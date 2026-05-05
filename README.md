@@ -226,19 +226,25 @@ Para espaços grandes (>10.000 combinações):
 
 ## 🚀 Deploy
 
-### Backend (Render)
+### Backend (Render - Python Runtime Recomendado)
 
 1. Crie uma conta no [Render](https://render.com)
 2. Conecte seu repositório GitHub
 3. Crie um novo **Web Service**
 4. Configure:
    - **Root Directory**: `backend`
-   - **Runtime**: Docker
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn api:app --host 0.0.0.0 --port $PORT`
 5. Adicione variáveis de ambiente:
    ```
-   CORS_ORIGINS=https://seu-frontend.vercel.app
+   CORS_ORIGINS=http://localhost:3000
+   DATA_MODE=simulated
    ```
 6. Deploy!
+7. Teste: `https://seu-backend.onrender.com/health`
+
+**Nota**: O Dockerfile está disponível como alternativa, mas o Python Runtime é a opção recomendada inicialmente por ser mais simples e evitar problemas com Docker.
 
 ### Frontend (Vercel)
 
