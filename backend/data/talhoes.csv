@@ -1,0 +1,11 @@
+id,area,solo,clima,relevo,agua
+1,10,argiloso,quente,plano,media
+2,15,arenoso,quente,leve,baixa
+3,8,misto,ameno,plano,alta
+4,12,siltoso,ameno,leve,media
+5,18,argiloso,frio,plano,alta
+6,9,arenoso,quente,moderado,baixa
+7,14,misto,ameno,plano,media
+8,11,argiloso,quente,leve,alta
+9,7,siltoso,frio,moderado,media
+10,13,misto,ameno,ingreme,baixa

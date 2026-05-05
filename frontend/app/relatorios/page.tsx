@@ -1,0 +1,149 @@
+"use client";
+
+import { useState } from "react";
+import { Topbar } from "@/components/layout/topbar";
+import { ReportConfigPanel } from "@/components/relatorios/report-config-panel";
+import { ReportSummaryCard } from "@/components/relatorios/report-summary-card";
+import { ReportPreview } from "@/components/relatorios/report-preview";
+import { ReportActions } from "@/components/relatorios/report-actions";
+import { ReportContentOverview } from "@/components/relatorios/report-content-overview";
+import { ReportEmptyState } from "@/components/relatorios/report-empty-state";
+import { ErrorState } from "@/components/shared/error-state";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { gerarRelatorio } from "@/lib/api";
+
+interface RelatorioData {
+  caminho: string;
+  conteudo: string;
+  formato: "md" | "txt";
+  objetivo: string;
+}
+
+export default function RelatoriosPage() {
+  const [objetivo, setObjetivo] = useState<string>("equilibrado");
+  const [formato, setFormato] = useState<"md" | "txt">("md");
+  const [relatorio, setRelatorio] = useState<RelatorioData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleGenerate = async () => {
+    setLoading(true);
+    setError(null);
+    setRelatorio(null);
+
+    try {
+      const data = await gerarRelatorio(objetivo, formato);
+      setRelatorio({
+        caminho: data.caminho,
+        conteudo: data.conteudo,
+        formato: data.formato,
+        objetivo: objetivo
+      });
+    } catch (err) {
+      console.error("Erro ao gerar relatório:", err);
+      setError(err instanceof Error ? err.message : "Erro ao gerar relatório");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegenerate = () => {
+    handleGenerate();
+  };
+
+  return (
+    <div>
+      <Topbar
+        title="Relatórios"
+        subtitle="Gere documentos explicáveis com plano recomendado, cenários, validação e justificativa técnica"
+      />
+
+      <div className="p-8 space-y-8">
+        {/* Configuração e Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Painel de Configuração */}
+          <div className="lg:col-span-1">
+            <ReportConfigPanel
+              objetivo={objetivo}
+              formato={formato}
+              loading={loading}
+              onObjetivoChange={setObjetivo}
+              onFormatoChange={setFormato}
+              onGenerate={handleGenerate}
+            />
+          </div>
+
+          {/* Overview do Conteúdo */}
+          <div className="lg:col-span-2">
+            <ReportContentOverview />
+          </div>
+        </div>
+
+        {/* Estado Vazio */}
+        {!relatorio && !loading && !error && (
+          <ReportEmptyState />
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="bg-slate-900/50 border-slate-800/50 p-5">
+                  <Skeleton className="h-4 w-24 bg-slate-800 mb-3" />
+                  <Skeleton className="h-6 w-32 bg-slate-800" />
+                </Card>
+              ))}
+            </div>
+            
+            <Card className="bg-slate-900/50 border-slate-800/50 p-6">
+              <Skeleton className="h-6 w-48 bg-slate-800 mb-4" />
+              <div className="space-y-2">
+                {[...Array(10)].map((_, i) => (
+                  <Skeleton key={i} className="h-4 w-full bg-slate-800" />
+                ))}
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Erro */}
+        {error && !loading && (
+          <ErrorState
+            title="Erro ao Gerar Relatório"
+            message={error}
+            onRetry={handleGenerate}
+          />
+        )}
+
+        {/* Relatório Gerado */}
+        {relatorio && !loading && (
+          <div className="space-y-6">
+            {/* Cards de Resumo */}
+            <ReportSummaryCard
+              objetivo={relatorio.objetivo}
+              formato={relatorio.formato}
+              caminho={relatorio.caminho}
+              tamanho={relatorio.conteudo.length}
+            />
+
+            {/* Ações */}
+            <ReportActions
+              conteudo={relatorio.conteudo}
+              objetivo={relatorio.objetivo}
+              formato={relatorio.formato}
+              onRegenerate={handleRegenerate}
+            />
+
+            {/* Preview */}
+            <ReportPreview
+              conteudo={relatorio.conteudo}
+              formato={relatorio.formato}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
