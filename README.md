@@ -67,7 +67,7 @@ O AgroPlan AI oferece um **modo local acelerado** para desenvolvimento e uso di√
 
 ```bash
 # 1. Instalar CLI global
-bun add -g @kuuhaku-allan/agroplan-cli
+bun add -g agroplan-ai-cli
 
 # 2. Configurar API local
 agroplan setup

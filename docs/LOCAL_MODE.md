@@ -30,7 +30,7 @@ powershell -c "irm bun.sh/install.ps1|iex"
 curl -fsSL https://bun.com/install | bash
 
 # 2. Instalar AgroPlan CLI globalmente
-bun add -g @kuuhaku-allan/agroplan-cli
+bun add -g agroplan-ai-cli
 
 # 3. Configurar API local
 agroplan setup
@@ -129,7 +129,7 @@ localStorage.removeItem('agroplan_api_mode');         // Voltar automático
 ### Usuário Final
 ```bash
 # 1. Instalar CLI global
-bun add -g @kuuhaku-allan/agroplan-cli
+bun add -g agroplan-ai-cli
 
 # 2. Configurar
 agroplan setup

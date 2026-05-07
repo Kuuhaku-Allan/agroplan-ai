@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { join, dirname } from "path";
-import { existsSync } from "fs";
+import { existsSync, mkdirSync } from "fs";
 import { homedir } from "os";
 
 /**
@@ -84,11 +84,11 @@ export function ensureAgroplanDir() {
   
   // Cria .agroplan se não existir
   if (!existsSync(paths.agroplanDir)) {
-    Bun.spawnSync(["mkdir", "-p", paths.agroplanDir]);
+    mkdirSync(paths.agroplanDir, { recursive: true });
   }
   
   // Cria logs se não existir
   if (!existsSync(paths.logsDir)) {
-    Bun.spawnSync(["mkdir", "-p", paths.logsDir]);
+    mkdirSync(paths.logsDir, { recursive: true });
   }
 }

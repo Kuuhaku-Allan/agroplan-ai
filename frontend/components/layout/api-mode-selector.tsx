@@ -275,7 +275,7 @@ function LocalApiSetupModal({
     },
     {
       step: "2. Instalar AgroPlan CLI",
-      command: "bun add -g @kuuhaku-allan/agroplan-cli",
+      command: "bun add -g agroplan-ai-cli",
       description: "Instala a CLI global do AgroPlan"
     },
     {
@@ -303,7 +303,7 @@ function LocalApiSetupModal({
     },
     {
       step: "2. Instalar AgroPlan CLI",
-      command: "bun add -g @kuuhaku-allan/agroplan-cli",
+      command: "bun add -g agroplan-ai-cli",
       description: "Instala a CLI global do AgroPlan"
     },
     {

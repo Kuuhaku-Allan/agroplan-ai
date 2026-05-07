@@ -1,6 +1,6 @@
 {
-  "name": "@kuuhaku-allan/agroplan-cli",
-  "version": "1.0.0",
+  "name": "agroplan-ai-cli",
+  "version": "1.0.1",
   "description": "CLI global para AgroPlan AI - modo local acelerado",
   "type": "module",
   "bin": {
@@ -13,8 +13,12 @@
   ],
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target bun",
+    "postbuild": "node -e \"const fs=require('fs'); let content=fs.readFileSync('dist/index.js','utf8'); if(!content.startsWith('#!/usr/bin/env bun')) content='#!/usr/bin/env bun\\n'+content; fs.writeFileSync('dist/index.js',content);\"",
     "dev": "bun run src/index.ts",
     "agroplan": "bun run src/index.ts"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@types/node": "^20.0.0"
@@ -29,8 +33,19 @@
     "agroplan",
     "agricultura",
     "cli",
-    "local-api"
+    "local-api",
+    "farming",
+    "genetic-algorithm"
   ],
   "author": "Kuuhaku Allan",
-  "license": "MIT"
+  "license": "MIT",
+  "homepage": "https://agroplan-ai.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kuuhaku-Allan/agroplan-ai.git",
+    "directory": "tools/agroplan-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Kuuhaku-Allan/agroplan-ai/issues"
+  }
 }
