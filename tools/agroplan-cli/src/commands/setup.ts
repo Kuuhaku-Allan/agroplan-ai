@@ -186,9 +186,19 @@ export async function setupCommand(force: boolean = false, pythonPath?: string):
   console.log("   ✅ Servidor web configurado");
   
   // Salvar estado do setup
-  const packageJson = require(join(dirname(dirname(dirname(__dirname))), "package.json"));
+  let version = "1.0.5";
+  try {
+    // Tentar encontrar o package.json da CLI instalada
+    const packagePath = require.resolve('agroplan-ai-cli/package.json');
+    const packageJson = require(packagePath);
+    version = packageJson.version || "1.0.5";
+  } catch {
+    // Fallback para versão hardcoded se não conseguir encontrar
+    version = "1.0.5";
+  }
+  
   saveSetupState({
-    version: packageJson.version || "1.0.5",
+    version: version,
     installedAt: new Date().toISOString(),
     backendPath: backendDir,
     python: python.version || "unknown",
