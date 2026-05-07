@@ -63,20 +63,27 @@ O AgroPlan AI oferece um **modo local acelerado** para desenvolvimento e uso di�
 - **Desenvolvimento**: Ideal para uso diário e modificações
 
 ### 🛠️ Setup Rápido
-```bash
-# 1. Instalar Bun
-curl -fsSL https://bun.sh/install | bash  # macOS/Linux
-# ou: irm bun.sh/install.ps1 | iex        # Windows
+**Requer [Bun ≥ 1.0](https://bun.sh/) instalado**
 
-# 2. Verificar sistema
-cd tools/agroplan-cli
-bun run agroplan doctor
+```bash
+# 1. Instalar CLI global
+bun add -g @kuuhaku-allan/agroplan-cli
+
+# 2. Configurar API local
+agroplan setup
 
 # 3. Iniciar API local
-bun run agroplan serve on
+agroplan serve on
 
 # 4. Abrir no navegador
-bun run agroplan open
+agroplan open
+```
+
+**Para desenvolvedores:**
+```bash
+git clone https://github.com/Kuuhaku-Allan/agroplan-ai
+cd agroplan-ai/tools/agroplan-cli
+bun install && bun run agroplan doctor
 ```
 
 ### 🎯 Detecção Automática

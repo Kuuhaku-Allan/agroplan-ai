@@ -13,7 +13,8 @@ import {
   ChevronDown,
   Settings,
   Zap,
-  Globe
+  Globe,
+  AlertTriangle
 } from "lucide-react";
 import { getApiMode, setApiMode, testApiConnection, clearApiCache } from "@/lib/api";
 
@@ -269,27 +270,27 @@ function LocalApiSetupModal({
   const windowsCommands = [
     {
       step: "1. Instalar Bun",
-      command: "irm bun.sh/install.ps1 | iex",
+      command: "powershell -c \"irm bun.sh/install.ps1|iex\"",
       description: "Instala o runtime Bun no Windows"
     },
     {
-      step: "2. Entrar na pasta da CLI",
-      command: "cd tools/agroplan-cli",
-      description: "Navega para a pasta da CLI local"
+      step: "2. Instalar AgroPlan CLI",
+      command: "bun add -g @kuuhaku-allan/agroplan-cli",
+      description: "Instala a CLI global do AgroPlan"
     },
     {
-      step: "3. Verificar sistema",
-      command: "bun run agroplan doctor",
-      description: "Verifica se tudo está configurado"
+      step: "3. Configurar API local",
+      command: "agroplan setup",
+      description: "Configura a API local no seu computador"
     },
     {
       step: "4. Iniciar API local",
-      command: "bun run agroplan serve on",
+      command: "agroplan serve on",
       description: "Inicia o servidor local em localhost:8000"
     },
     {
       step: "5. Abrir aplicação",
-      command: "bun run agroplan open",
+      command: "agroplan open",
       description: "Abre o AgroPlan AI no navegador"
     }
   ];
@@ -297,27 +298,27 @@ function LocalApiSetupModal({
   const macosCommands = [
     {
       step: "1. Instalar Bun",
-      command: "curl -fsSL https://bun.sh/install | bash",
+      command: "curl -fsSL https://bun.com/install | bash",
       description: "Instala o runtime Bun no macOS/Linux"
     },
     {
-      step: "2. Entrar na pasta da CLI",
-      command: "cd tools/agroplan-cli",
-      description: "Navega para a pasta da CLI local"
+      step: "2. Instalar AgroPlan CLI",
+      command: "bun add -g @kuuhaku-allan/agroplan-cli",
+      description: "Instala a CLI global do AgroPlan"
     },
     {
-      step: "3. Verificar sistema",
-      command: "bun run agroplan doctor",
-      description: "Verifica se tudo está configurado"
+      step: "3. Configurar API local",
+      command: "agroplan setup",
+      description: "Configura a API local no seu computador"
     },
     {
       step: "4. Iniciar API local",
-      command: "bun run agroplan serve on",
+      command: "agroplan serve on",
       description: "Inicia o servidor local em localhost:8000"
     },
     {
       step: "5. Abrir aplicação",
-      command: "bun run agroplan open",
+      command: "agroplan open",
       description: "Abre o AgroPlan AI no navegador"
     }
   ];
@@ -325,9 +326,9 @@ function LocalApiSetupModal({
   const commands = activeTab === 'windows' ? windowsCommands : macosCommands;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto border-slate-700 bg-slate-800">
-        <CardHeader>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+      <Card className="w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl border-slate-700 bg-slate-800 shadow-2xl">
+        <CardHeader className="sticky top-0 bg-slate-800 border-b border-slate-700 rounded-t-2xl">
           <CardTitle className="text-slate-50 flex items-center gap-2">
             <Monitor className="w-5 h-5 text-emerald-500" />
             Configurar API Local
@@ -336,7 +337,24 @@ function LocalApiSetupModal({
             A API Local evita a espera do Render acordar e deixa o AgroPlan AI mais rápido no uso diário.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6 p-6">
+          {/* Requisito do Bun */}
+          <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <div className="flex items-center gap-2 text-blue-400 font-medium mb-2">
+              <Globe className="w-4 h-4" />
+              Requisito
+            </div>
+            <p className="text-sm text-slate-300">
+              Requer <a 
+                href="https://bun.sh/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 underline"
+              >
+                Bun ≥ 1.0
+              </a> instalado no seu computador
+            </p>
+          </div>
           {/* Tabs */}
           <div className="flex gap-2 p-1 bg-slate-700/50 rounded-lg">
             <button
@@ -368,20 +386,31 @@ function LocalApiSetupModal({
                 <div className="font-medium text-slate-50">{cmd.step}</div>
                 <div className="text-sm text-slate-400">{cmd.description}</div>
                 <div className="flex gap-2">
-                  <code className="flex-1 p-3 bg-slate-900 border border-slate-600 rounded-lg text-emerald-400 font-mono text-sm">
+                  <code className="flex-1 p-3 bg-slate-900 border border-slate-600 rounded-lg text-emerald-400 font-mono text-sm break-all">
                     {cmd.command}
                   </code>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => copyToClipboard(cmd.command)}
-                    className="border-slate-600 hover:bg-slate-700"
+                    className="border-slate-600 hover:bg-slate-700 shrink-0"
                   >
                     Copiar
                   </Button>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Nota importante */}
+          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+            <div className="flex items-center gap-2 text-amber-400 font-medium mb-2">
+              <AlertTriangle className="w-4 h-4" />
+              Importante
+            </div>
+            <p className="text-sm text-slate-300">
+              Após executar os comandos, recarregue esta página para que o sistema detecte a API Local automaticamente.
+            </p>
           </div>
 
           {/* Botões de ação */}

@@ -1,0 +1,11 @@
+cultura,solos_ideais,climas_ideais,relevo_ideal,agua_necessaria,risco_base
+soja,argiloso;misto,quente;ameno,plano;leve,media,30
+milho,argiloso;misto;arenoso,quente;ameno,plano;leve,alta,35
+feijao,misto;arenoso,ameno;quente,plano,media,25
+trigo,argiloso;misto,frio;ameno,plano;leve,media,40
+algodao,argiloso;arenoso,quente,plano;leve,alta,45
+cafe,argiloso;siltoso,ameno;quente,leve;moderado,alta,50
+cana,argiloso;misto,quente,plano,alta,38
+sorgo,arenoso;siltoso,quente;ameno,plano;leve,baixa,20
+mandioca,arenoso;misto,quente;ameno,plano;leve,baixa,18
+arroz,argiloso;siltoso,ameno;frio,plano,alta,42

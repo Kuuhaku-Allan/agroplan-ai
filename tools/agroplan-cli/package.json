@@ -1,14 +1,20 @@
 {
-  "name": "agroplan-cli",
+  "name": "@kuuhaku-allan/agroplan-cli",
   "version": "1.0.0",
-  "description": "CLI local para AgroPlan AI - launcher e orquestrador do backend FastAPI",
+  "description": "CLI global para AgroPlan AI - modo local acelerado",
   "type": "module",
+  "bin": {
+    "agroplan": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "backend-template",
+    "README.md"
+  ],
   "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target bun",
     "dev": "bun run src/index.ts",
     "agroplan": "bun run src/index.ts"
-  },
-  "bin": {
-    "agroplan": "./src/index.ts"
   },
   "dependencies": {
     "@types/node": "^20.0.0"
@@ -18,5 +24,13 @@
   },
   "engines": {
     "bun": ">=1.0.0"
-  }
+  },
+  "keywords": [
+    "agroplan",
+    "agricultura",
+    "cli",
+    "local-api"
+  ],
+  "author": "Kuuhaku Allan",
+  "license": "MIT"
 }

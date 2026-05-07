@@ -1,0 +1,463 @@
+================================================================================
+RELATÓRIO AGROPLAN AI - SISTEMA DE PLANEJAMENTO DE PLANTIO
+================================================================================
+
+Data: 05/05/2026 17:51:08
+Objetivo: SUSTENTÁVEL
+
+================================================================================
+
+1. RESUMO EXECUTIVO
+--------------------------------------------------------------------------------
+
+PLANO RECOMENDADO:
+
+  Talhão 1 (10 ha): ALGODÃO
+    Lucro estimado: R$ 69.500,00
+    Risco: 45%
+    Tempo: 140 dias
+
+  Talhão 2 (15 ha): MANDIOCA
+    Lucro estimado: R$ 88.800,00
+    Risco: 18%
+    Tempo: 240 dias
+
+  Talhão 3 (8 ha): MILHO
+    Lucro estimado: R$ 80.400,00
+    Risco: 35%
+    Tempo: 100 dias
+
+  Talhão 4 (12 ha): CAFÉ
+    Lucro estimado: R$ 81.600,00
+    Risco: 50%
+    Tempo: 180 dias
+
+  Talhão 5 (18 ha): TRIGO
+    Lucro estimado: R$ 127.800,00
+    Risco: 40%
+    Tempo: 110 dias
+
+  Talhão 6 (9 ha): SORGO
+    Lucro estimado: R$ 53.460,00
+    Risco: 20%
+    Tempo: 85 dias
+
+  Talhão 7 (14 ha): FEIJÃO
+    Lucro estimado: R$ 72.240,00
+    Risco: 25%
+    Tempo: 90 dias
+
+  Talhão 8 (11 ha): SOJA
+    Lucro estimado: R$ 89.100,00
+    Risco: 30%
+    Tempo: 120 dias
+
+  Talhão 9 (7 ha): ARROZ
+    Lucro estimado: R$ 50.260,00
+    Risco: 42%
+    Tempo: 130 dias
+
+  Talhão 10 (13 ha): MANDIOCA
+    Lucro estimado: R$ 76.960,00
+    Risco: 18%
+    Tempo: 240 dias
+
+MÉTRICAS GERAIS:
+  Lucro Total: R$ 790.120,00
+  Risco Médio: 31.7%
+  Diversidade: 9 cultura(s)
+  Fitness: 71.84
+
+JUSTIFICATIVA:
+  O plano recomendado priorizou compatibilidade com o terreno, diversidade de culturas e uso adequado dos recursos disponíveis.
+
+  Sobre Sustentabilidade: Neste sistema, sustentabilidade considera
+  compatibilidade com o terreno, diversidade de culturas e uso adequado
+  dos recursos disponíveis.
+
+================================================================================
+
+2. CARACTERÍSTICAS DOS TALHÕES
+--------------------------------------------------------------------------------
+
+Talhão 1:
+  Área: 10 hectares
+  Solo: Argiloso
+  Clima: Quente
+  Relevo: Plano
+  Disponibilidade de Água: Média
+
+Talhão 2:
+  Área: 15 hectares
+  Solo: Arenoso
+  Clima: Quente
+  Relevo: Leve
+  Disponibilidade de Água: Baixa
+
+Talhão 3:
+  Área: 8 hectares
+  Solo: Misto
+  Clima: Ameno
+  Relevo: Plano
+  Disponibilidade de Água: Alta
+
+Talhão 4:
+  Área: 12 hectares
+  Solo: Siltoso
+  Clima: Ameno
+  Relevo: Leve
+  Disponibilidade de Água: Média
+
+Talhão 5:
+  Área: 18 hectares
+  Solo: Argiloso
+  Clima: Frio
+  Relevo: Plano
+  Disponibilidade de Água: Alta
+
+Talhão 6:
+  Área: 9 hectares
+  Solo: Arenoso
+  Clima: Quente
+  Relevo: Moderado
+  Disponibilidade de Água: Baixa
+
+Talhão 7:
+  Área: 14 hectares
+  Solo: Misto
+  Clima: Ameno
+  Relevo: Plano
+  Disponibilidade de Água: Média
+
+Talhão 8:
+  Área: 11 hectares
+  Solo: Argiloso
+  Clima: Quente
+  Relevo: Leve
+  Disponibilidade de Água: Alta
+
+Talhão 9:
+  Área: 7 hectares
+  Solo: Siltoso
+  Clima: Frio
+  Relevo: Moderado
+  Disponibilidade de Água: Média
+
+Talhão 10:
+  Área: 13 hectares
+  Solo: Misto
+  Clima: Ameno
+  Relevo: Íngreme
+  Disponibilidade de Água: Baixa
+
+================================================================================
+
+3. COMPARAÇÃO DE CENÁRIOS
+--------------------------------------------------------------------------------
+
+AG Sustentável:
+  Lucro: R$ 790.120,00
+  Risco: 31.7%
+
+Equilibrado:
+  Lucro: R$ 853.730,00
+  Risco: 28.2%
+
+Máximo Lucro:
+  Lucro: R$ 1.638.000,00
+  Risco: 38.0%
+
+Baixo Risco:
+  Lucro: R$ 692.640,00
+  Risco: 18.0%
+
+Sustentável:
+  Lucro: R$ 768.720,00
+  Risco: 25.2%
+
+Conservador:
+  Lucro: R$ 826.000,00
+  Risco: 24.6%
+
+================================================================================
+
+4. RESULTADO DO ALGORITMO GENÉTICO
+--------------------------------------------------------------------------------
+
+CONFIGURAÇÃO:
+  Objetivo: Sustentável
+  Gerações: 100
+  População: 50 indivíduos
+  Seed: 42
+
+RESULTADO:
+  Fitness Final: 71.84
+  Lucro Total: R$ 790.120,00
+  Risco Médio: 31.7%
+  Diversidade: 9 cultura(s)
+
+PLANO DETALHADO:
+
+Talhão 1 (10 ha) - Solo Argiloso, Clima Quente
+  Cultura: ALGODÃO
+  Lucro: R$ 69.500,00
+  Risco: 45%
+  Nota de compatibilidade: 70.52
+
+Talhão 2 (15 ha) - Solo Arenoso, Clima Quente
+  Cultura: MANDIOCA
+  Lucro: R$ 88.800,00
+  Risco: 18%
+  Nota de compatibilidade: 79.06
+
+Talhão 3 (8 ha) - Solo Misto, Clima Ameno
+  Cultura: MILHO
+  Lucro: R$ 80.400,00
+  Risco: 35%
+  Nota de compatibilidade: 82.03
+
+Talhão 4 (12 ha) - Solo Siltoso, Clima Ameno
+  Cultura: CAFÉ
+  Lucro: R$ 81.600,00
+  Risco: 50%
+  Nota de compatibilidade: 69.86
+
+Talhão 5 (18 ha) - Solo Argiloso, Clima Frio
+  Cultura: TRIGO
+  Lucro: R$ 127.800,00
+  Risco: 40%
+  Nota de compatibilidade: 78.19
+
+Talhão 6 (9 ha) - Solo Arenoso, Clima Quente
+  Cultura: SORGO
+  Lucro: R$ 53.460,00
+  Risco: 20%
+  Nota de compatibilidade: 63.88
+
+Talhão 7 (14 ha) - Solo Misto, Clima Ameno
+  Cultura: FEIJÃO
+  Lucro: R$ 72.240,00
+  Risco: 25%
+  Nota de compatibilidade: 77.50
+
+Talhão 8 (11 ha) - Solo Argiloso, Clima Quente
+  Cultura: SOJA
+  Lucro: R$ 89.100,00
+  Risco: 30%
+  Nota de compatibilidade: 80.33
+
+Talhão 9 (7 ha) - Solo Siltoso, Clima Frio
+  Cultura: ARROZ
+  Lucro: R$ 50.260,00
+  Risco: 42%
+  Nota de compatibilidade: 56.09
+
+Talhão 10 (13 ha) - Solo Misto, Clima Ameno
+  Cultura: MANDIOCA
+  Lucro: R$ 76.960,00
+  Risco: 18%
+  Nota de compatibilidade: 64.06
+
+================================================================================
+
+5. VALIDAÇÃO DO ALGORITMO
+--------------------------------------------------------------------------------
+
+Total de combinações possíveis: 10.000.000.000
+
+FORÇA BRUTA INVIÁVEL
+
+A busca exaustiva por força bruta foi considerada inviável neste conjunto,
+pois existem aproximadamente 10.000.000.000 combinações possíveis.
+
+Por isso, a validação foi realizada por meio de:
+  - Múltiplas rodadas do Algoritmo Genético
+  - Análise de estabilidade estatística
+  - Comparação com cenários manuais
+
+Por que a força bruta é inviável?
+
+Com 10 talhões e 10 culturas, o número de
+combinações cresce exponencialmente.
+
+Testar 10.000.000.000 combinações levaria:
+  - 1 milhão/s: aproximadamente 2.8 horas
+  - 1 bilhão/s: aproximadamente 10 segundos
+
+O Algoritmo Genético é a solução ideal para este cenário.
+
+================================================================================
+
+6. ESTABILIDADE DO ALGORITMO
+--------------------------------------------------------------------------------
+
+Rodadas executadas: 5
+
+ESTATÍSTICAS:
+  Melhor Fitness: 71.88
+  Fitness Médio: 71.13
+  Pior Fitness: 70.59
+  Desvio Padrão: 0.55
+  Coeficiente de Variação: 0.77%
+
+ESTABILIDADE: ALTA
+
+O algoritmo apresentou alta estabilidade, encontrando soluções muito semelhantes em todas as execuções.
+
+================================================================================
+
+7. JUSTIFICATIVA AGRONÔMICA
+--------------------------------------------------------------------------------
+
+Talhão 1: ALGODÃO
+
+Por que algodão foi escolhida para este talhão?
+  - Solo argiloso: Compatível com as necessidades da cultura
+  - Clima quente: Adequado para o desenvolvimento
+  - Relevo plano: Favorável ao cultivo
+  - Água média: Atende às necessidades hídricas
+  - Nota de compatibilidade: 70.52/100
+  - Lucro estimado: R$ 69.500,00
+  - Risco: 45%
+
+Talhão 2: MANDIOCA
+
+Por que mandioca foi escolhida para este talhão?
+  - Solo arenoso: Compatível com as necessidades da cultura
+  - Clima quente: Adequado para o desenvolvimento
+  - Relevo leve: Favorável ao cultivo
+  - Água baixa: Atende às necessidades hídricas
+  - Nota de compatibilidade: 79.06/100
+  - Lucro estimado: R$ 88.800,00
+  - Risco: 18%
+
+Talhão 3: MILHO
+
+Por que milho foi escolhida para este talhão?
+  - Solo misto: Compatível com as necessidades da cultura
+  - Clima ameno: Adequado para o desenvolvimento
+  - Relevo plano: Favorável ao cultivo
+  - Água alta: Atende às necessidades hídricas
+  - Nota de compatibilidade: 82.03/100
+  - Lucro estimado: R$ 80.400,00
+  - Risco: 35%
+
+Talhão 4: CAFÉ
+
+Por que café foi escolhida para este talhão?
+  - Solo siltoso: Compatível com as necessidades da cultura
+  - Clima ameno: Adequado para o desenvolvimento
+  - Relevo leve: Favorável ao cultivo
+  - Água média: Atende às necessidades hídricas
+  - Nota de compatibilidade: 69.86/100
+  - Lucro estimado: R$ 81.600,00
+  - Risco: 50%
+
+Talhão 5: TRIGO
+
+Por que trigo foi escolhida para este talhão?
+  - Solo argiloso: Compatível com as necessidades da cultura
+  - Clima frio: Adequado para o desenvolvimento
+  - Relevo plano: Favorável ao cultivo
+  - Água alta: Atende às necessidades hídricas
+  - Nota de compatibilidade: 78.19/100
+  - Lucro estimado: R$ 127.800,00
+  - Risco: 40%
+
+Talhão 6: SORGO
+
+Por que sorgo foi escolhida para este talhão?
+  - Solo arenoso: Compatível com as necessidades da cultura
+  - Clima quente: Adequado para o desenvolvimento
+  - Relevo moderado: Favorável ao cultivo
+  - Água baixa: Atende às necessidades hídricas
+  - Nota de compatibilidade: 63.88/100
+  - Lucro estimado: R$ 53.460,00
+  - Risco: 20%
+
+Talhão 7: FEIJÃO
+
+Por que feijão foi escolhida para este talhão?
+  - Solo misto: Compatível com as necessidades da cultura
+  - Clima ameno: Adequado para o desenvolvimento
+  - Relevo plano: Favorável ao cultivo
+  - Água média: Atende às necessidades hídricas
+  - Nota de compatibilidade: 77.50/100
+  - Lucro estimado: R$ 72.240,00
+  - Risco: 25%
+
+Talhão 8: SOJA
+
+Por que soja foi escolhida para este talhão?
+  - Solo argiloso: Compatível com as necessidades da cultura
+  - Clima quente: Adequado para o desenvolvimento
+  - Relevo leve: Favorável ao cultivo
+  - Água alta: Atende às necessidades hídricas
+  - Nota de compatibilidade: 80.33/100
+  - Lucro estimado: R$ 89.100,00
+  - Risco: 30%
+
+Talhão 9: ARROZ
+
+Por que arroz foi escolhida para este talhão?
+  - Solo siltoso: Compatível com as necessidades da cultura
+  - Clima frio: Adequado para o desenvolvimento
+  - Relevo moderado: Favorável ao cultivo
+  - Água média: Atende às necessidades hídricas
+  - Nota de compatibilidade: 56.09/100
+  - Lucro estimado: R$ 50.260,00
+  - Risco: 42%
+
+Talhão 10: MANDIOCA
+
+Por que mandioca foi escolhida para este talhão?
+  - Solo misto: Compatível com as necessidades da cultura
+  - Clima ameno: Adequado para o desenvolvimento
+  - Relevo íngreme: Favorável ao cultivo
+  - Água baixa: Atende às necessidades hídricas
+  - Nota de compatibilidade: 64.06/100
+  - Lucro estimado: R$ 76.960,00
+  - Risco: 18%
+
+================================================================================
+
+8. LIMITAÇÕES DO SISTEMA
+--------------------------------------------------------------------------------
+
+Este sistema fornece recomendações baseadas em dados e algoritmos,
+mas possui limitações:
+
+1. Dados Simulados: Os dados atuais são estimativas, não medições reais
+2. Modelo Simplificado: Não considera todos os fatores agronômicos
+3. Sem Análise Laboratorial: Não utiliza análise química e física do solo
+4. Sem Dados Climáticos Reais: Não integra com estações meteorológicas
+5. Sem Preços de Mercado Reais: Usa valores estimados
+6. Não Substitui Agrônomo: As recomendações devem ser validadas
+
+RECOMENDAÇÃO: Use este sistema como ferramenta de apoio à decisão,
+não como decisão final.
+
+================================================================================
+
+9. CONCLUSÃO
+--------------------------------------------------------------------------------
+
+O sistema AgroPlan AI recomenda o plano apresentado neste relatório
+com base no objetivo sustentável.
+
+A solução foi validada por meio de múltiplas rodadas e apresenta
+estabilidade alta.
+
+Com 10.000.000.000 combinações possíveis, o Algoritmo Genético
+demonstra sua essencialidade para resolver problemas de planejamento
+agrícola em escala real.
+
+PRÓXIMOS PASSOS SUGERIDOS:
+1. Validar recomendações com agrônomo
+2. Considerar fatores locais não modelados
+3. Ajustar conforme disponibilidade de recursos
+4. Monitorar resultados para melhorias futuras
+
+================================================================================
+
+*Relatório gerado automaticamente pelo AgroPlan AI*

@@ -1,10 +1,15 @@
 #!/usr/bin/env bun
 import { join, dirname } from "path";
 import { existsSync } from "fs";
+import { homedir } from "os";
 
 /**
  * Utilitários para gerenciar caminhos do projeto
  */
+
+export function getHomeAgroplanDir(): string {
+  return join(homedir(), ".agroplan");
+}
 
 export function findProjectRoot(): string {
   let currentDir = process.cwd();
@@ -25,19 +30,53 @@ export function findProjectRoot(): string {
 }
 
 export function getProjectPaths() {
-  const root = findProjectRoot();
+  // Tenta usar diretório home primeiro (modo global)
+  const homeDir = getHomeAgroplanDir();
+  const homeBackend = join(homeDir, "backend");
   
-  return {
-    root,
-    backend: join(root, "backend"),
-    api: join(root, "backend", "api.py"),
-    requirements: join(root, "backend", "requirements.txt"),
-    venv: join(root, "backend", ".venv"),
-    agroplanDir: join(root, ".agroplan"),
-    pidFile: join(root, ".agroplan", "agroplan-api.pid"),
-    logsDir: join(root, ".agroplan", "logs"),
-    logFile: join(root, ".agroplan", "logs", "api.log")
-  };
+  if (existsSync(homeBackend)) {
+    return {
+      root: homeDir,
+      backend: homeBackend,
+      api: join(homeBackend, "api.py"),
+      requirements: join(homeBackend, "requirements.txt"),
+      venv: join(homeBackend, ".venv"),
+      agroplanDir: homeDir,
+      pidFile: join(homeDir, "agroplan-api.pid"),
+      logsDir: join(homeDir, "logs"),
+      logFile: join(homeDir, "logs", "api.log")
+    };
+  }
+  
+  // Fallback para modo desenvolvimento (repositório local)
+  try {
+    const root = findProjectRoot();
+    
+    return {
+      root,
+      backend: join(root, "backend"),
+      api: join(root, "backend", "api.py"),
+      requirements: join(root, "backend", "requirements.txt"),
+      venv: join(root, "backend", ".venv"),
+      agroplanDir: join(root, ".agroplan"),
+      pidFile: join(root, ".agroplan", "agroplan-api.pid"),
+      logsDir: join(root, ".agroplan", "logs"),
+      logFile: join(root, ".agroplan", "logs", "api.log")
+    };
+  } catch {
+    // Se não encontrar repositório, usar diretório home mesmo sem backend
+    return {
+      root: homeDir,
+      backend: homeBackend,
+      api: join(homeBackend, "api.py"),
+      requirements: join(homeBackend, "requirements.txt"),
+      venv: join(homeBackend, ".venv"),
+      agroplanDir: homeDir,
+      pidFile: join(homeDir, "agroplan-api.pid"),
+      logsDir: join(homeDir, "logs"),
+      logFile: join(homeDir, "logs", "api.log")
+    };
+  }
 }
 
 export function ensureAgroplanDir() {

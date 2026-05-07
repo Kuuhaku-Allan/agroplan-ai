@@ -18,64 +18,66 @@ O **Modo Local** permite executar o backend FastAPI diretamente no seu computado
 
 ## 🚀 Instalação
 
-### 1. Instalar Bun
-```bash
-# Windows (PowerShell)
-irm bun.sh/install.ps1 | iex
+### Para Usuários Finais
 
-# macOS/Linux
-curl -fsSL https://bun.sh/install | bash
+**Requer [Bun ≥ 1.0](https://bun.sh/) instalado**
+
+```bash
+# 1. Instalar Bun (se ainda não tiver)
+# Windows PowerShell:
+powershell -c "irm bun.sh/install.ps1|iex"
+# macOS/Linux:
+curl -fsSL https://bun.com/install | bash
+
+# 2. Instalar AgroPlan CLI globalmente
+bun add -g @kuuhaku-allan/agroplan-cli
+
+# 3. Configurar API local
+agroplan setup
+
+# 4. Iniciar API local
+agroplan serve on
+
+# 5. Abrir no navegador
+agroplan open
 ```
 
-### 2. Verificar Python
-```bash
-python --version  # Deve ser 3.8+
-pip --version     # Deve estar disponível
-```
+### Para Desenvolvedores
 
-Se não tiver Python: https://python.org/downloads
+Se você clonou o repositório:
+```bash
+cd tools/agroplan-cli
+bun install
+bun run agroplan doctor
+bun run agroplan serve on
+```
 
 ## 📋 Comandos Disponíveis
 
+### Configuração Inicial
+```bash
+agroplan setup
+```
+Configura a API local no diretório `~/.agroplan` do usuário.
+
 ### Diagnóstico
 ```bash
-cd tools/agroplan-cli
-bun run agroplan doctor
+agroplan doctor
 ```
 Verifica se tudo está configurado corretamente.
 
-### Iniciar API Local
+### Gerenciar Servidor
 ```bash
-bun run agroplan serve on
+agroplan serve on     # Iniciar API local
+agroplan serve off    # Parar API local
+agroplan serve status # Status das APIs
+agroplan serve logs   # Ver logs
 ```
-- Cria ambiente virtual se necessário
-- Instala dependências automaticamente
-- Inicia servidor em http://localhost:8000
-- Roda em background
 
-### Parar API Local
+### Utilitários
 ```bash
-bun run agroplan serve off
+agroplan open         # Abrir no navegador
 ```
-Encerra o servidor local com segurança.
-
-### Status
-```bash
-bun run agroplan serve status
-```
-Mostra status da API local e Render.
-
-### Logs
-```bash
-bun run agroplan serve logs
-```
-Exibe logs da API local.
-
-### Abrir no Navegador
-```bash
-bun run agroplan open
-```
-Abre https://agroplan-ai.vercel.app/dashboard
 
 ## 🔄 Detecção Automática
 
@@ -124,43 +126,68 @@ localStorage.removeItem('agroplan_api_mode');         // Voltar automático
 
 ## 🛠️ Fluxo Recomendado
 
-### Desenvolvimento Diário
+### Usuário Final
 ```bash
-# 1. Verificar sistema
-bun run agroplan doctor
+# 1. Instalar CLI global
+bun add -g @kuuhaku-allan/agroplan-cli
 
-# 2. Iniciar API local
-bun run agroplan serve on
+# 2. Configurar
+agroplan setup
 
-# 3. Abrir no navegador
-bun run agroplan open
+# 3. Iniciar
+agroplan serve on
 
-# 4. Trabalhar normalmente
-# Frontend usa API local automaticamente
+# 4. Usar
+agroplan open
 
 # 5. Parar quando terminar
-bun run agroplan serve off
+agroplan serve off
 ```
 
-### Apresentação/Demo
+### Desenvolvedor
 ```bash
-# Opção 1: Usar local (mais rápido)
-bun run agroplan serve on
-bun run agroplan open
+# 1. Clonar repositório
+git clone https://github.com/Kuuhaku-Allan/agroplan-ai
+cd agroplan-ai
 
-# Opção 2: Usar apenas Render (sem setup)
-# Abrir direto: https://agroplan-ai.vercel.app
+# 2. Entrar na CLI
+cd tools/agroplan-cli
+bun install
+
+# 3. Testar
+bun run agroplan doctor
+bun run agroplan serve on
 ```
 
 ## 🔧 Estrutura de Arquivos
 
+### Instalação Global
+```
+~/.agroplan/                  # Diretório do usuário
+├── backend/                  # Backend local
+│   ├── api.py               # API FastAPI
+│   ├── core/                # Módulos principais
+│   ├── data/                # Dados simulados
+│   ├── requirements.txt     # Dependências Python
+│   └── .venv/               # Ambiente virtual
+├── agroplan-api.pid         # PID do processo
+└── logs/
+    └── api.log              # Logs do servidor
+
+# CLI instalada globalmente via:
+# bun add -g @kuuhaku-allan/agroplan-cli
+```
+
+### Desenvolvimento
 ```
 tools/agroplan-cli/
 ├── package.json          # Configuração Bun
 ├── tsconfig.json         # TypeScript config
+├── backend-template/     # Template do backend
 └── src/
     ├── index.ts          # CLI principal
     ├── commands/
+    │   ├── setup.ts      # Configuração inicial
     │   ├── doctor.ts     # Diagnóstico
     │   ├── serve.ts      # Gerenciar servidor
     │   └── open.ts       # Abrir navegador
@@ -168,11 +195,6 @@ tools/agroplan-cli/
         ├── paths.ts      # Caminhos do projeto
         ├── python.ts     # Gerenciar Python/venv
         └── process.ts    # Gerenciar processos
-
-.agroplan/                # Criado automaticamente
-├── agroplan-api.pid      # PID do processo
-└── logs/
-    └── api.log           # Logs do servidor
 ```
 
 ## ❓ Troubleshooting

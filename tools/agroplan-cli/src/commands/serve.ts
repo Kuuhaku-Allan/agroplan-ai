@@ -12,6 +12,18 @@ import { savePid, readPid, removePidFile, isProcessRunning, killProcess, checkPo
 export async function serveOnCommand(): Promise<void> {
   console.log("🚀 Iniciando API local do AgroPlan AI...\n");
   
+  const paths = getProjectPaths();
+  
+  // Verificar se setup foi executado (modo global)
+  if (!existsSync(paths.backend) || !existsSync(paths.api)) {
+    console.log("❌ API local ainda não configurada");
+    console.log("\n💡 Execute primeiro:");
+    console.log("   agroplan setup");
+    console.log("\n   Isso criará a instalação local em:");
+    console.log(`   ${paths.backend}`);
+    return;
+  }
+  
   // Verificar se já está rodando
   const existingPid = readPid();
   if (existingPid && isProcessRunning(existingPid)) {
@@ -26,7 +38,6 @@ export async function serveOnCommand(): Promise<void> {
     removePidFile();
   }
   
-  const paths = getProjectPaths();
   ensureAgroplanDir();
   
   // Verificar se ambiente virtual existe

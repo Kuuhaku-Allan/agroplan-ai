@@ -10,8 +10,10 @@
 import { doctorCommand } from "./commands/doctor";
 import { serveOnCommand, serveOffCommand, serveStatusCommand, serveLogsCommand } from "./commands/serve";
 import { openCommand } from "./commands/open";
+import { setupCommand } from "./commands/setup";
 
 const COMMANDS = {
+  setup: "Configura a API local no seu computador",
   doctor: "Verifica se o sistema está configurado corretamente",
   "serve on": "Inicia a API local em http://localhost:8000",
   "serve off": "Para a API local",
@@ -30,10 +32,10 @@ function showHelp(): void {
   });
   
   console.log("\n🎯 Fluxo recomendado:");
-  console.log("   1. bun run agroplan doctor      # Verificar sistema");
-  console.log("   2. bun run agroplan serve on    # Iniciar API local");
-  console.log("   3. bun run agroplan open        # Abrir no navegador");
-  console.log("   4. bun run agroplan serve off   # Parar quando terminar");
+  console.log("   1. agroplan setup           # Configurar API local");
+  console.log("   2. agroplan serve on        # Iniciar API local");
+  console.log("   3. agroplan open            # Abrir no navegador");
+  console.log("   4. agroplan serve off       # Parar quando terminar");
   
   console.log("\n💡 Modo híbrido:");
   console.log("   • API Local: Rápida, não dorme, ideal para uso diário");
@@ -53,6 +55,10 @@ async function main(): Promise<void> {
   
   try {
     switch (command) {
+      case "setup":
+        await setupCommand();
+        break;
+        
       case "doctor":
         await doctorCommand();
         break;

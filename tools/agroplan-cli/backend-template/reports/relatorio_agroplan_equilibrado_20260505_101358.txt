@@ -1,0 +1,41 @@
+================================================================================
+RELATÓRIO AGROPLAN AI - SISTEMA DE PLANEJAMENTO DE PLANTIO
+================================================================================
+
+Data: 05/05/2026 10:13:58
+Objetivo: EQUILIBRADO
+
+================================================================================
+
+1. RESUMO EXECUTIVO
+--------------------------------------------------------------------------------
+
+PLANO RECOMENDADO:
+
+  Talhão 1 (10 ha): SOJA
+    Lucro estimado: R$ 81,000.00
+    Risco: 30%
+    Tempo: 120 dias
+
+  Talhão 2 (15 ha): FEIJAO
+    Lucro estimado: R$ 77,400.00
+    Risco: 25%
+    Tempo: 90 dias
+
+  Talhão 3 (8 ha): MILHO
+    Lucro estimado: R$ 80,400.00
+    Risco: 35%
+    Tempo: 100 dias
+
+MÉTRICAS GERAIS:
+  Lucro Total: R$ 238,800.00
+  Risco Médio: 28.9%
+  Diversidade: 3 cultura(s)
+  Fitness: 75.22
+
+JUSTIFICATIVA:
+  O algoritmo genético encontrou um plano equilibrado entre lucro, risco e compatibilidade do terreno. A solução mantém alto retorno financeiro (R$ 238,800.00) sem ultrapassar níveis críticos de risco (28.9%). O plano utiliza 3 culturas diferentes, oferecendo boa diversificação. Fitness final: 75.22.
+
+================================================================================
+
+*Relatório gerado automaticamente pelo AgroPlan AI*
