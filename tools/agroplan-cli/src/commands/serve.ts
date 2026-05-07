@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, openSync, closeSync } from "fs";
 import { spawn } from "child_process";
 import { getProjectPaths, ensureAgroplanDir } from "../utils/paths";
 import { createVenv, installRequirements, getVenvPython } from "../utils/python";
@@ -90,6 +90,10 @@ export async function serveOnCommand(): Promise<void> {
   // Iniciar servidor
   console.log("🌐 Iniciando servidor uvicorn...");
   
+  // Abrir handles de arquivo para logs (redirecionamento direto)
+  const out = openSync(paths.logFile, "a");
+  const err = openSync(paths.logFile, "a");
+  
   const child = spawn(uvicornPath, [
     "api:app",
     "--host", "127.0.0.1",
@@ -98,7 +102,8 @@ export async function serveOnCommand(): Promise<void> {
   ], {
     cwd: paths.backend,
     detached: true,
-    stdio: ["ignore", "pipe", "pipe"],
+    windowsHide: true,  // Esconder janela no Windows
+    stdio: ["ignore", out, err],  // Redirecionar stdout/stderr para arquivo
     env: {
       ...process.env,
       CORS_ORIGINS: "https://agroplan-ai.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
@@ -108,16 +113,11 @@ export async function serveOnCommand(): Promise<void> {
   // Salvar PID
   savePid(child.pid!);
   
-  // Redirecionar logs
-  const logStream = Bun.file(paths.logFile).writer();
-  child.stdout?.on("data", (data) => {
-    logStream.write(data);
-  });
-  child.stderr?.on("data", (data) => {
-    logStream.write(data);
-  });
+  // Fechar handles no processo pai (logs vão direto para arquivo)
+  closeSync(out);
+  closeSync(err);
   
-  // Desanexar processo para continuar rodando em background
+  // Desanexar processo para continuar rodando independentemente
   child.unref();
   
   // Aguardar um pouco e verificar se iniciou corretamente
@@ -135,7 +135,8 @@ export async function serveOnCommand(): Promise<void> {
       console.log(`   PID: ${child.pid}`);
       console.log("   URL: http://localhost:8000");
       console.log("   Health: http://localhost:8000/health");
-      console.log("\n💡 Use 'agroplan serve off' para parar");
+      console.log("\n🎯 API rodando em segundo plano - você pode fechar este terminal!");
+      console.log("💡 Use 'agroplan serve off' para parar");
       return;
     }
     
