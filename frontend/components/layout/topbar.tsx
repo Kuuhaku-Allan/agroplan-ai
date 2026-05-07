@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Loader2, Monitor, Cloud } from "lucide-react";
 import { getHealth } from "@/lib/api";
+import { ApiModeSelector } from "./api-mode-selector";
 
 interface TopbarProps {
   title: string;
@@ -18,6 +18,7 @@ export function Topbar({ title, subtitle }: TopbarProps) {
 
   const carregarHealth = async () => {
     try {
+      setApiStatus("loading");
       const health = await getHealth();
       setApiStatus("connected");
       setApiOrigin(health.api_origin);
@@ -49,31 +50,12 @@ export function Topbar({ title, subtitle }: TopbarProps) {
 
         {/* Status Badges */}
         <div className="flex items-center gap-2">
-          {/* Badge de origem da API */}
-          {apiStatus === "connected" && apiOrigin === "local" && (
-            <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500">
-              <Monitor className="w-3 h-3 mr-1" />
-              API Local
-            </Badge>
-          )}
-          {apiStatus === "connected" && apiOrigin === "render" && (
-            <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-500">
-              <Cloud className="w-3 h-3 mr-1" />
-              API Render
-            </Badge>
-          )}
-          {apiStatus === "disconnected" && (
-            <Badge variant="outline" className="border-red-500/30 bg-red-500/10 text-red-500">
-              <XCircle className="w-3 h-3 mr-1" />
-              API Offline
-            </Badge>
-          )}
-          {apiStatus === "loading" && (
-            <Badge variant="outline" className="border-slate-500/30 bg-slate-500/10 text-slate-400">
-              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-              Conectando...
-            </Badge>
-          )}
+          {/* Seletor de API */}
+          <ApiModeSelector 
+            status={apiStatus}
+            origin={apiOrigin}
+            onRefresh={carregarHealth}
+          />
           
           {culturas !== undefined && (
             <Badge variant="outline" className="border-slate-700 bg-slate-800/50 text-slate-300">

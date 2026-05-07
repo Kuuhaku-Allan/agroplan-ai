@@ -86,7 +86,24 @@ O frontend detecta automaticamente qual API usar:
 2. Se funcionar → usa API Local
 3. Se falhar → usa API Render
 
-### Modos Manuais
+### Seletor Visual na Topbar
+- **🖥️ API Local**: Badge verde clicável com ícone Monitor
+- **☁️ API Render**: Badge azul clicável com ícone Cloud  
+- **❌ API Offline**: Badge vermelho quando nenhuma responder
+
+### Menu de Seleção
+Clique no badge da API para abrir o menu:
+- **Automático**: Usa Local se disponível, senão Render
+- **API Local**: Força uso local (abre assistente se não disponível)
+- **API Render**: Força uso do Render
+
+### Assistente de Instalação
+Quando seleciona "API Local" mas não está disponível:
+- Mostra comandos passo a passo para Windows e macOS/Linux
+- Botões "Copiar" para cada comando
+- Opções: "Testar Novamente", "Usar Render por Enquanto"
+
+### Modos Manuais (avançado)
 ```javascript
 // No console do navegador
 localStorage.setItem('agroplan_api_mode', 'local');   // Forçar local

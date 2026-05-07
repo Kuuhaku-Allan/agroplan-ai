@@ -83,7 +83,8 @@ bun run agroplan open
 O frontend detecta automaticamente qual API usar:
 - **🖥️ API Local**: Badge verde quando localhost:8000 disponível
 - **☁️ API Render**: Badge azul quando usa fallback online
-- **Transparente**: Usuário não precisa configurar nada
+- **Menu clicável**: Seletor visual na Topbar permite alternar entre Automático/Local/Render
+- **Assistente integrado**: Guia passo a passo quando API Local não disponível
 
 📖 **Documentação completa**: [docs/LOCAL_MODE.md](docs/LOCAL_MODE.md)
 - Download e cópia para área de transferência

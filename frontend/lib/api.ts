@@ -106,13 +106,132 @@ export function setApiMode(mode: 'auto' | 'local' | 'online'): void {
   }
 }
 
-export async function getHealth() {
+/**
+ * Obtém o modo de API atual
+ */
+export function getApiMode(): 'auto' | 'local' | 'online' {
+  if (typeof window === 'undefined') return 'auto';
+  return (localStorage.getItem('agroplan_api_mode') as any) || 'auto';
+}
+
+/**
+ * Testa conexão com as APIs
+ */
+export async function testApiConnection(): Promise<{
+  local: { online: boolean; latency?: number; error?: string };
+  render: { online: boolean; latency?: number; error?: string };
+  active: 'local' | 'render' | 'none';
+}> {
+  const results = {
+    local: { online: false, latency: undefined as number | undefined, error: undefined as string | undefined },
+    render: { online: false, latency: undefined as number | undefined, error: undefined as string | undefined },
+    active: 'none' as 'local' | 'render' | 'none'
+  };
+
+  // Testar API Local
+  try {
+    const startLocal = Date.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    
+    const localResponse = await fetch(`${LOCAL_API_URL}/health`, {
+      signal: controller.signal,
+      cache: 'no-store'
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (localResponse.ok) {
+      results.local.online = true;
+      results.local.latency = Date.now() - startLocal;
+    }
+  } catch (error: any) {
+    results.local.error = error.name === 'AbortError' ? 'Timeout' : 'Conexão falhou';
+  }
+
+  // Testar API Render
+  try {
+    const startRender = Date.now();
+    const renderResponse = await fetch(`${ONLINE_API_URL}/health`, {
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-store'
+    });
+    
+    if (renderResponse.ok) {
+      results.render.online = true;
+      results.render.latency = Date.now() - startRender;
+    }
+  } catch (error: any) {
+    results.render.error = error.name === 'AbortError' ? 'Timeout' : 'Conexão falhou';
+  }
+
+  // Determinar qual está ativa
+  if (results.local.online) {
+    results.active = 'local';
+  } else if (results.render.online) {
+    results.active = 'render';
+  }
+
+  return results;
+}
+
+/**
+ * Fetch inteligente com failover automático
+ */
+async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
+  const mode = getApiMode();
+  
   try {
     const apiUrl = await getApiUrl();
-    const response = await fetch(`${apiUrl}/health`, {
+    const response = await fetch(`${apiUrl}${path}`, options);
+    
+    if (response.ok) {
+      return response;
+    }
+    
+    // Se não for modo auto, não tentar fallback
+    if (mode !== 'auto') {
+      throw new Error(`API ${mode} falhou: ${response.status}`);
+    }
+    
+    // Em modo auto, tentar fallback
+    throw new Error('Tentando fallback...');
+    
+  } catch (error) {
+    // Se não for modo auto, relançar erro
+    if (mode !== 'auto') {
+      throw error;
+    }
+    
+    // Modo auto: tentar fallback
+    console.warn('API primária falhou, tentando fallback...', error);
+    
+    clearApiCache();
+    
+    try {
+      const fallbackUrl = await getApiUrl();
+      const fallbackResponse = await fetch(`${fallbackUrl}${path}`, options);
+      
+      if (fallbackResponse.ok) {
+        // Mostrar notificação discreta de fallback
+        if (typeof window !== 'undefined') {
+          console.info('Alternando para API de backup');
+        }
+        return fallbackResponse;
+      }
+      
+      throw new Error(`Fallback também falhou: ${fallbackResponse.status}`);
+    } catch (fallbackError) {
+      throw new Error('Nenhuma API disponível');
+    }
+  }
+}
+
+export async function getHealth() {
+  try {
+    const response = await apiFetch('/health', {
       cache: 'no-store',
     });
-    if (!response.ok) throw new Error(`Falha ao verificar saúde da API: ${response.status}`);
     
     const data = await response.json();
     const apiInfo = await getApiInfo();
@@ -129,14 +248,12 @@ export async function getHealth() {
 
 export async function getDashboard() {
   try {
-    const apiUrl = await getApiUrl();
-    const response = await fetch(`${apiUrl}/dashboard`, {
+    const response = await apiFetch('/dashboard', {
       cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
       },
     });
-    if (!response.ok) throw new Error(`Falha ao carregar dashboard: ${response.status}`);
     return response.json();
   } catch (error) {
     console.error('Erro em getDashboard:', error);
@@ -145,19 +262,15 @@ export async function getDashboard() {
 }
 
 export async function getTalhoes() {
-  const apiUrl = await getApiUrl();
-  const response = await fetch(`${apiUrl}/talhoes`);
-  if (!response.ok) throw new Error('Falha ao carregar talhões');
+  const response = await apiFetch('/talhoes');
   return response.json();
 }
 
 export async function getRecomendacoes() {
   try {
-    const apiUrl = await getApiUrl();
-    const response = await fetch(`${apiUrl}/recomendacoes`, {
+    const response = await apiFetch('/recomendacoes', {
       cache: 'no-store',
     });
-    if (!response.ok) throw new Error(`Falha ao carregar recomendações: ${response.status}`);
     return response.json();
   } catch (error) {
     console.error('Erro em getRecomendacoes:', error);
@@ -166,19 +279,15 @@ export async function getRecomendacoes() {
 }
 
 export async function getCulturas() {
-  const apiUrl = await getApiUrl();
-  const response = await fetch(`${apiUrl}/culturas`);
-  if (!response.ok) throw new Error('Falha ao carregar culturas');
+  const response = await apiFetch('/culturas');
   return response.json();
 }
 
 export async function getCenarios() {
   try {
-    const apiUrl = await getApiUrl();
-    const response = await fetch(`${apiUrl}/cenarios`, {
+    const response = await apiFetch('/cenarios', {
       cache: 'no-store',
     });
-    if (!response.ok) throw new Error(`Falha ao carregar cenários: ${response.status}`);
     return response.json();
   } catch (error) {
     console.error('Erro em getCenarios:', error);
@@ -188,13 +297,13 @@ export async function getCenarios() {
 
 export async function otimizar(objetivo: string = 'equilibrado', seed: number = 42) {
   try {
-    const apiUrl = await getApiUrl();
-    const response = await fetch(`${apiUrl}/otimizar`, {
+    const response = await apiFetch('/otimizar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ objetivo, seed }),
       cache: 'no-store',
     });
+    
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: 'Erro desconhecido' }));
       throw new Error(error.detail || `Falha ao otimizar: ${response.status}`);
@@ -207,8 +316,7 @@ export async function otimizar(objetivo: string = 'equilibrado', seed: number = 
 }
 
 export async function validar(objetivo: string = 'equilibrado', seed: number = 42) {
-  const apiUrl = await getApiUrl();
-  const response = await fetch(`${apiUrl}/validar`, {
+  const response = await apiFetch('/validar', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ objetivo, seed })
@@ -240,8 +348,7 @@ export async function validar(objetivo: string = 'equilibrado', seed: number = 4
 }
 
 export async function rodadas(objetivo: string = 'equilibrado', numRodadas: number = 5) {
-  const apiUrl = await getApiUrl();
-  const response = await fetch(`${apiUrl}/rodadas`, {
+  const response = await apiFetch('/rodadas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ objetivo, rodadas: numRodadas })
@@ -251,8 +358,7 @@ export async function rodadas(objetivo: string = 'equilibrado', numRodadas: numb
 }
 
 export async function gerarRelatorio(objetivo: string = 'equilibrado', formato: string = 'md') {
-  const apiUrl = await getApiUrl();
-  const response = await fetch(`${apiUrl}/relatorio`, {
+  const response = await apiFetch('/relatorio', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ objetivo, formato })

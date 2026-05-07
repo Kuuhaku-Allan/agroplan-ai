@@ -76,7 +76,11 @@ export async function serveOnCommand(): Promise<void> {
   ], {
     cwd: paths.backend,
     detached: true,
-    stdio: ["ignore", "pipe", "pipe"]
+    stdio: ["ignore", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      CORS_ORIGINS: "https://agroplan-ai.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
+    }
   });
   
   // Salvar PID
