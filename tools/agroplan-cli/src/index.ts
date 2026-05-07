@@ -14,6 +14,8 @@ import { setupCommand } from "./commands/setup";
 
 const COMMANDS = {
   setup: "Configura a API local no seu computador",
+  "setup --force": "Reinstala a API local (remove instalação anterior)",
+  "setup --python=<path>": "Usa Python específico para instalação",
   doctor: "Verifica se o sistema está configurado corretamente",
   "serve on": "Inicia a API local em http://localhost:8000",
   "serve off": "Para a API local",
@@ -23,12 +25,12 @@ const COMMANDS = {
 };
 
 function showHelp(): void {
-  console.log("🌱 AgroPlan AI - CLI Local v1.0.0");
+  console.log("🌱 AgroPlan AI - CLI Local v1.0.5");
   console.log("   Launcher para modo local acelerado\n");
   
   console.log("📋 Comandos disponíveis:");
   Object.entries(COMMANDS).forEach(([cmd, desc]) => {
-    console.log(`   bun run agroplan ${cmd.padEnd(12)} # ${desc}`);
+    console.log(`   agroplan ${cmd.padEnd(20)} # ${desc}`);
   });
   
   console.log("\n🎯 Fluxo recomendado:");
@@ -36,6 +38,9 @@ function showHelp(): void {
   console.log("   2. agroplan serve on        # Iniciar API local");
   console.log("   3. agroplan open            # Abrir no navegador");
   console.log("   4. agroplan serve off       # Parar quando terminar");
+  
+  console.log("\n🐍 Para Python 3.13 (Windows):");
+  console.log("   agroplan setup --python=\"C:\\Python311\\python.exe\"");
   
   console.log("\n💡 Modo híbrido:");
   console.log("   • API Local: Rápida, não dorme, ideal para uso diário");
@@ -51,12 +56,27 @@ async function main(): Promise<void> {
     return;
   }
   
-  const command = args.join(" ");
+  // Processar argumentos
+  let command = "";
+  let pythonPath: string | undefined;
+  let force = false;
+  
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    
+    if (arg.startsWith("--python=")) {
+      pythonPath = arg.split("=")[1];
+    } else if (arg === "--force") {
+      force = true;
+    } else {
+      command += (command ? " " : "") + arg;
+    }
+  }
   
   try {
     switch (command) {
       case "setup":
-        await setupCommand();
+        await setupCommand(force, pythonPath);
         break;
         
       case "doctor":
@@ -91,7 +111,7 @@ async function main(): Promise<void> {
         
       default:
         console.log(`❌ Comando desconhecido: ${command}`);
-        console.log("\n💡 Use 'bun run agroplan help' para ver comandos disponíveis");
+        console.log("\n💡 Use 'agroplan help' para ver comandos disponíveis");
         process.exit(1);
     }
   } catch (error) {

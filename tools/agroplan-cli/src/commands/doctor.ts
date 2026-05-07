@@ -3,6 +3,7 @@ import { existsSync } from "fs";
 import { checkPython, checkPip } from "../utils/python";
 import { getProjectPaths } from "../utils/paths";
 import { checkPort } from "../utils/process";
+import { isSetupComplete, readSetupState } from "../utils/setup-state";
 
 /**
  * Comando doctor - verifica se tudo está configurado corretamente
@@ -18,6 +19,11 @@ export async function doctorCommand(): Promise<void> {
   const python = checkPython();
   if (python.available) {
     console.log(`   ✅ ${python.version} (${python.path})`);
+    
+    // Aviso sobre Python 3.13
+    if (python.version && python.version.includes("3.13")) {
+      console.log("   ⚠️  Python 3.13 detectado. Se a instalação for lenta, use Python 3.11 ou 3.12.");
+    }
   } else {
     console.log("   ❌ Python não encontrado");
     console.log("      Instale Python 3.8+ em https://python.org");
@@ -34,7 +40,23 @@ export async function doctorCommand(): Promise<void> {
     allGood = false;
   }
   
-  // 3. Verificar estrutura do projeto
+  // 3. Verificar setup local
+  console.log("\n🛠️ Setup Local:");
+  const setupComplete = isSetupComplete();
+  const setupState = readSetupState();
+  
+  if (setupComplete && setupState) {
+    console.log("   ✅ Setup concluído");
+    console.log(`   📅 Instalado em: ${new Date(setupState.installedAt).toLocaleString()}`);
+    console.log(`   📦 Versão: ${setupState.version}`);
+    console.log(`   🐍 Python: ${setupState.python}`);
+  } else {
+    console.log("   ❌ Setup não concluído");
+    console.log("      Execute: agroplan setup");
+    allGood = false;
+  }
+  
+  // 4. Verificar estrutura do projeto
   console.log("\n📁 Estrutura do Projeto:");
   try {
     const paths = getProjectPaths();
@@ -62,8 +84,22 @@ export async function doctorCommand(): Promise<void> {
     
     if (existsSync(paths.venv)) {
       console.log("   ✅ Ambiente virtual (.venv) encontrado");
+      
+      // Verificar uvicorn
+      const isWindows = process.platform === "win32";
+      const uvicornPath = isWindows 
+        ? `${paths.venv}/Scripts/uvicorn.exe`
+        : `${paths.venv}/bin/uvicorn`;
+      
+      if (existsSync(uvicornPath)) {
+        console.log("   ✅ Uvicorn instalado");
+      } else {
+        console.log("   ❌ Uvicorn não encontrado");
+        allGood = false;
+      }
     } else {
-      console.log("   ⚠️  Ambiente virtual não encontrado (será criado automaticamente)");
+      console.log("   ❌ Ambiente virtual não encontrado");
+      allGood = false;
     }
     
   } catch (error) {
@@ -72,16 +108,38 @@ export async function doctorCommand(): Promise<void> {
     allGood = false;
   }
   
-  // 4. Verificar porta 8000
+  // 5. Verificar porta 8000
   console.log("\n🌐 Conectividade:");
   const localRunning = await checkPort(8000);
   if (localRunning) {
-    console.log("   ✅ API local rodando em http://localhost:8000");
+    // Tentar verificar se é nossa API
+    try {
+      const response = await fetch("http://localhost:8000/health", {
+        signal: AbortSignal.timeout(2000)
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status && (data.culturas !== undefined || data.talhoes !== undefined)) {
+          console.log("   ✅ API local rodando em http://localhost:8000");
+          console.log(`      Status: ${data.status}`);
+          if (data.culturas !== undefined) console.log(`      Culturas: ${data.culturas}`);
+          if (data.talhoes !== undefined) console.log(`      Talhões: ${data.talhoes}`);
+          if (data.cache_items !== undefined) console.log(`      Cache items: ${data.cache_items}`);
+        } else {
+          console.log("   ⚠️  Porta 8000 ocupada por outro serviço");
+        }
+      } else {
+        console.log("   ⚠️  Porta 8000 ocupada (não é AgroPlan)");
+      }
+    } catch {
+      console.log("   ⚠️  Porta 8000 ocupada (serviço não identificado)");
+    }
   } else {
     console.log("   ⚠️  API local não está rodando");
   }
   
-  // 5. Verificar API do Render
+  // 6. Verificar API do Render
   try {
     const renderResponse = await fetch("https://agroplan-ai-api.onrender.com/health", {
       signal: AbortSignal.timeout(5000)
@@ -91,6 +149,7 @@ export async function doctorCommand(): Promise<void> {
       const data = await renderResponse.json();
       console.log("   ✅ API Render online");
       console.log(`      Culturas: ${data.culturas}, Talhões: ${data.talhoes}`);
+      if (data.cache_items !== undefined) console.log(`      Cache items: ${data.cache_items}`);
     } else {
       console.log("   ⚠️  API Render com problemas");
     }
@@ -103,11 +162,14 @@ export async function doctorCommand(): Promise<void> {
   if (allGood) {
     console.log("✅ Sistema pronto para uso!");
     console.log("\nPróximos passos:");
-    console.log("   bun run agroplan serve on    # Iniciar API local");
-    console.log("   bun run agroplan open        # Abrir no navegador");
+    console.log("   agroplan serve on    # Iniciar API local");
+    console.log("   agroplan open        # Abrir no navegador");
   } else {
     console.log("❌ Alguns problemas foram encontrados");
-    console.log("\nCorreja os problemas acima e execute novamente:");
-    console.log("   bun run agroplan doctor");
+    console.log("\nCorreja os problemas acima:");
+    if (!setupComplete) {
+      console.log("   agroplan setup       # Configurar API local");
+    }
+    console.log("   agroplan doctor      # Verificar novamente");
   }
 }

@@ -42,42 +42,53 @@ export async function serveOnCommand(): Promise<void> {
   
   // Verificar se ambiente virtual existe
   if (!existsSync(paths.venv)) {
-    console.log("🐍 Criando ambiente virtual...");
-    if (!createVenv()) {
-      console.log("❌ Falha ao criar ambiente virtual");
-      return;
-    }
-  }
-  
-  // Verificar se dependências estão instaladas
-  const venvPython = getVenvPython();
-  if (!venvPython) {
     console.log("❌ Ambiente virtual não encontrado");
+    console.log("   Execute: agroplan setup");
     return;
   }
   
-  // Instalar/atualizar dependências
-  console.log("📦 Verificando dependências...");
-  if (!installRequirements()) {
-    console.log("❌ Falha ao instalar dependências");
+  // Verificar se uvicorn existe (não instalar dependências)
+  const isWindows = process.platform === "win32";
+  const uvicornPath = isWindows 
+    ? `${paths.venv}/Scripts/uvicorn.exe`
+    : `${paths.venv}/bin/uvicorn`;
+  
+  if (!existsSync(uvicornPath)) {
+    console.log("❌ Dependências não instaladas");
+    console.log("   Execute: agroplan setup");
     return;
   }
   
-  // Verificar se porta está livre
+  // Verificar se porta está livre ou se é nossa própria API
   const portInUse = await checkPort(8000);
   if (portInUse) {
-    console.log("❌ Porta 8000 já está em uso");
-    console.log("   Verifique se outro processo está usando a porta");
+    // Tentar verificar se é nossa API
+    try {
+      const response = await fetch("http://localhost:8000/health", {
+        signal: AbortSignal.timeout(2000)
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status && (data.culturas !== undefined || data.talhoes !== undefined)) {
+          console.log("✅ API local já está rodando em http://localhost:8000");
+          console.log(`   Status: ${data.status}`);
+          if (data.culturas !== undefined) console.log(`   Culturas: ${data.culturas}`);
+          if (data.talhoes !== undefined) console.log(`   Talhões: ${data.talhoes}`);
+          return;
+        }
+      }
+    } catch {
+      // Não é nossa API ou não responde
+    }
+    
+    console.log("❌ Porta 8000 está ocupada por outro processo");
+    console.log("   Feche o processo ou use outro modo de API");
     return;
   }
   
   // Iniciar servidor
   console.log("🌐 Iniciando servidor uvicorn...");
-  
-  const isWindows = process.platform === "win32";
-  const uvicornPath = isWindows 
-    ? `${paths.venv}/Scripts/uvicorn.exe`
-    : `${paths.venv}/bin/uvicorn`;
   
   const child = spawn(uvicornPath, [
     "api:app",
@@ -124,7 +135,7 @@ export async function serveOnCommand(): Promise<void> {
       console.log(`   PID: ${child.pid}`);
       console.log("   URL: http://localhost:8000");
       console.log("   Health: http://localhost:8000/health");
-      console.log("\n💡 Use 'bun run agroplan serve off' para parar");
+      console.log("\n💡 Use 'agroplan serve off' para parar");
       return;
     }
     
@@ -132,7 +143,7 @@ export async function serveOnCommand(): Promise<void> {
   }
   
   console.log("❌ Falha ao iniciar API local");
-  console.log("   Verifique os logs: bun run agroplan serve logs");
+  console.log("   Verifique os logs: agroplan serve logs");
 }
 
 export async function serveOffCommand(): Promise<void> {
