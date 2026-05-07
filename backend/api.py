@@ -2,7 +2,7 @@
 FastAPI Backend para AgroPlan AI
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -508,15 +508,29 @@ def relatorio(request: RelatorioRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/cache/limpar")
-def limpar_cache():
-    """Limpa o cache de resultados pesados"""
+def limpar_cache(request: Request):
+    """Limpa o cache de resultados pesados (protegido por token)"""
+    # Verifica token de administração
+    cache_admin_token = os.getenv("CACHE_ADMIN_TOKEN")
+    
+    if cache_admin_token:
+        # Se token está configurado, verifica header
+        provided_token = request.headers.get("X-Cache-Token")
+        if not provided_token or provided_token != cache_admin_token:
+            raise HTTPException(
+                status_code=403, 
+                detail="Token de administração inválido ou ausente. Use header X-Cache-Token."
+            )
+    
+    # Limpa cache
     global _resultados_cache
     items_removidos = len(_resultados_cache)
     _resultados_cache.clear()
     
     return {
         "status": "ok",
-        "message": f"Cache limpo. {items_removidos} itens removidos."
+        "message": f"Cache limpo. {items_removidos} itens removidos.",
+        "protected": bool(cache_admin_token)
     }
 
 if __name__ == "__main__":
