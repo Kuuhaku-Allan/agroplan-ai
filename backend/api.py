@@ -152,12 +152,25 @@ def health():
 
 @app.get("/dados/clima")
 def get_clima(
-    lat: float = Query(..., description="Latitude"),
-    lon: float = Query(..., description="Longitude"), 
+    lat: Optional[float] = Query(None, description="Latitude"),
+    lon: Optional[float] = Query(None, description="Longitude"), 
     days: int = Query(30, description="Número de dias para análise")
 ):
     """Obtém dados climáticos reais ou simulados"""
     try:
+        # Se lat ou lon não foram fornecidos, retornar mensagem amigável
+        if lat is None or lon is None:
+            return {
+                "message": "Informe latitude e longitude para consultar dados climáticos reais.",
+                "exemplo_sao_paulo": "/dados/clima?lat=-23.55&lon=-46.63&days=30",
+                "exemplo_brasilia": "/dados/clima?lat=-15.78&lon=-47.93&days=30",
+                "parametros": {
+                    "lat": "Latitude da localização",
+                    "lon": "Longitude da localização", 
+                    "days": "Número de dias analisados, padrão 30"
+                }
+            }
+        
         if days < 1 or days > 365:
             raise HTTPException(status_code=400, detail="Days deve estar entre 1 e 365")
         
