@@ -2,7 +2,7 @@
 FastAPI Backend para AgroPlan AI
 """
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -17,10 +17,17 @@ from core.planner import gerar_cenarios, gerar_plano_genetico
 from core.bruteforce_validator import comparar_ag_com_forca_bruta, executar_multiplas_rodadas
 from core.report_generator import gerar_relatorio_completo
 
+# Importar provedores de dados reais
+from providers.weather_provider import get_weather_summary
+from providers.cache import clear_provider_cache, get_cache_stats
+
 # Configurações de ambiente
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+DATA_MODE = os.getenv("DATA_MODE", "hybrid")  # simulated, real, hybrid
+WEATHER_PROVIDER = os.getenv("WEATHER_PROVIDER", "open-meteo")
+PROVIDER_CACHE_TTL = int(os.getenv("PROVIDER_CACHE_TTL", "3600"))
 
 # Cache em memória para resultados pesados
 _resultados_cache = {}
@@ -126,13 +133,37 @@ def health():
     """Verifica saúde da API"""
     try:
         culturas, talhoes, regras = get_dados()
+        provider_cache_stats = get_cache_stats()
+        
         return {
             "status": "healthy",
             "culturas": len(culturas),
             "talhoes": len(talhoes),
             "regras": len(regras),
-            "cache_items": len(_resultados_cache)
+            "cache_items": len(_resultados_cache),
+            "data_mode": DATA_MODE,
+            "providers": {
+                "weather": "available" if WEATHER_PROVIDER else "disabled"
+            },
+            "provider_cache": provider_cache_stats
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/dados/clima")
+def get_clima(
+    lat: float = Query(..., description="Latitude"),
+    lon: float = Query(..., description="Longitude"), 
+    days: int = Query(30, description="Número de dias para análise")
+):
+    """Obtém dados climáticos reais ou simulados"""
+    try:
+        if days < 1 or days > 365:
+            raise HTTPException(status_code=400, detail="Days deve estar entre 1 e 365")
+        
+        weather_data = get_weather_summary(lat, lon, days)
+        return weather_data.to_dict()
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

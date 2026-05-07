@@ -1,0 +1,1 @@
+# Provedores de dados reais para AgroPlan AI
