@@ -48,6 +48,44 @@ Geração de relatórios profissionais:
 - Formatos: Markdown e TXT
 - Configuração por objetivo
 - Preview em tempo real
+
+## 🚀 Modo Local Opcional
+
+O AgroPlan AI oferece um **modo local acelerado** para desenvolvimento e uso diário:
+
+### 🌐 Arquitetura Híbrida
+- **Online**: Frontend (Vercel) + Backend (Render) - funciona em qualquer PC
+- **Local**: Frontend (Vercel) + Backend (localhost:8000) - mais rápido, não dorme
+
+### ⚡ Vantagens do Modo Local
+- **Performance**: Resposta instantânea (~0.1s vs ~0.3s)
+- **Disponibilidade**: Não depende do Render acordar
+- **Desenvolvimento**: Ideal para uso diário e modificações
+
+### 🛠️ Setup Rápido
+```bash
+# 1. Instalar Bun
+curl -fsSL https://bun.sh/install | bash  # macOS/Linux
+# ou: irm bun.sh/install.ps1 | iex        # Windows
+
+# 2. Verificar sistema
+cd tools/agroplan-cli
+bun run agroplan doctor
+
+# 3. Iniciar API local
+bun run agroplan serve on
+
+# 4. Abrir no navegador
+bun run agroplan open
+```
+
+### 🎯 Detecção Automática
+O frontend detecta automaticamente qual API usar:
+- **🖥️ API Local**: Badge verde quando localhost:8000 disponível
+- **☁️ API Render**: Badge azul quando usa fallback online
+- **Transparente**: Usuário não precisa configurar nada
+
+📖 **Documentação completa**: [docs/LOCAL_MODE.md](docs/LOCAL_MODE.md)
 - Download e cópia para área de transferência
 
 ---

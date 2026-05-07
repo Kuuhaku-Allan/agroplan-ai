@@ -1,0 +1,22 @@
+{
+  "name": "agroplan-cli",
+  "version": "1.0.0",
+  "description": "CLI local para AgroPlan AI - launcher e orquestrador do backend FastAPI",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "agroplan": "bun run src/index.ts"
+  },
+  "bin": {
+    "agroplan": "./src/index.ts"
+  },
+  "dependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}

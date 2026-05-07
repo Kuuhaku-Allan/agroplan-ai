@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Monitor, Cloud } from "lucide-react";
 import { getHealth } from "@/lib/api";
 
 interface TopbarProps {
@@ -12,6 +12,7 @@ interface TopbarProps {
 
 export function Topbar({ title, subtitle }: TopbarProps) {
   const [apiStatus, setApiStatus] = useState<"connected" | "disconnected" | "loading">("loading");
+  const [apiOrigin, setApiOrigin] = useState<"local" | "render" | undefined>(undefined);
   const [culturas, setCulturas] = useState<number | undefined>(undefined);
   const [talhoes, setTalhoes] = useState<number | undefined>(undefined);
 
@@ -19,11 +20,13 @@ export function Topbar({ title, subtitle }: TopbarProps) {
     try {
       const health = await getHealth();
       setApiStatus("connected");
+      setApiOrigin(health.api_origin);
       setCulturas(health.culturas);
       setTalhoes(health.talhoes);
     } catch (error) {
       console.error("Erro ao verificar saúde da API:", error);
       setApiStatus("disconnected");
+      setApiOrigin(undefined);
     }
   };
 
@@ -46,10 +49,17 @@ export function Topbar({ title, subtitle }: TopbarProps) {
 
         {/* Status Badges */}
         <div className="flex items-center gap-2">
-          {apiStatus === "connected" && (
+          {/* Badge de origem da API */}
+          {apiStatus === "connected" && apiOrigin === "local" && (
             <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500">
-              <CheckCircle2 className="w-3 h-3 mr-1" />
-              API Conectada
+              <Monitor className="w-3 h-3 mr-1" />
+              API Local
+            </Badge>
+          )}
+          {apiStatus === "connected" && apiOrigin === "render" && (
+            <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-500">
+              <Cloud className="w-3 h-3 mr-1" />
+              API Render
             </Badge>
           )}
           {apiStatus === "disconnected" && (
