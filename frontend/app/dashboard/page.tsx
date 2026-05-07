@@ -54,12 +54,13 @@ export default function DashboardPage() {
     setError(null);
 
     try {
-      // Carrega dados do dashboard
-      const dashboardData = await getDashboard();
+      // Carrega dashboard e cenários em paralelo
+      const [dashboardData, cenariosData] = await Promise.all([
+        getDashboard(),
+        getCenarios()
+      ]);
+      
       setDashboard(dashboardData);
-
-      // Carrega cenários
-      const cenariosData = await getCenarios();
       setCenarios(cenariosData.cenarios);
     } catch (err) {
       console.error("Erro ao carregar dados:", err);

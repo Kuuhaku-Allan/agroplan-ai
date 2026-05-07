@@ -9,7 +9,7 @@ import { FieldDistributionChart } from "@/components/talhoes/field-distribution-
 import { FieldDetailPanel } from "@/components/talhoes/field-detail-panel";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingCard } from "@/components/shared/loading-card";
-import { getTalhoes, getDashboard } from "@/lib/api";
+import { getTalhoes, getRecomendacoes } from "@/lib/api";
 
 interface Talhao {
   id: number;
@@ -41,15 +41,15 @@ export default function TalhoesPage() {
     setError(null);
 
     try {
-      // Busca talhões
-      const talhoesData = await getTalhoes();
-      
-      // Busca plano recomendado do dashboard
-      const dashboardData = await getDashboard();
+      // Busca talhões e recomendações em paralelo
+      const [talhoesData, recomendacoesData] = await Promise.all([
+        getTalhoes(),
+        getRecomendacoes()
+      ]);
       
       // Combina dados dos talhões com recomendações
       const talhoesComRecomendacao = talhoesData.talhoes.map((talhao: any) => {
-        const recomendacao = dashboardData.plano.find((p: any) => p.talhao === talhao.id);
+        const recomendacao = recomendacoesData.recomendacoes.find((r: any) => r.talhao === talhao.id);
         
         return {
           id: talhao.id,

@@ -22,6 +22,25 @@ HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
 
+# Cache em memória para resultados pesados
+_resultados_cache = {}
+
+def get_cache_key(nome, **params):
+    """Gera chave única para cache baseada no nome e parâmetros"""
+    return f"{nome}:" + ":".join(f"{k}={v}" for k, v in sorted(params.items()))
+
+def get_or_compute_cache(key, compute_fn):
+    """Retorna valor do cache ou computa e armazena se não existir"""
+    if key not in _resultados_cache:
+        _resultados_cache[key] = compute_fn()
+    return _resultados_cache[key]
+
+def get_ag_cacheado(objetivo="equilibrado", seed=42, geracoes=100, populacao=50):
+    """Retorna resultado do AG cacheado"""
+    culturas, talhoes, regras = get_dados()
+    key = get_cache_key("ag", objetivo=objetivo, seed=seed, geracoes=geracoes, populacao=populacao)
+    return get_or_compute_cache(key, lambda: gerar_plano_genetico(culturas, talhoes, regras, objetivo=objetivo, seed=seed, geracoes=geracoes, populacao=populacao))
+
 # Inicializa FastAPI
 app = FastAPI(
     title="AgroPlan AI API",
@@ -111,7 +130,8 @@ def health():
             "status": "healthy",
             "culturas": len(culturas),
             "talhoes": len(talhoes),
-            "regras": len(regras)
+            "regras": len(regras),
+            "cache_items": len(_resultados_cache)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -120,16 +140,47 @@ def health():
 def get_dashboard():
     """Retorna resumo do dashboard"""
     try:
-        culturas, talhoes, regras = get_dados()
-        
-        # Gera plano recomendado
-        resultado_ag = gerar_plano_genetico(culturas, talhoes, regras, objetivo='equilibrado', seed=42)
-        
-        # Tenta validar
-        validacao = comparar_ag_com_forca_bruta(culturas, talhoes, regras, objetivo='equilibrado', seed=42)
-        
-        # Se força bruta é inviável, retorna dados especiais
-        if validacao.get('erro'):
+        def montar_dashboard():
+            culturas, talhoes, regras = get_dados()
+            
+            # Usa AG cacheado
+            resultado_ag = get_ag_cacheado(objetivo='equilibrado', seed=42)
+            
+            # Tenta validar
+            validacao = comparar_ag_com_forca_bruta(culturas, talhoes, regras, objetivo='equilibrado', seed=42)
+            
+            # Se força bruta é inviável, retorna dados especiais
+            if validacao.get('erro'):
+                return {
+                    "lucro_total": float(resultado_ag['lucro_total']),
+                    "risco_medio": float(resultado_ag['risco_medio']),
+                    "fitness": float(resultado_ag['fitness']),
+                    "diversidade": int(resultado_ag['diversidade']),
+                    "objetivo": str(resultado_ag['objetivo']),
+                    "culturas_escolhidas": [str(p['cultura']) for p in resultado_ag['plano']],
+                    "validacao": {
+                        "otimo_global": False,
+                        "total_combinacoes": int(validacao.get('total_combinacoes', 0))
+                    },
+                    "plano": [
+                        {
+                            "talhao": int(p['talhao']),
+                            "area": float(p['area']),
+                            "solo": str(p['solo']),
+                            "clima": str(p['clima']),
+                            "relevo": str(p['relevo']),
+                            "agua": str(p['agua']),
+                            "cultura": str(p['cultura']),
+                            "lucro_estimado": float(p['lucro_estimado']),
+                            "risco": float(p['risco']),
+                            "nota": float(p['nota']),
+                            "tempo": int(p['tempo'])
+                        }
+                        for p in resultado_ag['plano']
+                    ]
+                }
+            
+            # Converte tipos numpy para Python nativos
             return {
                 "lucro_total": float(resultado_ag['lucro_total']),
                 "risco_medio": float(resultado_ag['risco_medio']),
@@ -138,8 +189,8 @@ def get_dashboard():
                 "objetivo": str(resultado_ag['objetivo']),
                 "culturas_escolhidas": [str(p['cultura']) for p in resultado_ag['plano']],
                 "validacao": {
-                    "otimo_global": False,
-                    "total_combinacoes": int(validacao.get('total_combinacoes', 0))
+                    "otimo_global": bool(validacao.get('ag_encontrou_otimo_global', False)),
+                    "total_combinacoes": int(validacao.get('forca_bruta', {}).get('total_combinacoes', 0))
                 },
                 "plano": [
                     {
@@ -159,35 +210,14 @@ def get_dashboard():
                 ]
             }
         
-        # Converte tipos numpy para Python nativos
-        return {
-            "lucro_total": float(resultado_ag['lucro_total']),
-            "risco_medio": float(resultado_ag['risco_medio']),
-            "fitness": float(resultado_ag['fitness']),
-            "diversidade": int(resultado_ag['diversidade']),
-            "objetivo": str(resultado_ag['objetivo']),
-            "culturas_escolhidas": [str(p['cultura']) for p in resultado_ag['plano']],
-            "validacao": {
-                "otimo_global": bool(validacao.get('ag_encontrou_otimo_global', False)),
-                "total_combinacoes": int(validacao.get('forca_bruta', {}).get('total_combinacoes', 0))
-            },
-            "plano": [
-                {
-                    "talhao": int(p['talhao']),
-                    "area": float(p['area']),
-                    "solo": str(p['solo']),
-                    "clima": str(p['clima']),
-                    "relevo": str(p['relevo']),
-                    "agua": str(p['agua']),
-                    "cultura": str(p['cultura']),
-                    "lucro_estimado": float(p['lucro_estimado']),
-                    "risco": float(p['risco']),
-                    "nota": float(p['nota']),
-                    "tempo": int(p['tempo'])
-                }
-                for p in resultado_ag['plano']
-            ]
-        }
+        # Usa cache para dashboard
+        key = get_cache_key("dashboard", objetivo="equilibrado", seed=42)
+        resultado = get_or_compute_cache(key, montar_dashboard)
+        
+        # Converte tipos Python (por segurança)
+        return converter_tipos_python(resultado)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -198,6 +228,37 @@ def get_talhoes():
         culturas, talhoes, regras = get_dados()
         return {
             "talhoes": talhoes.to_dict('records')
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/recomendacoes")
+def get_recomendacoes():
+    """Retorna recomendações de culturas por talhão"""
+    try:
+        culturas, talhoes, regras = get_dados()
+        
+        # Usa AG cacheado para obter recomendações
+        resultado_ag = get_ag_cacheado(objetivo='equilibrado', seed=42)
+        
+        # Formata recomendações
+        recomendacoes = []
+        for p in resultado_ag['plano']:
+            recomendacoes.append({
+                "talhao": int(p['talhao']),
+                "cultura": str(p['cultura']),
+                "lucro_estimado": float(p['lucro_estimado']),
+                "risco": float(p['risco']),
+                "nota": float(p['nota']),
+                "area": float(p['area']),
+                "solo": str(p['solo']),
+                "clima": str(p['clima']),
+                "relevo": str(p['relevo']),
+                "agua": str(p['agua'])
+            })
+        
+        return {
+            "recomendacoes": recomendacoes
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -231,73 +292,80 @@ def get_culturas():
 def get_cenarios():
     """Retorna comparação de cenários"""
     try:
-        culturas, talhoes, regras = get_dados()
-        
-        # Gera todos os cenários
-        cenarios = gerar_cenarios(culturas, talhoes, regras)
-        
-        # Gera também o AG
-        resultado_ag = gerar_plano_genetico(culturas, talhoes, regras, objetivo='equilibrado', seed=42)
-        
-        # Cria um mapa de talhões para facilitar o acesso
-        talhoes_dict = {int(row['id']): row for _, row in talhoes.iterrows()}
-        
-        # Formata resposta
-        cenarios_formatados = {}
-        
-        for key, cenario in cenarios.items():
-            cenarios_formatados[key] = {
-                'nome': str(cenario['nome']),
-                'descricao': str(cenario['descricao']),
-                'lucro_total': float(cenario['lucro_total']),
-                'risco_medio': float(cenario['risco_medio']),
-                'area_total': float(cenario['area_total']),
+        def montar_cenarios():
+            culturas, talhoes, regras = get_dados()
+            
+            # Gera todos os cenários
+            cenarios = gerar_cenarios(culturas, talhoes, regras)
+            
+            # Usa AG cacheado
+            resultado_ag = get_ag_cacheado(objetivo='equilibrado', seed=42)
+            
+            # Cria um mapa de talhões para facilitar o acesso
+            talhoes_dict = {int(row['id']): row for _, row in talhoes.iterrows()}
+            
+            # Formata resposta
+            cenarios_formatados = {}
+            
+            for key, cenario in cenarios.items():
+                cenarios_formatados[key] = {
+                    'nome': str(cenario['nome']),
+                    'descricao': str(cenario['descricao']),
+                    'lucro_total': float(cenario['lucro_total']),
+                    'risco_medio': float(cenario['risco_medio']),
+                    'area_total': float(cenario['area_total']),
+                    'plano': [
+                        {
+                            "talhao": int(p['talhao']),
+                            "area": float(p['area']),
+                            "solo": str(talhoes_dict[int(p['talhao'])]['solo']),
+                            "clima": str(talhoes_dict[int(p['talhao'])]['clima']),
+                            "relevo": str(talhoes_dict[int(p['talhao'])]['relevo']),
+                            "agua": str(talhoes_dict[int(p['talhao'])]['agua']),
+                            "cultura": str(p['cultura']),
+                            "lucro_estimado": float(p['lucro_estimado']),
+                            "risco": float(p['risco']),
+                            "nota": float(p['nota']),
+                            "tempo": 0  # Não disponível nos cenários simples
+                        }
+                        for p in cenario['plano']
+                    ]
+                }
+            
+            # Adiciona AG
+            cenarios_formatados['genetico'] = {
+                'nome': 'Algoritmo Genético',
+                'descricao': 'Solução otimizada automaticamente',
+                'lucro_total': float(resultado_ag['lucro_total']),
+                'risco_medio': float(resultado_ag['risco_medio']),
+                'area_total': float(resultado_ag['area_total']),
                 'plano': [
                     {
                         "talhao": int(p['talhao']),
                         "area": float(p['area']),
-                        "solo": str(talhoes_dict[int(p['talhao'])]['solo']),
-                        "clima": str(talhoes_dict[int(p['talhao'])]['clima']),
-                        "relevo": str(talhoes_dict[int(p['talhao'])]['relevo']),
-                        "agua": str(talhoes_dict[int(p['talhao'])]['agua']),
+                        "solo": str(p['solo']),
+                        "clima": str(p['clima']),
+                        "relevo": str(p['relevo']),
+                        "agua": str(p['agua']),
                         "cultura": str(p['cultura']),
                         "lucro_estimado": float(p['lucro_estimado']),
                         "risco": float(p['risco']),
                         "nota": float(p['nota']),
-                        "tempo": 0  # Não disponível nos cenários simples
+                        "tempo": int(p['tempo'])
                     }
-                    for p in cenario['plano']
+                    for p in resultado_ag['plano']
                 ]
             }
+            
+            return {
+                "cenarios": cenarios_formatados
+            }
         
-        # Adiciona AG
-        cenarios_formatados['genetico'] = {
-            'nome': 'Algoritmo Genético',
-            'descricao': 'Solução otimizada automaticamente',
-            'lucro_total': float(resultado_ag['lucro_total']),
-            'risco_medio': float(resultado_ag['risco_medio']),
-            'area_total': float(resultado_ag['area_total']),
-            'plano': [
-                {
-                    "talhao": int(p['talhao']),
-                    "area": float(p['area']),
-                    "solo": str(p['solo']),
-                    "clima": str(p['clima']),
-                    "relevo": str(p['relevo']),
-                    "agua": str(p['agua']),
-                    "cultura": str(p['cultura']),
-                    "lucro_estimado": float(p['lucro_estimado']),
-                    "risco": float(p['risco']),
-                    "nota": float(p['nota']),
-                    "tempo": int(p['tempo'])
-                }
-                for p in resultado_ag['plano']
-            ]
-        }
+        # Usa cache para cenários
+        key = get_cache_key("cenarios")
+        resultado = get_or_compute_cache(key, montar_cenarios)
         
-        return {
-            "cenarios": cenarios_formatados
-        }
+        return converter_tipos_python(resultado)
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -307,21 +375,32 @@ def get_cenarios():
 def otimizar(request: OtimizarRequest):
     """Executa otimização com Algoritmo Genético"""
     try:
-        culturas, talhoes, regras = get_dados()
-        
         # Valida objetivo
         objetivos_validos = ['equilibrado', 'lucro', 'risco', 'sustentavel']
         if request.objetivo not in objetivos_validos:
             raise HTTPException(status_code=400, detail=f"Objetivo inválido. Use: {objetivos_validos}")
         
-        # Executa AG
-        resultado = gerar_plano_genetico(
-            culturas, talhoes, regras,
-            objetivo=request.objetivo,
-            geracoes=request.geracoes,
-            populacao=request.populacao,
-            seed=request.seed
-        )
+        # Usa AG cacheado se parâmetros forem padrão
+        if (request.objetivo == "equilibrado" and 
+            request.seed == 42 and 
+            request.geracoes == 100 and 
+            request.populacao == 50):
+            resultado = get_ag_cacheado(
+                objetivo=request.objetivo,
+                seed=request.seed,
+                geracoes=request.geracoes,
+                populacao=request.populacao
+            )
+        else:
+            # Executa AG sem cache para parâmetros customizados
+            culturas, talhoes, regras = get_dados()
+            resultado = gerar_plano_genetico(
+                culturas, talhoes, regras,
+                objetivo=request.objetivo,
+                geracoes=request.geracoes,
+                populacao=request.populacao,
+                seed=request.seed
+            )
         
         # Converte tipos numpy para Python nativos
         resultado_convertido = converter_tipos_python(resultado)
@@ -427,6 +506,18 @@ def relatorio(request: RelatorioRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/cache/limpar")
+def limpar_cache():
+    """Limpa o cache de resultados pesados"""
+    global _resultados_cache
+    items_removidos = len(_resultados_cache)
+    _resultados_cache.clear()
+    
+    return {
+        "status": "ok",
+        "message": f"Cache limpo. {items_removidos} itens removidos."
+    }
 
 if __name__ == "__main__":
     import uvicorn

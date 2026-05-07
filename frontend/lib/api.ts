@@ -39,6 +39,19 @@ export async function getTalhoes() {
   return response.json();
 }
 
+export async function getRecomendacoes() {
+  try {
+    const response = await fetch(`${API_URL}/recomendacoes`, {
+      cache: 'no-store',
+    });
+    if (!response.ok) throw new Error(`Falha ao carregar recomendações: ${response.status}`);
+    return response.json();
+  } catch (error) {
+    console.error('Erro em getRecomendacoes:', error);
+    throw error;
+  }
+}
+
 export async function getCulturas() {
   const response = await fetch(`${API_URL}/culturas`);
   if (!response.ok) throw new Error('Falha ao carregar culturas');
