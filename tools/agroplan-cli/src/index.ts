@@ -25,7 +25,7 @@ const COMMANDS = {
 };
 
 function showHelp(): void {
-  console.log("🌱 AgroPlan AI - CLI Local v1.0.7");
+  console.log("🌱 AgroPlan AI - CLI Local v1.0.8");
   console.log("   Launcher para modo local acelerado\n");
   
   console.log("📋 Comandos disponíveis:");

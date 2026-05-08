@@ -70,6 +70,9 @@ class OtimizarRequest(BaseModel):
     seed: Optional[int] = 42
     geracoes: Optional[int] = 100
     populacao: Optional[int] = 50
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    days: Optional[int] = 30
 
 class ValidarRequest(BaseModel):
     objetivo: str = "equilibrado"
@@ -78,6 +81,9 @@ class ValidarRequest(BaseModel):
 class RelatorioRequest(BaseModel):
     objetivo: str = "equilibrado"
     formato: str = "md"
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    days: Optional[int] = 30
 
 class RodadasRequest(BaseModel):
     objetivo: str = "equilibrado"
@@ -181,21 +187,46 @@ def get_clima(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/dashboard")
-def get_dashboard():
-    """Retorna resumo do dashboard"""
+def get_dashboard(
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
+    days: int = Query(30, description="Número de dias para análise climática")
+):
+    """Retorna resumo do dashboard com contexto climático opcional"""
     try:
-        def montar_dashboard():
-            culturas, talhoes, regras = get_dados()
-            
-            # Usa AG cacheado
-            resultado_ag = get_ag_cacheado(objetivo='equilibrado', seed=42)
+        culturas, talhoes, regras = get_dados()
+        
+        # Obter contexto climático se coordenadas foram fornecidas
+        contexto_climatico = None
+        if lat is not None and lon is not None:
+            from core.climate_adapter import obter_contexto_climatico_por_coordenadas
+            contexto_climatico = obter_contexto_climatico_por_coordenadas(lat, lon, days)
+        
+        # Gerar chave de cache considerando clima
+        cache_params = {"objetivo": "equilibrado", "seed": 42}
+        if lat is not None and lon is not None:
+            cache_params.update({"lat": lat, "lon": lon, "days": days})
+        
+        cache_key = get_cache_key("dashboard", **cache_params)
+        
+        def compute_dashboard():
+            # Usar AG com clima se disponível
+            if contexto_climatico:
+                from core.climate_adapter import gerar_plano_com_clima
+                resultado_ag = gerar_plano_com_clima(
+                    culturas, talhoes, regras, 
+                    objetivo='equilibrado', seed=42,
+                    lat=lat, lon=lon, days=days
+                )
+            else:
+                resultado_ag = get_ag_cacheado(objetivo='equilibrado', seed=42)
             
             # Tenta validar
             validacao = comparar_ag_com_forca_bruta(culturas, talhoes, regras, objetivo='equilibrado', seed=42)
             
-            # Se força bruta é inviável, retorna dados especiais
+            # Preparar resultado base
             if validacao.get('erro'):
-                return {
+                resultado_base = {
                     "lucro_total": float(resultado_ag['lucro_total']),
                     "risco_medio": float(resultado_ag['risco_medio']),
                     "fitness": float(resultado_ag['fitness']),
@@ -223,45 +254,60 @@ def get_dashboard():
                         for p in resultado_ag['plano']
                     ]
                 }
+            else:
+                resultado_base = {
+                    "lucro_total": float(resultado_ag['lucro_total']),
+                    "risco_medio": float(resultado_ag['risco_medio']),
+                    "fitness": float(resultado_ag['fitness']),
+                    "diversidade": int(resultado_ag['diversidade']),
+                    "objetivo": str(resultado_ag['objetivo']),
+                    "culturas_escolhidas": [str(p['cultura']) for p in resultado_ag['plano']],
+                    "validacao": {
+                        "otimo_global": bool(validacao.get('ag_encontrou_otimo_global', False)),
+                        "total_combinacoes": int(validacao.get('forca_bruta', {}).get('total_combinacoes', 0))
+                    },
+                    "plano": [
+                        {
+                            "talhao": int(p['talhao']),
+                            "area": float(p['area']),
+                            "solo": str(p['solo']),
+                            "clima": str(p['clima']),
+                            "relevo": str(p['relevo']),
+                            "agua": str(p['agua']),
+                            "cultura": str(p['cultura']),
+                            "lucro_estimado": float(p['lucro_estimado']),
+                            "risco": float(p['risco']),
+                            "nota": float(p['nota']),
+                            "tempo": int(p['tempo'])
+                        }
+                        for p in resultado_ag['plano']
+                    ]
+                }
             
-            # Converte tipos numpy para Python nativos
-            return {
-                "lucro_total": float(resultado_ag['lucro_total']),
-                "risco_medio": float(resultado_ag['risco_medio']),
-                "fitness": float(resultado_ag['fitness']),
-                "diversidade": int(resultado_ag['diversidade']),
-                "objetivo": str(resultado_ag['objetivo']),
-                "culturas_escolhidas": [str(p['cultura']) for p in resultado_ag['plano']],
-                "validacao": {
-                    "otimo_global": bool(validacao.get('ag_encontrou_otimo_global', False)),
-                    "total_combinacoes": int(validacao.get('forca_bruta', {}).get('total_combinacoes', 0))
-                },
-                "plano": [
-                    {
-                        "talhao": int(p['talhao']),
-                        "area": float(p['area']),
-                        "solo": str(p['solo']),
-                        "clima": str(p['clima']),
-                        "relevo": str(p['relevo']),
-                        "agua": str(p['agua']),
-                        "cultura": str(p['cultura']),
-                        "lucro_estimado": float(p['lucro_estimado']),
-                        "risco": float(p['risco']),
-                        "nota": float(p['nota']),
-                        "tempo": int(p['tempo'])
-                    }
-                    for p in resultado_ag['plano']
-                ]
-            }
+            # Adicionar informações de clima real
+            if contexto_climatico:
+                resultado_base["clima_real"] = {
+                    "ativo": True,
+                    "source": contexto_climatico.get("fonte", "unknown"),
+                    "temperatura_media": contexto_climatico.get("temperatura_media"),
+                    "precipitacao_total": contexto_climatico.get("precipitacao_total"),
+                    "risco_climatico_estimado": contexto_climatico.get("risco_climatico_estimado"),
+                    "clima_observado": contexto_climatico.get("clima_observado"),
+                    "agua_observada": contexto_climatico.get("agua_observada"),
+                    "ajuste_risco": contexto_climatico.get("ajuste_risco", 0),
+                    "fallback": contexto_climatico.get("fallback", False),
+                    "error": contexto_climatico.get("error")
+                }
+            else:
+                resultado_base["clima_real"] = {"ativo": False}
+            
+            return resultado_base
         
-        # Usa cache para dashboard
-        key = get_cache_key("dashboard", objetivo="equilibrado", seed=42)
-        resultado = get_or_compute_cache(key, montar_dashboard)
+        # Usa cache para dashboard com contexto climático
+        resultado = get_or_compute_cache(cache_key, compute_dashboard)
         
         # Converte tipos Python (por segurança)
         return converter_tipos_python(resultado)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -333,17 +379,42 @@ def get_culturas():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/cenarios")
-def get_cenarios():
-    """Retorna comparação de cenários"""
+def get_cenarios(
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
+    days: int = Query(30, description="Número de dias para análise climática")
+):
+    """Retorna comparação de cenários com contexto climático opcional"""
     try:
+        # Obter contexto climático se coordenadas foram fornecidas
+        contexto_climatico = None
+        if lat is not None and lon is not None:
+            from core.climate_adapter import obter_contexto_climatico_por_coordenadas
+            contexto_climatico = obter_contexto_climatico_por_coordenadas(lat, lon, days)
+        
+        # Gerar chave de cache considerando clima
+        cache_params = {"cenarios": True}
+        if lat is not None and lon is not None:
+            cache_params.update({"lat": lat, "lon": lon, "days": days})
+        
+        cache_key = get_cache_key("cenarios", **cache_params)
+        
         def montar_cenarios():
             culturas, talhoes, regras = get_dados()
             
             # Gera todos os cenários
             cenarios = gerar_cenarios(culturas, talhoes, regras)
             
-            # Usa AG cacheado
-            resultado_ag = get_ag_cacheado(objetivo='equilibrado', seed=42)
+            # Usar AG com clima se disponível
+            if contexto_climatico:
+                from core.climate_adapter import gerar_plano_com_clima
+                resultado_ag = gerar_plano_com_clima(
+                    culturas, talhoes, regras, 
+                    objetivo='equilibrado', seed=42,
+                    lat=lat, lon=lon, days=days
+                )
+            else:
+                resultado_ag = get_ag_cacheado(objetivo='equilibrado', seed=42)
             
             # Cria um mapa de talhões para facilitar o acesso
             talhoes_dict = {int(row['id']): row for _, row in talhoes.iterrows()}
@@ -376,7 +447,7 @@ def get_cenarios():
                     ]
                 }
             
-            # Adiciona AG
+            # Adiciona AG com contexto climático
             cenarios_formatados['genetico'] = {
                 'nome': 'Algoritmo Genético',
                 'descricao': 'Solução otimizada automaticamente',
@@ -401,13 +472,28 @@ def get_cenarios():
                 ]
             }
             
-            return {
-                "cenarios": cenarios_formatados
-            }
+            # Adicionar informações de clima real se disponível
+            resultado_final = {"cenarios": cenarios_formatados}
+            if contexto_climatico:
+                resultado_final["clima_real"] = {
+                    "ativo": True,
+                    "source": contexto_climatico.get("fonte", "unknown"),
+                    "temperatura_media": contexto_climatico.get("temperatura_media"),
+                    "precipitacao_total": contexto_climatico.get("precipitacao_total"),
+                    "risco_climatico_estimado": contexto_climatico.get("risco_climatico_estimado"),
+                    "clima_observado": contexto_climatico.get("clima_observado"),
+                    "agua_observada": contexto_climatico.get("agua_observada"),
+                    "ajuste_risco": contexto_climatico.get("ajuste_risco", 0),
+                    "fallback": contexto_climatico.get("fallback", False),
+                    "error": contexto_climatico.get("error")
+                }
+            else:
+                resultado_final["clima_real"] = {"ativo": False}
+            
+            return resultado_final
         
-        # Usa cache para cenários
-        key = get_cache_key("cenarios")
-        resultado = get_or_compute_cache(key, montar_cenarios)
+        # Usa cache para cenários com contexto climático
+        resultado = get_or_compute_cache(cache_key, montar_cenarios)
         
         return converter_tipos_python(resultado)
     except Exception as e:
@@ -417,34 +503,54 @@ def get_cenarios():
 
 @app.post("/otimizar")
 def otimizar(request: OtimizarRequest):
-    """Executa otimização com Algoritmo Genético"""
+    """Executa otimização com Algoritmo Genético e contexto climático opcional"""
     try:
         # Valida objetivo
         objetivos_validos = ['equilibrado', 'lucro', 'risco', 'sustentavel']
         if request.objetivo not in objetivos_validos:
             raise HTTPException(status_code=400, detail=f"Objetivo inválido. Use: {objetivos_validos}")
         
-        # Usa AG cacheado se parâmetros forem padrão
-        if (request.objetivo == "equilibrado" and 
-            request.seed == 42 and 
-            request.geracoes == 100 and 
-            request.populacao == 50):
-            resultado = get_ag_cacheado(
+        # Obter contexto climático se coordenadas foram fornecidas
+        contexto_climatico = None
+        if request.lat is not None and request.lon is not None:
+            from core.climate_adapter import obter_contexto_climatico_por_coordenadas
+            contexto_climatico = obter_contexto_climatico_por_coordenadas(request.lat, request.lon, request.days)
+        
+        # Usar AG com clima se disponível
+        if contexto_climatico:
+            from core.climate_adapter import gerar_plano_com_clima
+            resultado = gerar_plano_com_clima(
+                *get_dados(),
                 objetivo=request.objetivo,
                 seed=request.seed,
                 geracoes=request.geracoes,
-                populacao=request.populacao
+                populacao=request.populacao,
+                lat=request.lat,
+                lon=request.lon,
+                days=request.days
             )
         else:
-            # Executa AG sem cache para parâmetros customizados
-            culturas, talhoes, regras = get_dados()
-            resultado = gerar_plano_genetico(
-                culturas, talhoes, regras,
-                objetivo=request.objetivo,
-                geracoes=request.geracoes,
-                populacao=request.populacao,
-                seed=request.seed
-            )
+            # Usa AG cacheado se parâmetros forem padrão e sem clima
+            if (request.objetivo == "equilibrado" and 
+                request.seed == 42 and 
+                request.geracoes == 100 and 
+                request.populacao == 50):
+                resultado = get_ag_cacheado(
+                    objetivo=request.objetivo,
+                    seed=request.seed,
+                    geracoes=request.geracoes,
+                    populacao=request.populacao
+                )
+            else:
+                # Executa AG sem cache para parâmetros customizados
+                culturas, talhoes, regras = get_dados()
+                resultado = gerar_plano_genetico(
+                    culturas, talhoes, regras,
+                    objetivo=request.objetivo,
+                    geracoes=request.geracoes,
+                    populacao=request.populacao,
+                    seed=request.seed
+                )
         
         # Converte tipos numpy para Python nativos
         resultado_convertido = converter_tipos_python(resultado)
@@ -516,7 +622,7 @@ def rodadas(request: RodadasRequest):
 
 @app.post("/relatorio")
 def relatorio(request: RelatorioRequest):
-    """Gera relatório"""
+    """Gera relatório com contexto climático opcional"""
     try:
         culturas, talhoes, regras = get_dados()
         
@@ -530,7 +636,14 @@ def relatorio(request: RelatorioRequest):
         if request.formato not in formatos_validos:
             raise HTTPException(status_code=400, detail=f"Formato inválido. Use: {formatos_validos}")
         
-        # Gera relatório
+        # Obter contexto climático se coordenadas foram fornecidas
+        contexto_climatico = None
+        if request.lat is not None and request.lon is not None:
+            from core.climate_adapter import obter_contexto_climatico_por_coordenadas
+            contexto_climatico = obter_contexto_climatico_por_coordenadas(request.lat, request.lon, request.days)
+        
+        # Gera relatório (por enquanto sem integração climática no gerador)
+        # TODO: Atualizar report_generator para aceitar contexto climático
         caminho = gerar_relatorio_completo(
             culturas, talhoes, regras,
             objetivo=request.objetivo,
@@ -541,11 +654,48 @@ def relatorio(request: RelatorioRequest):
         with open(caminho, 'r', encoding='utf-8') as f:
             conteudo = f.read()
         
-        return {
+        # Adiciona informações climáticas ao final se disponível
+        if contexto_climatico and not contexto_climatico.get("fallback", True):
+            clima_info = f"""
+
+## Dados Climáticos Reais
+
+**Fonte:** {contexto_climatico.get('fonte', 'N/A')}
+**Temperatura Média:** {contexto_climatico.get('temperatura_media', 'N/A')}°C
+**Precipitação Total:** {contexto_climatico.get('precipitacao_total', 'N/A')}mm
+**Risco Climático:** {contexto_climatico.get('risco_climatico_estimado', 'N/A')}
+**Clima Observado:** {contexto_climatico.get('clima_observado', 'N/A')}
+**Água Observada:** {contexto_climatico.get('agua_observada', 'N/A')}
+**Ajuste de Risco:** {contexto_climatico.get('ajuste_risco', 0):+.1%}
+
+*Dados climáticos integrados ao planejamento para maior precisão.*
+"""
+            conteudo += clima_info
+        
+        resultado = {
             "caminho": caminho,
             "conteudo": conteudo,
             "formato": request.formato
         }
+        
+        # Adicionar informações de clima real
+        if contexto_climatico:
+            resultado["clima_real"] = {
+                "ativo": True,
+                "source": contexto_climatico.get("fonte", "unknown"),
+                "temperatura_media": contexto_climatico.get("temperatura_media"),
+                "precipitacao_total": contexto_climatico.get("precipitacao_total"),
+                "risco_climatico_estimado": contexto_climatico.get("risco_climatico_estimado"),
+                "clima_observado": contexto_climatico.get("clima_observado"),
+                "agua_observada": contexto_climatico.get("agua_observada"),
+                "ajuste_risco": contexto_climatico.get("ajuste_risco", 0),
+                "fallback": contexto_climatico.get("fallback", False),
+                "error": contexto_climatico.get("error")
+            }
+        else:
+            resultado["clima_real"] = {"ativo": False}
+        
+        return resultado
     except HTTPException:
         raise
     except Exception as e:
