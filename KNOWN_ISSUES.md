@@ -1,57 +1,66 @@
 # Known Issues
 
-## API Local - Report Generation Error (Windows)
+## Resolved Issues
 
-**Status:** Non-critical  
-**Affected:** Windows API Local only  
-**Not Affected:** API Render, Dashboard, Cenários, Otimização
+### API Local - Report Generation Error (Windows) - ✅ RESOLVED
 
-### Symptom
+**Status:** Fixed in CLI v1.0.13  
+**Resolution Date:** 08/05/2026
+
+#### Problem
 ```
 POST /relatorio
 Response: 500 Internal Server Error
 ```
 
-### Cause
-Windows encoding issue with emoji characters (📊, 🧬, 🔬, etc.) in `report_generator.py`.
+Windows encoding issue with emoji characters (📊, 🧬, 🔬, etc.) in `report_generator.py` console output.
 
-The report generator uses emojis in console output:
+#### Solution
+Added `safe_print()` helper function that handles Unicode encoding errors gracefully:
+
 ```python
-print("   📊 Gerando cenários...")
-print("   🧬 Executando Algoritmo Genético...")
+def safe_print(message):
+    try:
+        print(message)
+    except UnicodeEncodeError:
+        print(message.encode("ascii", errors="ignore").decode("ascii"))
 ```
 
-On Windows, the default console encoding (`cp1252` or `charmap`) cannot encode these Unicode characters, causing the API to crash when generating reports.
+All emoji prints now use `safe_print()` instead of `print()`.
 
-### Workaround
-Use API Render for report generation:
+#### How to Update
 ```bash
-# Frontend automatically uses API Render when Local fails
-# Or access directly:
-curl -X POST https://agroplan-ai.onrender.com/relatorio \
-  -H "Content-Type: application/json" \
-  -d '{"objetivo": "equilibrado", "formato": "md"}'
+bun add -g agroplan-ai-cli@latest
+agroplan serve off
+agroplan setup --force --python="path/to/python"
+agroplan serve on
 ```
 
-### Impact
-- ✅ Dashboard works (no report generation)
-- ✅ Cenários works
-- ✅ Otimização works
-- ✅ Talhões works
-- ✅ Climate integration works
-- ❌ Report generation fails on Windows Local API
+#### Verification
+```bash
+# Test report generation
+POST http://localhost:8000/relatorio
+{
+  "objetivo": "equilibrado",
+  "formato": "md"
+}
 
-### Permanent Fix (Future)
-Options:
-1. Remove emojis from console output
-2. Set UTF-8 encoding explicitly:
-   ```python
-   import sys
-   import io
-   sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-   ```
-3. Catch encoding errors and fallback to ASCII
-4. Use environment variable to disable emojis on Windows
+# Should return 200 OK with report content
+```
 
-### Priority
-**Low** - Report generation works on Render, and the main functionality (planning, optimization, climate integration) works perfectly on Local API.
+---
+
+## Current Issues
+
+No known critical issues at this time.
+
+### Minor Limitations
+
+1. **ZARC Decêndio Parser**: Official ZARC CSV (1M+ records) downloads successfully, but decêndio-to-date conversion is not yet implemented. System uses fallback data for now.
+
+2. **Large CSV Files**: ZARC CSV (214MB) is not stored in Git repository. It's downloaded automatically on first use and cached locally.
+
+---
+
+**Last Updated:** 08/05/2026  
+**CLI Version:** 1.0.13

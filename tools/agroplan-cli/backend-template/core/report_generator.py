@@ -8,6 +8,19 @@ from core.planner import gerar_cenarios, gerar_plano_genetico
 from core.bruteforce_validator import comparar_ag_com_forca_bruta, executar_multiplas_rodadas
 
 
+def safe_print(message):
+    """
+    Print seguro que funciona no Windows mesmo com emojis
+    
+    Tenta print normal, se falhar por encoding, remove caracteres não-ASCII
+    """
+    try:
+        print(message)
+    except UnicodeEncodeError:
+        # Fallback: remove caracteres não-ASCII
+        print(message.encode("ascii", errors="ignore").decode("ascii"))
+
+
 def format_currency_brl(value):
     """Formata valor monetário em padrão brasileiro"""
     return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -101,10 +114,10 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
         Caminho do arquivo gerado
     """
     # Executa todas as análises
-    print("   📊 Gerando cenários...")
+    safe_print("   📊 Gerando cenários...")
     cenarios = gerar_cenarios(culturas, talhoes, regras)
     
-    print("   🧬 Executando Algoritmo Genético...")
+    safe_print("   🧬 Executando Algoritmo Genético...")
     # Aplicar contexto climático se disponível
     if contexto_climatico:
         from core.climate_adapter import aplicar_contexto_climatico_no_plano
@@ -113,10 +126,10 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
     else:
         resultado_ag = gerar_plano_genetico(culturas, talhoes, regras, objetivo, seed=42)
     
-    print("   🔬 Validando com força bruta...")
+    safe_print("   🔬 Validando com força bruta...")
     validacao = comparar_ag_com_forca_bruta(culturas, talhoes, regras, objetivo, seed=42)
     
-    print("   🔄 Analisando estabilidade (5 rodadas)...")
+    safe_print("   🔄 Analisando estabilidade (5 rodadas)...")
     estabilidade = executar_multiplas_rodadas(culturas, talhoes, regras, objetivo, rodadas=5)
     
     # Gera conteúdo do relatório
