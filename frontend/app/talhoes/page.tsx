@@ -9,7 +9,10 @@ import { FieldDistributionChart } from "@/components/talhoes/field-distribution-
 import { FieldDetailPanel } from "@/components/talhoes/field-detail-panel";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingCard } from "@/components/shared/loading-card";
-import { getTalhoes, getRecomendacoes } from "@/lib/api";
+import { ClimateInactiveBanner } from "@/components/climate/climate-impact-banner";
+import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
+import { getTalhoes, getRecomendacoes, getClimateLocation, setClimateLocation } from "@/lib/api";
+import type { ClimateLocation } from "@/lib/types/climate";
 
 interface Talhao {
   id: number;
@@ -29,6 +32,8 @@ export default function TalhoesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTalhao, setSelectedTalhao] = useState<Talhao | null>(null);
+  const [climateLocation, setClimateLocationState] = useState<ClimateLocation | null>(null);
+  const [showClimateSelector, setShowClimateSelector] = useState(false);
 
   // Filtros
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,6 +46,10 @@ export default function TalhoesPage() {
     setError(null);
 
     try {
+      // Obter localização climática salva
+      const savedLocation = getClimateLocation();
+      setClimateLocationState(savedLocation);
+
       // Busca talhões e recomendações em paralelo
       const [talhoesData, recomendacoesData] = await Promise.all([
         getTalhoes(),
@@ -72,6 +81,11 @@ export default function TalhoesPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClimateLocationChange = (location: ClimateLocation | null) => {
+    setClimateLocation(location);
+    setClimateLocationState(location);
   };
 
   useEffect(() => {
@@ -147,6 +161,14 @@ export default function TalhoesPage() {
       />
 
       <div className="p-8 space-y-8">
+        {/* Banner Climático */}
+        {climateLocation && (
+          <ClimateInactiveBanner
+            onActivate={() => setShowClimateSelector(true)}
+            message={`Recomendações ajustadas pelo clima real da região: ${climateLocation.label}`}
+          />
+        )}
+
         {/* Erro */}
         {error && !loading && (
           <ErrorState onRetry={loadData} />
@@ -238,6 +260,15 @@ export default function TalhoesPage() {
         <FieldDetailPanel
           talhao={selectedTalhao}
           onClose={() => setSelectedTalhao(null)}
+        />
+      )}
+
+      {/* Modal de Seleção de Região Climática */}
+      {showClimateSelector && (
+        <ClimateRegionSelector
+          currentLocation={climateLocation}
+          onSelect={handleClimateLocationChange}
+          onClose={() => setShowClimateSelector(false)}
         />
       )}
     </div>

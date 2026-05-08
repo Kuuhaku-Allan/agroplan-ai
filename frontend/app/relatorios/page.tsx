@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Topbar } from "@/components/layout/topbar";
 import { ReportConfigPanel } from "@/components/relatorios/report-config-panel";
 import { ReportSummaryCard } from "@/components/relatorios/report-summary-card";
@@ -9,15 +9,19 @@ import { ReportActions } from "@/components/relatorios/report-actions";
 import { ReportContentOverview } from "@/components/relatorios/report-content-overview";
 import { ReportEmptyState } from "@/components/relatorios/report-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { ClimateImpactBanner, ClimateInactiveBanner } from "@/components/climate/climate-impact-banner";
+import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { gerarRelatorio } from "@/lib/api";
+import { gerarRelatorio, getClimateLocation, setClimateLocation } from "@/lib/api";
+import type { ClimateLocation, ClimateData } from "@/lib/types/climate";
 
 interface RelatorioData {
   caminho: string;
   conteudo: string;
   formato: "md" | "txt";
   objetivo: string;
+  clima_real?: ClimateData;
 }
 
 export default function RelatoriosPage() {
@@ -26,6 +30,14 @@ export default function RelatoriosPage() {
   const [relatorio, setRelatorio] = useState<RelatorioData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [climateLocation, setClimateLocationState] = useState<ClimateLocation | null>(null);
+  const [showClimateSelector, setShowClimateSelector] = useState(false);
+
+  useEffect(() => {
+    // Carregar localização climática salva
+    const savedLocation = getClimateLocation();
+    setClimateLocationState(savedLocation);
+  }, []);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -33,12 +45,17 @@ export default function RelatoriosPage() {
     setRelatorio(null);
 
     try {
-      const data = await gerarRelatorio(objetivo, formato);
+      // Obter localização climática atual
+      const currentLocation = getClimateLocation();
+      
+      // Gerar relatório com localização climática
+      const data = await gerarRelatorio(objetivo, formato, currentLocation || undefined);
       setRelatorio({
         caminho: data.caminho,
         conteudo: data.conteudo,
         formato: data.formato,
-        objetivo: objetivo
+        objetivo: objetivo,
+        clima_real: data.clima_real
       });
     } catch (err) {
       console.error("Erro ao gerar relatório:", err);
@@ -52,6 +69,11 @@ export default function RelatoriosPage() {
     handleGenerate();
   };
 
+  const handleClimateLocationChange = (location: ClimateLocation | null) => {
+    setClimateLocation(location);
+    setClimateLocationState(location);
+  };
+
   return (
     <div>
       <Topbar
@@ -60,6 +82,28 @@ export default function RelatoriosPage() {
       />
 
       <div className="p-8 space-y-8">
+        {/* Banner Climático */}
+        {climateLocation ? (
+          relatorio?.clima_real ? (
+            <ClimateImpactBanner
+              location={climateLocation}
+              climateData={relatorio.clima_real}
+              onChangeRegion={() => setShowClimateSelector(true)}
+              message="Relatório gerado com dados climáticos reais"
+            />
+          ) : (
+            <ClimateInactiveBanner
+              onActivate={() => setShowClimateSelector(true)}
+              message={`Região selecionada: ${climateLocation.label} (gere o relatório para incluir dados climáticos)`}
+            />
+          )
+        ) : (
+          <ClimateInactiveBanner
+            onActivate={() => setShowClimateSelector(true)}
+            message="Relatório será gerado com dados climáticos simulados"
+          />
+        )}
+
         {/* Configuração e Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Painel de Configuração */}
@@ -144,6 +188,15 @@ export default function RelatoriosPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Seleção de Região Climática */}
+      {showClimateSelector && (
+        <ClimateRegionSelector
+          currentLocation={climateLocation}
+          onSelect={handleClimateLocationChange}
+          onClose={() => setShowClimateSelector(false)}
+        />
+      )}
     </div>
   );
 }

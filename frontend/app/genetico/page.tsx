@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Topbar } from "@/components/layout/topbar";
 import { GeneticObjectiveSelector } from "@/components/genetico/genetic-objective-selector";
 import { GeneticResultSummary } from "@/components/genetico/genetic-result-summary";
@@ -8,16 +8,33 @@ import { FitnessEvolutionChart } from "@/components/genetico/fitness-evolution-c
 import { GeneticPlanCard } from "@/components/genetico/genetic-plan-card";
 import { GeneticExplanation } from "@/components/genetico/genetic-explanation";
 import { ErrorState } from "@/components/shared/error-state";
+import { ClimateImpactBanner, ClimateInactiveBanner } from "@/components/climate/climate-impact-banner";
+import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { otimizar } from "@/lib/api";
+import { otimizar, getClimateLocation, setClimateLocation } from "@/lib/api";
 import { ResultadoOtimizacao } from "@/lib/types";
+import type { ClimateLocation, ClimateData } from "@/lib/types/climate";
 import { Sparkles } from "lucide-react";
 
+interface ResultadoOtimizacaoComClima extends ResultadoOtimizacao {
+  clima_real?: ClimateData;
+  ajuste_climatico_aplicado?: boolean;
+  contexto_climatico?: any;
+}
+
 export default function GeneticoPage() {
-  const [resultado, setResultado] = useState<ResultadoOtimizacao | null>(null);
+  const [resultado, setResultado] = useState<ResultadoOtimizacaoComClima | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [climateLocation, setClimateLocationState] = useState<ClimateLocation | null>(null);
+  const [showClimateSelector, setShowClimateSelector] = useState(false);
+
+  useEffect(() => {
+    // Carregar localização climática salva
+    const savedLocation = getClimateLocation();
+    setClimateLocationState(savedLocation);
+  }, []);
 
   const handleExecute = async (objetivo: string, seed: number) => {
     setLoading(true);
@@ -25,7 +42,11 @@ export default function GeneticoPage() {
     setResultado(null);
 
     try {
-      const data = await otimizar(objetivo, seed);
+      // Obter localização climática atual
+      const currentLocation = getClimateLocation();
+      
+      // Executar otimização com localização climática
+      const data = await otimizar(objetivo, seed, currentLocation || undefined);
       setResultado(data);
     } catch (err) {
       console.error("Erro ao executar otimização:", err);
@@ -33,6 +54,11 @@ export default function GeneticoPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClimateLocationChange = (location: ClimateLocation | null) => {
+    setClimateLocation(location);
+    setClimateLocationState(location);
   };
 
   return (
@@ -43,6 +69,39 @@ export default function GeneticoPage() {
       />
 
       <div className="p-8 space-y-8">
+        {/* Banner Climático */}
+        {climateLocation ? (
+          resultado?.contexto_climatico ? (
+            <ClimateImpactBanner
+              location={climateLocation}
+              climateData={{
+                ativo: true,
+                source: resultado.contexto_climatico.fonte,
+                temperatura_media: resultado.contexto_climatico.temperatura_media,
+                precipitacao_total: resultado.contexto_climatico.precipitacao_total,
+                risco_climatico_estimado: resultado.contexto_climatico.risco_climatico_estimado,
+                clima_observado: resultado.contexto_climatico.clima_observado,
+                agua_observada: resultado.contexto_climatico.agua_observada,
+                ajuste_risco: resultado.contexto_climatico.ajuste_risco,
+                fallback: resultado.contexto_climatico.fallback,
+                error: resultado.contexto_climatico.error
+              }}
+              onChangeRegion={() => setShowClimateSelector(true)}
+              message="Otimização com dados climáticos reais aplicados"
+            />
+          ) : (
+            <ClimateInactiveBanner
+              onActivate={() => setShowClimateSelector(true)}
+              message={`Região selecionada: ${climateLocation.label} (execute a otimização para aplicar)`}
+            />
+          )
+        ) : (
+          <ClimateInactiveBanner
+            onActivate={() => setShowClimateSelector(true)}
+            message="Otimização usando dados climáticos simulados"
+          />
+        )}
+
         {/* Configuração */}
         <GeneticObjectiveSelector onExecute={handleExecute} loading={loading} />
 
@@ -118,6 +177,15 @@ export default function GeneticoPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Seleção de Região Climática */}
+      {showClimateSelector && (
+        <ClimateRegionSelector
+          currentLocation={climateLocation}
+          onSelect={handleClimateLocationChange}
+          onClose={() => setShowClimateSelector(false)}
+        />
+      )}
     </div>
   );
 }

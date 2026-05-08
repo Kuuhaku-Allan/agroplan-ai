@@ -10,15 +10,19 @@ import { ScenarioDetailPanel } from "@/components/cenarios/scenario-detail-panel
 import { ScenarioRanking } from "@/components/cenarios/scenario-ranking";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingCard } from "@/components/shared/loading-card";
+import { ClimateImpactBanner, ClimateInactiveBanner } from "@/components/climate/climate-impact-banner";
+import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
 import { Card } from "@/components/ui/card";
-import { getCenarios } from "@/lib/api";
+import { getCenarios, getClimateLocation, setClimateLocation } from "@/lib/api";
 import { Cenario } from "@/lib/types";
+import type { ClimateLocation, ClimateData } from "@/lib/types/climate";
 import { Info } from "lucide-react";
 
 interface CenariosData {
   cenarios: {
     [key: string]: Cenario;
   };
+  clima_real?: ClimateData;
 }
 
 export default function CenariosPage() {
@@ -26,6 +30,8 @@ export default function CenariosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
+  const [climateLocation, setClimateLocationState] = useState<ClimateLocation | null>(null);
+  const [showClimateSelector, setShowClimateSelector] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -36,7 +42,12 @@ export default function CenariosPage() {
     setError(null);
 
     try {
-      const result = await getCenarios();
+      // Obter localização climática salva
+      const savedLocation = getClimateLocation();
+      setClimateLocationState(savedLocation);
+
+      // Carregar cenários com localização climática
+      const result = await getCenarios(savedLocation || undefined);
       setData(result);
     } catch (err) {
       console.error("Erro ao carregar cenários:", err);
@@ -44,6 +55,12 @@ export default function CenariosPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClimateLocationChange = (location: ClimateLocation | null) => {
+    setClimateLocation(location);
+    setClimateLocationState(location);
+    loadData(); // Recarregar dados com nova localização
   };
 
   if (loading) {
@@ -93,6 +110,21 @@ export default function CenariosPage() {
       />
 
       <div className="p-8 space-y-8">
+        {/* Banner Climático */}
+        {climateLocation && data.clima_real ? (
+          <ClimateImpactBanner
+            location={climateLocation}
+            climateData={data.clima_real}
+            onChangeRegion={() => setShowClimateSelector(true)}
+            message="Cenários ajustados com dados climáticos reais"
+          />
+        ) : (
+          <ClimateInactiveBanner
+            onActivate={() => setShowClimateSelector(true)}
+            message="Cenários usando dados climáticos simulados"
+          />
+        )}
+
         {/* Cards de Cenários */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(cenarios).map(([key, cenario]) => (
@@ -148,6 +180,15 @@ export default function CenariosPage() {
           />
         )}
       </div>
+
+      {/* Modal de Seleção de Região Climática */}
+      {showClimateSelector && (
+        <ClimateRegionSelector
+          currentLocation={climateLocation}
+          onSelect={handleClimateLocationChange}
+          onClose={() => setShowClimateSelector(false)}
+        />
+      )}
     </div>
   );
 }
