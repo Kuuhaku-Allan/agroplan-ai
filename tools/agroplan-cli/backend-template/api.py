@@ -747,3 +747,57 @@ def limpar_cache(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=HOST, port=PORT)
+
+@app.get("/dados/zarc")
+def get_zarc(
+    cultura: Optional[str] = Query(None, description="Nome da cultura"),
+    uf: Optional[str] = Query(None, description="Unidade Federativa (ex: SP, PR)"),
+    municipio: Optional[str] = Query(None, description="Nome do município"),
+    solo: Optional[str] = Query(None, description="Tipo de solo"),
+    safra: str = Query("2025/2026", description="Safra (ex: 2025/2026)")
+):
+    """Obtém dados ZARC (Zoneamento Agrícola de Risco Climático)"""
+    try:
+        # Importar provider ZARC
+        from providers.zarc_provider import buscar_zarc
+        
+        # Se cultura não foi fornecida, retornar mensagem amigável
+        if not cultura:
+            return {
+                "message": "Informe a cultura para consultar dados ZARC.",
+                "exemplo_soja_sp": "/dados/zarc?cultura=soja&uf=SP&municipio=Sao%20Paulo&solo=argiloso",
+                "exemplo_milho_pr": "/dados/zarc?cultura=milho&uf=PR&municipio=Londrina&solo=argiloso",
+                "parametros": {
+                    "cultura": "Nome da cultura (obrigatório)",
+                    "uf": "Unidade Federativa (opcional)",
+                    "municipio": "Nome do município (opcional)",
+                    "solo": "Tipo de solo (opcional)",
+                    "safra": "Safra, padrão 2025/2026"
+                },
+                "culturas_disponiveis": ["soja", "milho", "feijao", "cafe", "cana", "trigo", "algodao"],
+                "safras_disponiveis": ["2025/2026", "2026/2027"]
+            }
+        
+        # Buscar dados ZARC
+        zarc_data = buscar_zarc(
+            cultura=cultura,
+            uf=uf,
+            municipio=municipio,
+            solo=solo,
+            safra=safra
+        )
+        
+        if zarc_data:
+            return zarc_data
+        else:
+            return {
+                "message": "Dados ZARC não encontrados para os parâmetros fornecidos.",
+                "cultura": cultura,
+                "uf": uf,
+                "municipio": municipio,
+                "solo": solo,
+                "safra": safra,
+                "sugestao": "Tente com parâmetros mais genéricos (apenas cultura e UF)"
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

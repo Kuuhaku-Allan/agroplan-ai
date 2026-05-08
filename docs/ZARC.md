@@ -13,7 +13,11 @@ O ZARC (Zoneamento Agrícola de Risco Climático) é um instrumento de política
 - ✅ Cache local com TTL 24h
 - ✅ Fallback com dados simplificados
 - ✅ Rastreabilidade honesta (oficial vs fallback)
-- ⚠️ Parser de decêndios em desenvolvimento
+- ✅ Parser de decêndios implementado e testado
+- ✅ Extração de janelas de plantio
+- ✅ Escolha da melhor janela por risco e duração
+- ✅ Endpoint `/dados/zarc` testado e funcionando
+- ⏳ Sincronização com CLI (próximo passo)
 
 ### Fonte de Dados
 
@@ -50,15 +54,39 @@ O ZARC usa **decêndios** (períodos de 10 dias) para representar janelas de pla
 - ...
 - `dec36`: 21-31 de dezembro
 
-**Valores nos decêndios:**
-- `1`, `2`, `3`: Níveis de risco (1 = baixo, 2 = médio, 3 = alto)
+**Valores nos decêndios (valores reais do CSV):**
+- `20`: Risco de 20% (baixo)
+- `30`: Risco de 30% (médio)
+- `40`: Risco de 40% (alto)
 - Vazio ou `0`: Não recomendado para plantio
+
+**Processamento:**
+O sistema agrupa decêndios consecutivos com valores válidos (20, 30, 40) em janelas de plantio. Para cada janela:
+1. Calcula o risco predominante pela média dos valores
+2. Identifica início e fim da janela
+3. Escolhe a melhor janela por: menor risco, depois maior duração
+
+**Exemplo de processamento:**
+```
+Entrada (CSV): dec10=20, dec11=20, dec12=20, dec13=30, dec14=30
+Saída: Janela de 01/04 a 20/05, risco predominante: baixo (média 24%)
+```
 
 ### Tipos de Solo (Cod_Solo)
 
-- `1`: Solo tipo 1 (arenoso)
-- `2`: Solo tipo 2 (médio/misto)
-- `3`: Solo tipo 3 (argiloso)
+O CSV oficial usa códigos de solo baseados em textura:
+
+**Códigos básicos:**
+- `1`: Solo arenoso
+- `2`: Solo médio/misto
+- `3`: Solo argiloso
+
+**Códigos estendidos (11-19):**
+- `11`, `12`, `13`: Variações de solo arenoso
+- `14`, `15`, `16`: Variações de solo médio
+- `17`, `18`, `19`: Variações de solo argiloso
+
+O sistema normaliza automaticamente todos os códigos para as três categorias básicas.
 
 ## Endpoints
 
@@ -97,32 +125,25 @@ GET /dados/zarc?cultura=soja&uf=SP&municipio=Ribeirao%20Preto&solo=argiloso
 }
 ```
 
-**Resposta (Oficial - Futuro):**
+**Resposta (Oficial com Parser):**
 ```json
 {
   "source": "zarc-oficial",
   "safra": "2025/2026",
-  "cultura": "SOJA",
+  "cultura": "Soja",
   "uf": "SP",
-  "municipio": "RIBEIRAO PRETO",
-  "geocodigo": "3543402",
-  "solo": "3",
-  "ciclo": "PRECOCE",
+  "municipio": "Clementina",
+  "geocodigo": "3511102",
+  "solo_codigo": "16",
+  "solo": "medio",
   "janela_plantio": {
-    "decendios": [10, 11, 12, 13, 14, 15],
-    "inicio": "01/04",
-    "fim": "31/05",
-    "risco_por_periodo": {
-      "dec10": 1,
-      "dec11": 1,
-      "dec12": 2,
-      "dec13": 2,
-      "dec14": 1,
-      "dec15": 1
-    }
+    "inicio": "11/09",
+    "fim": "31/12"
   },
   "risco": "baixo",
+  "decendios_recomendados": [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36],
   "fallback": false,
+  "encontrado": true,
   "observacao": "Dados obtidos da Tábua de Risco do ZARC (Ministério da Agricultura)."
 }
 ```
@@ -219,17 +240,11 @@ ZARC_SOURCE=official  # official ou fallback
 
 ## Desenvolvimento Futuro
 
-### Fase 8.2 - Parser de Decêndios
-
-- [ ] Implementar conversão decêndio → data
-- [ ] Processar colunas `dec1` a `dec36`
-- [ ] Identificar janelas de plantio contínuas
-- [ ] Calcular risco médio por janela
-- [ ] Mapear códigos de solo (1, 2, 3)
-- [ ] Normalizar nomes de culturas
-
 ### Fase 8.3 - Integração Completa
 
+- [ ] Sincronizar CLI backend-template
+- [ ] Publicar CLI v1.0.14
+- [ ] Testar na API Local
 - [ ] Atualizar `/dashboard` com ZARC
 - [ ] Mostrar janela de plantio em Talhões
 - [ ] Adicionar seção ZARC em Relatórios
