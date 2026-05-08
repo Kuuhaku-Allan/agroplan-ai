@@ -73,6 +73,9 @@ class OtimizarRequest(BaseModel):
     lat: Optional[float] = None
     lon: Optional[float] = None
     days: Optional[int] = 30
+    uf: Optional[str] = None
+    municipio: Optional[str] = None
+    safra: Optional[str] = "2025/2026"
 
 class ValidarRequest(BaseModel):
     objetivo: str = "equilibrado"
@@ -84,6 +87,9 @@ class RelatorioRequest(BaseModel):
     lat: Optional[float] = None
     lon: Optional[float] = None
     days: Optional[int] = 30
+    uf: Optional[str] = None
+    municipio: Optional[str] = None
+    safra: Optional[str] = "2025/2026"
 
 class RodadasRequest(BaseModel):
     objetivo: str = "equilibrado"
@@ -256,9 +262,12 @@ def get_zarc(
 def get_dashboard(
     lat: Optional[float] = None,
     lon: Optional[float] = None,
-    days: int = Query(30, description="Número de dias para análise climática")
+    days: int = Query(30, description="Número de dias para análise climática"),
+    uf: Optional[str] = None,
+    municipio: Optional[str] = None,
+    safra: str = Query("2025/2026", description="Safra ZARC")
 ):
-    """Retorna resumo do dashboard com contexto climático opcional"""
+    """Retorna resumo do dashboard com contexto climático e ZARC opcional"""
     try:
         culturas, talhoes, regras = get_dados()
         
@@ -268,10 +277,12 @@ def get_dashboard(
             from core.climate_adapter import obter_contexto_climatico_por_coordenadas
             contexto_climatico = obter_contexto_climatico_por_coordenadas(lat, lon, days)
         
-        # Gerar chave de cache considerando clima
+        # Gerar chave de cache considerando clima e ZARC
         cache_params = {"objetivo": "equilibrado", "seed": 42}
         if lat is not None and lon is not None:
             cache_params.update({"lat": lat, "lon": lon, "days": days})
+        if uf:
+            cache_params.update({"uf": uf, "municipio": municipio or "", "safra": safra})
         
         cache_key = get_cache_key("dashboard", **cache_params)
         
@@ -367,6 +378,18 @@ def get_dashboard(
             else:
                 resultado_base["clima_real"] = {"ativo": False}
             
+            # Enriquecer com ZARC se UF foi fornecida
+            if uf:
+                from core.zarc_adapter import enriquecer_plano_com_zarc
+                resultado_base = enriquecer_plano_com_zarc(
+                    resultado_base,
+                    uf=uf,
+                    municipio=municipio,
+                    safra=safra
+                )
+            else:
+                resultado_base["zarc"] = {"ativo": False}
+            
             return resultado_base
         
         # Usa cache para dashboard com contexto climático
@@ -389,8 +412,12 @@ def get_talhoes():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/recomendacoes")
-def get_recomendacoes():
-    """Retorna recomendações de culturas por talhão"""
+def get_recomendacoes(
+    uf: Optional[str] = None,
+    municipio: Optional[str] = None,
+    safra: str = Query("2025/2026", description="Safra ZARC")
+):
+    """Retorna recomendações de culturas por talhão com ZARC opcional"""
     try:
         culturas, talhoes, regras = get_dados()
         
@@ -413,9 +440,24 @@ def get_recomendacoes():
                 "agua": str(p['agua'])
             })
         
-        return {
-            "recomendacoes": recomendacoes
-        }
+        resultado = {"recomendacoes": recomendacoes}
+        
+        # Enriquecer com ZARC se UF foi fornecida
+        if uf:
+            from core.zarc_adapter import enriquecer_plano_com_zarc
+            resultado_temp = {"plano": recomendacoes}
+            resultado_temp = enriquecer_plano_com_zarc(
+                resultado_temp,
+                uf=uf,
+                municipio=municipio,
+                safra=safra
+            )
+            resultado["recomendacoes"] = resultado_temp["plano"]
+            resultado["zarc"] = resultado_temp.get("zarc", {"ativo": False})
+        else:
+            resultado["zarc"] = {"ativo": False}
+        
+        return resultado
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -656,6 +698,18 @@ def otimizar(request: OtimizarRequest):
         # Converte tipos numpy para Python nativos
         resultado_convertido = converter_tipos_python(resultado)
         
+        # Enriquecer com ZARC se UF foi fornecida
+        if request.uf:
+            from core.zarc_adapter import enriquecer_plano_com_zarc
+            resultado_convertido = enriquecer_plano_com_zarc(
+                resultado_convertido,
+                uf=request.uf,
+                municipio=request.municipio,
+                safra=request.safra
+            )
+        else:
+            resultado_convertido["zarc"] = {"ativo": False}
+        
         return resultado_convertido
     except HTTPException:
         raise
@@ -743,12 +797,15 @@ def relatorio(request: RelatorioRequest):
             from core.climate_adapter import obter_contexto_climatico_por_coordenadas
             contexto_climatico = obter_contexto_climatico_por_coordenadas(request.lat, request.lon, request.days)
         
-        # Gera relatório com contexto climático integrado
+        # Gera relatório com contexto climático e ZARC integrado
         caminho = gerar_relatorio_completo(
             culturas, talhoes, regras,
             objetivo=request.objetivo,
             formato=request.formato,
-            contexto_climatico=contexto_climatico
+            contexto_climatico=contexto_climatico,
+            uf=request.uf,
+            municipio=request.municipio,
+            safra=request.safra
         )
         
         # Lê conteúdo

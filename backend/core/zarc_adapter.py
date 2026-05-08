@@ -1,119 +1,278 @@
 """
-Adaptador para integrar dados ZARC no planejamento agrícola
+Adaptador ZARC - Integra dados do ZARC no planejamento
 """
-from typing import Optional, Dict, Any
+from typing import Dict, Any, Optional, List
 from providers.zarc_provider import buscar_zarc
 
-def converter_risco_zarc_para_ajuste(risco: str) -> float:
+def enriquecer_plano_com_zarc(
+    resultado: Dict[str, Any],
+    uf: Optional[str] = None,
+    municipio: Optional[str] = None,
+    safra: str = "2025/2026"
+) -> Dict[str, Any]:
     """
-    Converte risco ZARC para ajuste de risco
-    
-    Ajustes mais conservadores que clima, pois ZARC é oficial
-    
-    Returns:
-        Ajuste em pontos percentuais
-    """
-    ajustes = {
-        "baixo": -2,      # -2 pontos percentuais (janela favorável)
-        "medio": 4,       # +4 pontos percentuais (janela neutra)
-        "alto": 10,       # +10 pontos percentuais (janela desfavorável)
-        "indeterminado": 0
-    }
-    return ajustes.get(risco.lower(), 0)
-
-def aplicar_zarc_no_plano(resultado: Dict[str, Any], uf: Optional[str] = None, 
-                         municipio: Optional[str] = None, safra: str = "2025/2026") -> Dict[str, Any]:
-    """
-    Aplica informações ZARC no resultado do planejamento
-    
-    Adiciona informações de janela de plantio e risco ZARC para cada cultura
-    Não altera o risco calculado, apenas adiciona informações explicativas
+    Enriquece resultado do planejamento com dados ZARC
     
     Args:
         resultado: Resultado do planejamento (AG ou cenário)
         uf: Unidade Federativa
-        municipio: Município
-        safra: Safra
+        municipio: Nome do município
+        safra: Safra (padrão: 2025/2026)
     
     Returns:
-        Resultado com informações ZARC adicionadas
+        Resultado enriquecido com dados ZARC
     """
-    
-    if not uf or not municipio:
-        # Sem localização, não aplicar ZARC
-        resultado["zarc_aplicado"] = False
-        resultado["zarc_info"] = None
+    # Se não tiver UF, não adiciona ZARC
+    if not uf:
+        resultado["zarc"] = {"ativo": False}
         return resultado
     
     # Processar cada item do plano
-    if "plano" in resultado:
-        for item in resultado["plano"]:
-            cultura = item.get("cultura")
-            solo = item.get("solo")
-            
-            if cultura:
-                # Buscar dados ZARC
-                zarc_data = buscar_zarc(
-                    cultura=cultura,
-                    uf=uf,
-                    municipio=municipio,
-                    solo=solo,
-                    safra=safra
-                )
-                
-                if zarc_data:
-                    # Adicionar informações ZARC ao item
-                    item["zarc"] = {
-                        "janela_plantio": zarc_data.get("janela_plantio"),
-                        "risco": zarc_data.get("risco"),
-                        "source": zarc_data.get("source"),
-                        "observacao": zarc_data.get("observacao"),
-                        "fallback": zarc_data.get("fallback", False)
-                    }
-                    
-                    # Calcular ajuste (mas não aplicar por enquanto)
-                    ajuste_zarc = converter_risco_zarc_para_ajuste(zarc_data.get("risco", "indeterminado"))
-                    item["zarc"]["ajuste_sugerido"] = ajuste_zarc
-                else:
-                    item["zarc"] = {
-                        "janela_plantio": None,
-                        "risco": "indeterminado",
-                        "source": "nao-encontrado",
-                        "observacao": "Dados ZARC não encontrados para esta cultura/região.",
-                        "fallback": True
-                    }
+    culturas_com_zarc = 0
+    total_culturas = 0
+    sources = set()
+    tem_fallback = False
     
-    # Marcar que ZARC foi aplicado
-    resultado["zarc_aplicado"] = True
-    resultado["zarc_info"] = {
+    for item in resultado.get("plano", []):
+        total_culturas += 1
+        cultura = item.get("cultura")
+        solo = item.get("solo")
+        
+        # Buscar ZARC para esta cultura/solo
+        zarc_data = buscar_zarc(
+            cultura=cultura,
+            uf=uf,
+            municipio=municipio,
+            solo=solo,
+            safra=safra
+        )
+        
+        if zarc_data and zarc_data.get("encontrado"):
+            # ZARC encontrado
+            item["zarc"] = {
+                "ativo": True,
+                "source": zarc_data.get("source"),
+                "fallback": zarc_data.get("fallback", False),
+                "janela_plantio": zarc_data.get("janela_plantio"),
+                "risco": zarc_data.get("risco"),
+                "safra": zarc_data.get("safra"),
+                "observacao": zarc_data.get("observacao"),
+                "decendios_recomendados": zarc_data.get("decendios_recomendados"),
+                "municipio_zarc": zarc_data.get("municipio"),
+                "geocodigo": zarc_data.get("geocodigo")
+            }
+            culturas_com_zarc += 1
+            sources.add(zarc_data.get("source"))
+            if zarc_data.get("fallback"):
+                tem_fallback = True
+        else:
+            # ZARC não encontrado
+            item["zarc"] = {
+                "ativo": False,
+                "message": zarc_data.get("message") if zarc_data else "ZARC não consultado"
+            }
+    
+    # Determinar source geral
+    if len(sources) == 0:
+        source_geral = "unavailable"
+    elif len(sources) == 1:
+        source_geral = list(sources)[0]
+    else:
+        source_geral = "mixed"
+    
+    # Adicionar resumo ZARC no resultado
+    resultado["zarc"] = {
+        "ativo": True,
         "uf": uf,
         "municipio": municipio,
-        "safra": safra
+        "safra": safra,
+        "source": source_geral,
+        "fallback": tem_fallback,
+        "culturas_com_zarc": culturas_com_zarc,
+        "total_culturas": total_culturas
     }
     
     return resultado
 
-def obter_info_zarc_por_cultura(cultura: str, uf: Optional[str] = None, 
-                                municipio: Optional[str] = None, 
-                                solo: Optional[str] = None,
-                                safra: str = "2025/2026") -> Optional[Dict[str, Any]]:
+def aplicar_ajuste_zarc(
+    risco_base: float,
+    risco_zarc: str,
+    aplicar: bool = False
+) -> Dict[str, Any]:
     """
-    Obtém informações ZARC para uma cultura específica
+    Calcula ajuste de risco baseado no ZARC
     
     Args:
-        cultura: Nome da cultura
-        uf: Unidade Federativa (opcional)
-        municipio: Município (opcional)
-        solo: Tipo de solo (opcional)
-        safra: Safra
+        risco_base: Risco base em pontos percentuais
+        risco_zarc: Risco ZARC (baixo, medio, alto, indeterminado)
+        aplicar: Se deve aplicar o ajuste (padrão: False)
     
     Returns:
-        Dicionário com informações ZARC ou None
+        Dicionário com risco ajustado e informações do ajuste
     """
-    return buscar_zarc(
-        cultura=cultura,
-        uf=uf,
-        municipio=municipio,
-        solo=solo,
-        safra=safra
-    )
+    # Mapeamento de ajustes ZARC (conservadores)
+    ajustes = {
+        "baixo": -2,      # Reduz 2 pontos percentuais
+        "medio": +4,      # Aumenta 4 pontos percentuais
+        "alto": +10,      # Aumenta 10 pontos percentuais
+        "indeterminado": 0
+    }
+    
+    ajuste = ajustes.get(risco_zarc, 0)
+    
+    if aplicar and ajuste != 0:
+        risco_ajustado = min(95, max(5, risco_base + ajuste))
+    else:
+        risco_ajustado = risco_base
+    
+    return {
+        "risco_original": risco_base,
+        "risco_ajustado": risco_ajustado,
+        "ajuste_zarc": ajuste,
+        "ajuste_aplicado": aplicar,
+        "risco_zarc": risco_zarc
+    }
+
+def gerar_secao_zarc_relatorio(
+    plano: List[Dict[str, Any]],
+    uf: Optional[str] = None,
+    municipio: Optional[str] = None,
+    safra: str = "2025/2026",
+    formato: str = "md"
+) -> str:
+    """
+    Gera seção ZARC para relatório
+    
+    Args:
+        plano: Lista de itens do plano
+        uf: Unidade Federativa
+        municipio: Nome do município
+        safra: Safra
+        formato: Formato do relatório (md ou txt)
+    
+    Returns:
+        Texto da seção ZARC
+    """
+    if not uf:
+        return ""
+    
+    if formato == "md":
+        secao = "\n## 🌾 Zoneamento Agrícola de Risco Climático (ZARC)\n\n"
+        secao += f"**Região:** {municipio or 'Não especificado'}/{uf}\n"
+        secao += f"**Safra:** {safra}\n\n"
+        
+        # Contar culturas com ZARC
+        com_zarc = sum(1 for item in plano if item.get("zarc", {}).get("ativo"))
+        total = len(plano)
+        
+        secao += f"**Cobertura:** {com_zarc}/{total} culturas com recomendação ZARC\n\n"
+        
+        # Tabela por talhão
+        secao += "| Talhão | Cultura | Solo | Janela de Plantio | Risco ZARC | Fonte |\n"
+        secao += "|--------|---------|------|-------------------|------------|-------|\n"
+        
+        for item in plano:
+            talhao = item.get("talhao")
+            cultura = item.get("cultura")
+            solo = item.get("solo")
+            zarc = item.get("zarc", {})
+            
+            if zarc.get("ativo"):
+                janela = zarc.get("janela_plantio", {})
+                inicio = janela.get("inicio", "N/A")
+                fim = janela.get("fim", "N/A")
+                risco = zarc.get("risco", "N/A")
+                source = zarc.get("source", "N/A")
+                
+                # Emoji por fonte
+                if source == "zarc-oficial":
+                    fonte_emoji = "✅ Oficial"
+                elif source == "zarc-cache":
+                    fonte_emoji = "💾 Cache"
+                elif source == "zarc-fallback":
+                    fonte_emoji = "⚠️ Fallback"
+                else:
+                    fonte_emoji = source
+                
+                secao += f"| {talhao} | {cultura} | {solo} | {inicio} a {fim} | {risco} | {fonte_emoji} |\n"
+            else:
+                message = zarc.get("message", "Não encontrado")
+                secao += f"| {talhao} | {cultura} | {solo} | - | - | ⚠️ {message} |\n"
+        
+        secao += "\n"
+        
+        # Observações
+        secao += "### Observações ZARC\n\n"
+        
+        observacoes_unicas = set()
+        for item in plano:
+            zarc = item.get("zarc", {})
+            if zarc.get("ativo") and zarc.get("observacao"):
+                observacoes_unicas.add(zarc.get("observacao"))
+        
+        if observacoes_unicas:
+            for obs in observacoes_unicas:
+                secao += f"- {obs}\n"
+        else:
+            secao += "- Nenhuma recomendação ZARC encontrada para os parâmetros informados.\n"
+        
+        secao += "\n"
+        
+    else:  # txt
+        secao = "\n" + "="*80 + "\n"
+        secao += "ZONEAMENTO AGRÍCOLA DE RISCO CLIMÁTICO (ZARC)\n"
+        secao += "="*80 + "\n\n"
+        secao += f"Região: {municipio or 'Não especificado'}/{uf}\n"
+        secao += f"Safra: {safra}\n\n"
+        
+        # Contar culturas com ZARC
+        com_zarc = sum(1 for item in plano if item.get("zarc", {}).get("ativo"))
+        total = len(plano)
+        
+        secao += f"Cobertura: {com_zarc}/{total} culturas com recomendação ZARC\n\n"
+        
+        # Lista por talhão
+        for item in plano:
+            talhao = item.get("talhao")
+            cultura = item.get("cultura")
+            solo = item.get("solo")
+            zarc = item.get("zarc", {})
+            
+            secao += f"Talhão {talhao} - {cultura} ({solo})\n"
+            
+            if zarc.get("ativo"):
+                janela = zarc.get("janela_plantio", {})
+                inicio = janela.get("inicio", "N/A")
+                fim = janela.get("fim", "N/A")
+                risco = zarc.get("risco", "N/A")
+                source = zarc.get("source", "N/A")
+                
+                secao += f"  Janela de Plantio: {inicio} a {fim}\n"
+                secao += f"  Risco ZARC: {risco}\n"
+                secao += f"  Fonte: {source}\n"
+            else:
+                message = zarc.get("message", "Não encontrado")
+                secao += f"  Status: {message}\n"
+            
+            secao += "\n"
+        
+        # Observações
+        secao += "-"*80 + "\n"
+        secao += "OBSERVAÇÕES ZARC\n"
+        secao += "-"*80 + "\n\n"
+        
+        observacoes_unicas = set()
+        for item in plano:
+            zarc = item.get("zarc", {})
+            if zarc.get("ativo") and zarc.get("observacao"):
+                observacoes_unicas.add(zarc.get("observacao"))
+        
+        if observacoes_unicas:
+            for obs in observacoes_unicas:
+                secao += f"- {obs}\n"
+        else:
+            secao += "- Nenhuma recomendação ZARC encontrada para os parâmetros informados.\n"
+        
+        secao += "\n"
+    
+    return secao

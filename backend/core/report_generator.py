@@ -98,7 +98,7 @@ def get_objetivo_description(objetivo):
     return descriptions.get(objetivo, "otimizou múltiplos critérios")
 
 
-def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', formato='md', contexto_climatico=None):
+def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', formato='md', contexto_climatico=None, uf=None, municipio=None, safra="2025/2026"):
     """
     Gera relatório completo do sistema
     
@@ -109,6 +109,9 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
         objetivo: objetivo do AG
         formato: 'md' ou 'txt'
         contexto_climatico: Dicionário com dados climáticos reais (opcional)
+        uf: Unidade Federativa para ZARC (opcional)
+        municipio: Município para ZARC (opcional)
+        safra: Safra ZARC (padrão: 2025/2026)
     
     Returns:
         Caminho do arquivo gerado
@@ -150,6 +153,14 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
     if contexto_climatico:
         secao_clima = gerar_secao_climatica(contexto_climatico, formato)
         conteudo += "\n\n" + secao_clima
+    
+    # Adicionar seção ZARC se disponível
+    if uf:
+        from core.zarc_adapter import enriquecer_plano_com_zarc, gerar_secao_zarc_relatorio
+        resultado_temp = {"plano": resultado_ag["plano"]}
+        resultado_temp = enriquecer_plano_com_zarc(resultado_temp, uf, municipio, safra)
+        secao_zarc = gerar_secao_zarc_relatorio(resultado_temp["plano"], uf, municipio, safra, formato)
+        conteudo += "\n\n" + secao_zarc
     
     # Salva arquivo
     os.makedirs('reports', exist_ok=True)
