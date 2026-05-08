@@ -3,8 +3,11 @@
  * Suporta detecção automática entre API local e Render
  */
 
+import type { ClimateLocation } from './types/climate';
+
 const ONLINE_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://agroplan-ai-api.onrender.com';
 const LOCAL_API_URL = 'http://localhost:8000';
+const CLIMATE_STORAGE_KEY = 'agroplan_climate_location';
 
 // Cache da URL resolvida
 let resolvedApiUrl: string | null = null;
@@ -246,9 +249,21 @@ export async function getHealth() {
   }
 }
 
-export async function getDashboard() {
+export async function getDashboard(location?: ClimateLocation) {
   try {
-    const response = await apiFetch('/dashboard', {
+    let url = '/dashboard';
+    
+    // Adicionar parâmetros climáticos se localização fornecida
+    if (location) {
+      const params = new URLSearchParams({
+        lat: location.lat.toString(),
+        lon: location.lon.toString(),
+        days: (location.days || 30).toString()
+      });
+      url += `?${params.toString()}`;
+    }
+    
+    const response = await apiFetch(url, {
       cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
@@ -283,9 +298,21 @@ export async function getCulturas() {
   return response.json();
 }
 
-export async function getCenarios() {
+export async function getCenarios(location?: ClimateLocation) {
   try {
-    const response = await apiFetch('/cenarios', {
+    let url = '/cenarios';
+    
+    // Adicionar parâmetros climáticos se localização fornecida
+    if (location) {
+      const params = new URLSearchParams({
+        lat: location.lat.toString(),
+        lon: location.lon.toString(),
+        days: (location.days || 30).toString()
+      });
+      url += `?${params.toString()}`;
+    }
+    
+    const response = await apiFetch(url, {
       cache: 'no-store',
     });
     return response.json();
@@ -295,12 +322,21 @@ export async function getCenarios() {
   }
 }
 
-export async function otimizar(objetivo: string = 'equilibrado', seed: number = 42) {
+export async function otimizar(objetivo: string = 'equilibrado', seed: number = 42, location?: ClimateLocation) {
   try {
+    const body: any = { objetivo, seed };
+    
+    // Adicionar parâmetros climáticos se localização fornecida
+    if (location) {
+      body.lat = location.lat;
+      body.lon = location.lon;
+      body.days = location.days || 30;
+    }
+    
     const response = await apiFetch('/otimizar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ objetivo, seed }),
+      body: JSON.stringify(body),
       cache: 'no-store',
     });
     
@@ -357,12 +393,86 @@ export async function rodadas(objetivo: string = 'equilibrado', numRodadas: numb
   return response.json();
 }
 
-export async function gerarRelatorio(objetivo: string = 'equilibrado', formato: string = 'md') {
+export async function gerarRelatorio(objetivo: string = 'equilibrado', formato: string = 'md', location?: ClimateLocation) {
+  const body: any = { objetivo, formato };
+  
+  // Adicionar parâmetros climáticos se localização fornecida
+  if (location) {
+    body.lat = location.lat;
+    body.lon = location.lon;
+    body.days = location.days || 30;
+  }
+  
   const response = await apiFetch('/relatorio', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ objetivo, formato })
+    body: JSON.stringify(body)
   });
   if (!response.ok) throw new Error('Falha ao gerar relatório');
   return response.json();
+}
+
+
+// ===== Funções de Gerenciamento de Localização Climática =====
+
+/**
+ * Obtém a localização climática salva
+ */
+export function getClimateLocation(): ClimateLocation | null {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const stored = localStorage.getItem(CLIMATE_STORAGE_KEY);
+    if (!stored) return null;
+    return JSON.parse(stored);
+  } catch (error) {
+    console.error('Erro ao ler localização climática:', error);
+    return null;
+  }
+}
+
+/**
+ * Salva a localização climática
+ */
+export function setClimateLocation(location: ClimateLocation | null): void {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    if (location) {
+      localStorage.setItem(CLIMATE_STORAGE_KEY, JSON.stringify(location));
+    } else {
+      localStorage.removeItem(CLIMATE_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.error('Erro ao salvar localização climática:', error);
+  }
+}
+
+/**
+ * Remove a localização climática
+ */
+export function clearClimateLocation(): void {
+  setClimateLocation(null);
+}
+
+/**
+ * Obtém dados climáticos para uma localização
+ */
+export async function getClimateData(location: ClimateLocation) {
+  try {
+    const params = new URLSearchParams({
+      lat: location.lat.toString(),
+      lon: location.lon.toString(),
+      days: (location.days || 30).toString()
+    });
+    
+    const response = await apiFetch(`/dados/clima?${params.toString()}`, {
+      cache: 'no-store',
+    });
+    
+    return response.json();
+  } catch (error) {
+    console.error('Erro ao obter dados climáticos:', error);
+    throw error;
+  }
 }

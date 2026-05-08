@@ -54,6 +54,25 @@ export interface DashboardData {
     total_combinacoes: number;
   };
   plano: PlanoItem[];
+  clima_real?: {
+    ativo: boolean;
+    source?: string;
+    latitude?: number;
+    longitude?: number;
+    temperatura_media?: number;
+    temperatura_maxima?: number;
+    temperatura_minima?: number;
+    precipitacao_total?: number;
+    evapotranspiracao?: number;
+    umidade_media?: number;
+    radiacao_solar?: number;
+    risco_climatico_estimado?: string;
+    clima_observado?: string;
+    agua_observada?: string;
+    ajuste_risco?: number;
+    fallback?: boolean;
+    error?: string | null;
+  };
 }
 
 export interface Cenario {

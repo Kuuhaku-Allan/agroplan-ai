@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getDashboard, getCenarios } from "@/lib/api";
+import { getDashboard, getCenarios, getClimateLocation, setClimateLocation } from "@/lib/api";
 import { DashboardData, Cenario } from "@/lib/types";
+import type { ClimateLocation, ClimateData } from "@/lib/types/climate";
 import { Topbar } from "@/components/layout/topbar";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { ScenarioProfitChart } from "@/components/dashboard/scenario-profit-chart";
@@ -11,10 +12,13 @@ import { RecommendedPlan } from "@/components/dashboard/recommended-plan";
 import { DecisionSummary } from "@/components/dashboard/decision-summary";
 import { LoadingCard, LoadingChart } from "@/components/shared/loading-card";
 import { ErrorState } from "@/components/shared/error-state";
+import { ClimateRegionCard } from "@/components/climate/climate-region-card";
+import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
 import { formatCurrencyBRL, formatPercent, formatFitness, formatCurrencyCompactBRL, formatLargeNumber } from "@/lib/formatters";
 import { QuickActions } from "@/components/dashboard/quick-actions";
+import { Button } from "@/components/ui/button";
 
-import { TrendingUp, AlertTriangle, Gauge, Sprout, CheckCircle2 } from "lucide-react";
+import { TrendingUp, AlertTriangle, Gauge, Sprout, CheckCircle2, MapPin } from "lucide-react";
 
 // Função auxiliar para determinar status de validação
 function getValidationStatus(validacao: { otimo_global: boolean; total_combinacoes: number }) {
@@ -48,16 +52,22 @@ export default function DashboardPage() {
   const [cenarios, setCenarios] = useState<Record<string, Cenario> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [climateLocation, setClimateLocationState] = useState<ClimateLocation | null>(null);
+  const [showClimateSelector, setShowClimateSelector] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Carrega dashboard e cenários em paralelo
+      // Obter localização climática salva
+      const savedLocation = getClimateLocation();
+      setClimateLocationState(savedLocation);
+
+      // Carrega dashboard e cenários em paralelo com localização climática
       const [dashboardData, cenariosData] = await Promise.all([
-        getDashboard(),
-        getCenarios()
+        getDashboard(savedLocation || undefined),
+        getCenarios(savedLocation || undefined)
       ]);
       
       setDashboard(dashboardData);
@@ -68,6 +78,12 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClimateLocationChange = (location: ClimateLocation | null) => {
+    setClimateLocation(location);
+    setClimateLocationState(location);
+    loadData(); // Recarregar dados com nova localização
   };
 
   useEffect(() => {
@@ -181,8 +197,38 @@ export default function DashboardPage() {
               <RecommendedPlan plano={dashboard.plano} />
             </div>
 
-            {/* Coluna direita: Decisão e Ações (1/3 da largura) */}
+            {/* Coluna direita: Clima, Decisão e Ações (1/3 da largura) */}
             <div className="space-y-6">
+              {/* Card de Clima Real */}
+              {climateLocation ? (
+                <ClimateRegionCard
+                  location={climateLocation}
+                  climateData={dashboard.clima_real as ClimateData}
+                  onRemove={() => handleClimateLocationChange(null)}
+                />
+              ) : (
+                <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-slate-400" />
+                      <p className="text-sm font-medium text-slate-300">Clima Real</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400 mb-3">
+                    Selecione uma região para usar dados climáticos reais do Open-Meteo
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
+                    onClick={() => setShowClimateSelector(true)}
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Selecionar Região
+                  </Button>
+                </div>
+              )}
+              
               <DecisionSummary 
                 objetivo={dashboard.objetivo}
                 validacao={dashboard.validacao}
@@ -193,6 +239,15 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Seleção de Região Climática */}
+      {showClimateSelector && (
+        <ClimateRegionSelector
+          currentLocation={climateLocation}
+          onSelect={handleClimateLocationChange}
+          onClose={() => setShowClimateSelector(false)}
+        />
+      )}
     </div>
   );
 }
