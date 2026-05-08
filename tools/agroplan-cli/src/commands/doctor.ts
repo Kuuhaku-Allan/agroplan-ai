@@ -126,6 +126,17 @@ export async function doctorCommand(): Promise<void> {
           if (data.culturas !== undefined) console.log(`      Culturas: ${data.culturas}`);
           if (data.talhoes !== undefined) console.log(`      Talhões: ${data.talhoes}`);
           if (data.cache_items !== undefined) console.log(`      Cache items: ${data.cache_items}`);
+          
+          // Verificar se tem suporte a clima real
+          if (data.data_mode) {
+            console.log(`      Data mode: ${data.data_mode}`);
+            if (data.providers && data.providers.weather) {
+              console.log(`      Weather provider: ${data.providers.weather}`);
+            }
+          } else {
+            console.log("      ⚠️  Backend local desatualizado (sem suporte a clima real)");
+            console.log("         Rode: agroplan setup --force");
+          }
         } else {
           console.log("   ⚠️  Porta 8000 ocupada por outro serviço");
         }
