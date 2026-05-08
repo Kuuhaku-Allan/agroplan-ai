@@ -70,3 +70,7 @@ yarn-error.log*
 # Testing
 coverage/
 .pytest_cache/
+
+# ZARC Cache (CSV files are too large for GitHub - 200MB+)
+backend/data/zarc/*.csv
+!backend/data/zarc/.gitkeep

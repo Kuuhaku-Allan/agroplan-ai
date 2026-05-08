@@ -141,6 +141,10 @@ def health():
         culturas, talhoes, regras = get_dados()
         provider_cache_stats = get_cache_stats()
         
+        # Verificar status ZARC
+        from providers.zarc_provider import get_zarc_dataset, ZARC_SAFRA_DEFAULT
+        zarc_info = get_zarc_dataset(ZARC_SAFRA_DEFAULT)
+        
         return {
             "status": "healthy",
             "culturas": len(culturas),
@@ -149,7 +153,14 @@ def health():
             "cache_items": len(_resultados_cache),
             "data_mode": DATA_MODE,
             "providers": {
-                "weather": "available" if WEATHER_PROVIDER else "disabled"
+                "weather": "available" if WEATHER_PROVIDER else "disabled",
+                "zarc": {
+                    "status": "available",
+                    "safra": ZARC_SAFRA_DEFAULT,
+                    "source": zarc_info.get("source", "unknown"),
+                    "fallback": zarc_info.get("fallback", True),
+                    "records": len(zarc_info.get("records", []))
+                }
             },
             "provider_cache": provider_cache_stats
         }
