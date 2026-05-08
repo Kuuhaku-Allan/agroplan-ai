@@ -85,7 +85,7 @@ def get_objetivo_description(objetivo):
     return descriptions.get(objetivo, "otimizou múltiplos critérios")
 
 
-def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', formato='md'):
+def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', formato='md', contexto_climatico=None):
     """
     Gera relatório completo do sistema
     
@@ -95,6 +95,7 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
         regras: DataFrame com regras
         objetivo: objetivo do AG
         formato: 'md' ou 'txt'
+        contexto_climatico: Dicionário com dados climáticos reais (opcional)
     
     Returns:
         Caminho do arquivo gerado
@@ -104,7 +105,13 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
     cenarios = gerar_cenarios(culturas, talhoes, regras)
     
     print("   🧬 Executando Algoritmo Genético...")
-    resultado_ag = gerar_plano_genetico(culturas, talhoes, regras, objetivo, seed=42)
+    # Aplicar contexto climático se disponível
+    if contexto_climatico:
+        from core.climate_adapter import aplicar_contexto_climatico_no_plano
+        resultado_ag = gerar_plano_genetico(culturas, talhoes, regras, objetivo, seed=42)
+        resultado_ag = aplicar_contexto_climatico_no_plano(resultado_ag, contexto_climatico)
+    else:
+        resultado_ag = gerar_plano_genetico(culturas, talhoes, regras, objetivo, seed=42)
     
     print("   🔬 Validando com força bruta...")
     validacao = comparar_ag_com_forca_bruta(culturas, talhoes, regras, objetivo, seed=42)
@@ -126,6 +133,11 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
         )
         extensao = 'txt'
     
+    # Adicionar seção climática se disponível
+    if contexto_climatico:
+        secao_clima = gerar_secao_climatica(contexto_climatico, formato)
+        conteudo += "\n\n" + secao_clima
+    
     # Salva arquivo
     os.makedirs('reports', exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -136,6 +148,74 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
         f.write(conteudo)
     
     return caminho
+
+
+def gerar_secao_climatica(contexto_climatico, formato='md'):
+    """Gera seção de dados climáticos para o relatório"""
+    if not contexto_climatico or contexto_climatico.get("fallback", True):
+        if formato == 'md':
+            return "## Dados Climáticos\n\nEste relatório foi gerado com base nos dados internos simulados."
+        else:
+            return "DADOS CLIMÁTICOS\n\nEste relatório foi gerado com base nos dados internos simulados."
+    
+    if formato == 'md':
+        secao = "## Dados Climáticos Reais Utilizados\n\n"
+        secao += f"**Fonte:** {contexto_climatico.get('fonte', 'N/A')}\n\n"
+        
+        if contexto_climatico.get('temperatura_media'):
+            secao += f"**Temperatura Média:** {contexto_climatico['temperatura_media']:.1f}°C\n\n"
+        if contexto_climatico.get('temperatura_maxima'):
+            secao += f"**Temperatura Máxima:** {contexto_climatico['temperatura_maxima']:.1f}°C\n\n"
+        if contexto_climatico.get('temperatura_minima'):
+            secao += f"**Temperatura Mínima:** {contexto_climatico['temperatura_minima']:.1f}°C\n\n"
+        if contexto_climatico.get('precipitacao_total'):
+            secao += f"**Precipitação Total (30 dias):** {contexto_climatico['precipitacao_total']:.1f}mm\n\n"
+        if contexto_climatico.get('risco_climatico_estimado'):
+            secao += f"**Risco Climático Estimado:** {contexto_climatico['risco_climatico_estimado']}\n\n"
+        if contexto_climatico.get('clima_observado'):
+            secao += f"**Clima Observado:** {contexto_climatico['clima_observado']}\n\n"
+        if contexto_climatico.get('agua_observada'):
+            secao += f"**Disponibilidade Hídrica:** {contexto_climatico['agua_observada']}\n\n"
+        if contexto_climatico.get('ajuste_risco') is not None:
+            ajuste = contexto_climatico['ajuste_risco']
+            sinal = '+' if ajuste > 0 else ''
+            secao += f"**Ajuste de Risco Aplicado:** {sinal}{ajuste} pontos percentuais\n\n"
+        
+        secao += "**Impacto no Planejamento:**\n\n"
+        secao += "Os dados climáticos reais foram integrados ao algoritmo de otimização, "
+        secao += "ajustando automaticamente os níveis de risco de cada cultura com base nas "
+        secao += "condições meteorológicas observadas. Este ajuste proporciona maior precisão "
+        secao += "nas recomendações de plantio.\n"
+    else:
+        secao = "DADOS CLIMÁTICOS REAIS UTILIZADOS\n\n"
+        secao += f"Fonte: {contexto_climatico.get('fonte', 'N/A')}\n\n"
+        
+        if contexto_climatico.get('temperatura_media'):
+            secao += f"Temperatura Média: {contexto_climatico['temperatura_media']:.1f}°C\n"
+        if contexto_climatico.get('temperatura_maxima'):
+            secao += f"Temperatura Máxima: {contexto_climatico['temperatura_maxima']:.1f}°C\n"
+        if contexto_climatico.get('temperatura_minima'):
+            secao += f"Temperatura Mínima: {contexto_climatico['temperatura_minima']:.1f}°C\n"
+        if contexto_climatico.get('precipitacao_total'):
+            secao += f"Precipitação Total (30 dias): {contexto_climatico['precipitacao_total']:.1f}mm\n"
+        if contexto_climatico.get('risco_climatico_estimado'):
+            secao += f"Risco Climático Estimado: {contexto_climatico['risco_climatico_estimado']}\n"
+        if contexto_climatico.get('clima_observado'):
+            secao += f"Clima Observado: {contexto_climatico['clima_observado']}\n"
+        if contexto_climatico.get('agua_observada'):
+            secao += f"Disponibilidade Hídrica: {contexto_climatico['agua_observada']}\n"
+        if contexto_climatico.get('ajuste_risco') is not None:
+            ajuste = contexto_climatico['ajuste_risco']
+            sinal = '+' if ajuste > 0 else ''
+            secao += f"Ajuste de Risco Aplicado: {sinal}{ajuste} pontos percentuais\n"
+        
+        secao += "\nImpacto no Planejamento:\n\n"
+        secao += "Os dados climáticos reais foram integrados ao algoritmo de otimização, "
+        secao += "ajustando automaticamente os níveis de risco de cada cultura com base nas "
+        secao += "condições meteorológicas observadas. Este ajuste proporciona maior precisão "
+        secao += "nas recomendações de plantio.\n"
+    
+    return secao
 
 
 def gerar_relatorio_markdown(culturas, talhoes, regras, objetivo, cenarios, resultado_ag, validacao, estabilidade):

@@ -422,30 +422,65 @@ def get_cenarios(
             # Formata resposta
             cenarios_formatados = {}
             
+            # Aplicar ajuste climático em todos os cenários se disponível
+            ajuste_risco = contexto_climatico.get("ajuste_risco", 0) if contexto_climatico else 0
+            
             for key, cenario in cenarios.items():
+                # Aplicar ajuste climático no risco de cada item do plano
+                plano_ajustado = []
+                soma_risco_area = 0
+                soma_area = 0
+                
+                for p in cenario['plano']:
+                    risco_original = float(p['risco'])  # Em pontos percentuais (30, 35, etc.)
+                    area = float(p['area'])
+                    
+                    # Aplicar ajuste se houver (ajuste também em pontos percentuais: -3, +5, +15)
+                    if ajuste_risco != 0:
+                        novo_risco = min(95, max(5, risco_original + ajuste_risco))
+                    else:
+                        novo_risco = risco_original
+                    
+                    item_plano = {
+                        "talhao": int(p['talhao']),
+                        "area": area,
+                        "solo": str(talhoes_dict[int(p['talhao'])]['solo']),
+                        "clima": str(talhoes_dict[int(p['talhao'])]['clima']),
+                        "relevo": str(talhoes_dict[int(p['talhao'])]['relevo']),
+                        "agua": str(talhoes_dict[int(p['talhao'])]['agua']),
+                        "cultura": str(p['cultura']),
+                        "lucro_estimado": float(p['lucro_estimado']),
+                        "risco": round(novo_risco, 1),  # Em pontos percentuais
+                        "nota": float(p['nota']),
+                        "tempo": 0
+                    }
+                    
+                    # Adicionar campos de ajuste se aplicado
+                    if ajuste_risco != 0:
+                        item_plano["risco_original"] = round(risco_original, 1)
+                        item_plano["ajuste_aplicado"] = round(ajuste_risco, 1)
+                    
+                    plano_ajustado.append(item_plano)
+                    
+                    # Acumular para recalcular risco médio
+                    soma_risco_area += novo_risco * area
+                    soma_area += area
+                
+                # Recalcular risco médio ponderado
+                risco_medio_ajustado = soma_risco_area / soma_area if soma_area > 0 else cenario['risco_medio']
+                
                 cenarios_formatados[key] = {
                     'nome': str(cenario['nome']),
                     'descricao': str(cenario['descricao']),
                     'lucro_total': float(cenario['lucro_total']),
-                    'risco_medio': float(cenario['risco_medio']),
+                    'risco_medio': round(risco_medio_ajustado, 1),  # Em pontos percentuais
                     'area_total': float(cenario['area_total']),
-                    'plano': [
-                        {
-                            "talhao": int(p['talhao']),
-                            "area": float(p['area']),
-                            "solo": str(talhoes_dict[int(p['talhao'])]['solo']),
-                            "clima": str(talhoes_dict[int(p['talhao'])]['clima']),
-                            "relevo": str(talhoes_dict[int(p['talhao'])]['relevo']),
-                            "agua": str(talhoes_dict[int(p['talhao'])]['agua']),
-                            "cultura": str(p['cultura']),
-                            "lucro_estimado": float(p['lucro_estimado']),
-                            "risco": float(p['risco']),
-                            "nota": float(p['nota']),
-                            "tempo": 0  # Não disponível nos cenários simples
-                        }
-                        for p in cenario['plano']
-                    ]
+                    'plano': plano_ajustado
                 }
+                
+                # Adicionar risco médio original se ajuste foi aplicado
+                if ajuste_risco != 0:
+                    cenarios_formatados[key]['risco_medio_original'] = round(float(cenario['risco_medio']), 1)
             
             # Adiciona AG com contexto climático
             cenarios_formatados['genetico'] = {
@@ -642,35 +677,17 @@ def relatorio(request: RelatorioRequest):
             from core.climate_adapter import obter_contexto_climatico_por_coordenadas
             contexto_climatico = obter_contexto_climatico_por_coordenadas(request.lat, request.lon, request.days)
         
-        # Gera relatório (por enquanto sem integração climática no gerador)
-        # TODO: Atualizar report_generator para aceitar contexto climático
+        # Gera relatório com contexto climático integrado
         caminho = gerar_relatorio_completo(
             culturas, talhoes, regras,
             objetivo=request.objetivo,
-            formato=request.formato
+            formato=request.formato,
+            contexto_climatico=contexto_climatico
         )
         
         # Lê conteúdo
         with open(caminho, 'r', encoding='utf-8') as f:
             conteudo = f.read()
-        
-        # Adiciona informações climáticas ao final se disponível
-        if contexto_climatico and not contexto_climatico.get("fallback", True):
-            clima_info = f"""
-
-## Dados Climáticos Reais
-
-**Fonte:** {contexto_climatico.get('fonte', 'N/A')}
-**Temperatura Média:** {contexto_climatico.get('temperatura_media', 'N/A')}°C
-**Precipitação Total:** {contexto_climatico.get('precipitacao_total', 'N/A')}mm
-**Risco Climático:** {contexto_climatico.get('risco_climatico_estimado', 'N/A')}
-**Clima Observado:** {contexto_climatico.get('clima_observado', 'N/A')}
-**Água Observada:** {contexto_climatico.get('agua_observada', 'N/A')}
-**Ajuste de Risco:** {contexto_climatico.get('ajuste_risco', 0):+.1%}
-
-*Dados climáticos integrados ao planejamento para maior precisão.*
-"""
-            conteudo += clima_info
         
         resultado = {
             "caminho": caminho,
