@@ -540,177 +540,54 @@ def ensure_zarc_file(safra: str = ZARC_SAFRA_DEFAULT) -> Optional[Dict[str, Any]
     # Nenhum arquivo disponível
     return None
 
-# OBSOLETO: Funções antigas que carregavam CSV inteiro em memória
-# Mantidas apenas para referência, não devem ser usadas
-# Use: ensure_zarc_file() + iter_zarc_records() + buscar_zarc()
+# REMOVIDO: Funções obsoletas que carregavam CSV inteiro em memória
+# Essas funções foram removidas para evitar problemas de memória
+# Use: ensure_zarc_file() + iter_zarc_records() + buscar_zarc_indexado()
 
-# def download_zarc_dataset(safra: str) -> Optional[str]:
-#     """OBSOLETO - Não usar, causa problemas de memória"""
-#     pass
+def download_zarc_dataset(*args, **kwargs):
+    """
+    REMOVIDO: Esta função carregava o CSV inteiro em memória (214 MB).
+    
+    Use: ensure_zarc_file() para gerenciar o arquivo sem carregar dados
+    """
+    raise RuntimeError(
+        "download_zarc_dataset() foi removido por causar problemas de memória. "
+        "Use ensure_zarc_file() para gerenciar o arquivo ZARC."
+    )
 
-# def get_zarc_dataset(safra: str = ZARC_SAFRA_DEFAULT) -> Dict[str, Any]:
-#     """OBSOLETO - Não usar, carrega 1M+ registros em memória"""
-#     pass
+def get_zarc_dataset(*args, **kwargs):
+    """
+    REMOVIDO: Esta função carregava 1M+ registros em memória.
+    
+    Use: buscar_zarc_indexado() para lookup rápido O(1)
+    Use: iter_zarc_records() para processar em streaming
+    """
+    raise RuntimeError(
+        "get_zarc_dataset() foi removido por carregar 1M+ registros em memória. "
+        "Use buscar_zarc_indexado() para lookup rápido ou iter_zarc_records() para streaming."
+    )
 
-# def load_zarc_from_file(file_path: str) -> List[Dict[str, Any]]:
-#     """OBSOLETO - Não usar, carrega CSV inteiro em lista"""
-#     pass
+def load_zarc_from_file(*args, **kwargs):
     """
-    Baixa dataset ZARC oficial
+    REMOVIDO: Esta função carregava o CSV inteiro em uma lista.
     
-    Returns:
-        Caminho do arquivo baixado ou None se falhar
+    Use: iter_zarc_records() para processar linha por linha
     """
-    try:
-        url = ZARC_URLS.get(safra)
-        if not url:
-            print(f"URL não disponível para safra {safra}")
-            return None
-        
-        cache_path = get_cache_path(safra)
-        
-        print(f"Baixando ZARC oficial de {url}...")
-        
-        # Criar request com User-Agent
-        req = urllib.request.Request(
-            url,
-            headers={
-                'User-Agent': 'AgroPlan-AI/1.0 (https://github.com/Kuuhaku-Allan/agroplan-ai)'
-            }
-        )
-        
-        # Download
-        with urllib.request.urlopen(req, timeout=30) as response:
-            content = response.read().decode('utf-8')
-        
-        # Salvar
-        with open(cache_path, 'w', encoding='utf-8') as f:
-            f.write(content)
-        
-        print(f"ZARC oficial baixado e salvo em {cache_path}")
-        return cache_path
-        
-    except Exception as e:
-        print(f"Erro ao baixar ZARC oficial: {e}")
-        return None
+    raise RuntimeError(
+        "load_zarc_from_file() foi removido por carregar CSV inteiro em lista. "
+        "Use iter_zarc_records() para processar linha por linha."
+    )
 
-def get_zarc_dataset(safra: str = ZARC_SAFRA_DEFAULT) -> Dict[str, Any]:
+def inspect_zarc_columns(*args, **kwargs):
     """
-    Obtém dataset ZARC (cache ou download)
+    REMOVIDO: Esta função dependia de get_zarc_dataset().
     
-    Returns:
-        Dicionário com:
-        - records: Lista de registros ZARC
-        - source: "zarc-oficial" | "zarc-cache" | "zarc-fallback"
-        - fallback: bool
-        - cache_path: str ou None
-        - error: str ou None
+    Use: iter_zarc_records() e inspecione a primeira linha
     """
-    cache_path = get_cache_path(safra)
-    
-    # Verificar cache válido
-    if is_cache_valid(cache_path):
-        try:
-            records = load_zarc_from_file(cache_path)
-            return {
-                "records": records,
-                "source": "zarc-cache",
-                "fallback": False,
-                "cache_path": cache_path,
-                "error": None
-            }
-        except Exception as e:
-            print(f"Erro ao carregar cache ZARC: {e}")
-    
-    # Tentar download se source for official
-    if ZARC_SOURCE == "official":
-        downloaded_path = download_zarc_dataset(safra)
-        if downloaded_path:
-            try:
-                records = load_zarc_from_file(downloaded_path)
-                return {
-                    "records": records,
-                    "source": "zarc-oficial",
-                    "fallback": False,
-                    "cache_path": downloaded_path,
-                    "error": None
-                }
-            except Exception as e:
-                print(f"Erro ao carregar ZARC baixado: {e}")
-    
-    # Usar cache antigo se existir (mesmo expirado)
-    if os.path.exists(cache_path):
-        try:
-            records = load_zarc_from_file(cache_path)
-            return {
-                "records": records,
-                "source": "zarc-cache",
-                "fallback": False,
-                "cache_path": cache_path,
-                "error": "Cache expirado mas usado"
-            }
-        except Exception as e:
-            print(f"Erro ao carregar cache antigo: {e}")
-    
-    # Fallback para dados simplificados
-    print("Usando fallback ZARC simplificado")
-    return {
-        "records": get_zarc_fallback(),
-        "source": "zarc-fallback",
-        "fallback": True,
-        "cache_path": None,
-        "error": "CSV oficial não disponível, usando dados simplificados"
-    }
-
-def load_zarc_from_file(file_path: str) -> List[Dict[str, Any]]:
-    """Carrega dados ZARC de arquivo CSV"""
-    registros = []
-    
-    with open(file_path, 'r', encoding='utf-8-sig') as f:  # utf-8-sig remove BOM
-        # Detectar delimitador (CSV oficial usa ponto-e-vírgula)
-        primeira_linha = f.readline()
-        f.seek(0)
-        
-        delimiter = ';' if ';' in primeira_linha else ','
-        
-        reader = csv.DictReader(f, delimiter=delimiter)
-        
-        # Log das colunas encontradas (primeira vez)
-        if reader.fieldnames:
-            print(f"Colunas ZARC encontradas ({len(reader.fieldnames)} colunas, delimiter='{delimiter}')")
-        
-        for row in reader:
-            registros.append(row)
-    
-    return registros
-
-def inspect_zarc_columns(safra: str = ZARC_SAFRA_DEFAULT) -> Optional[List[str]]:
-    """
-    Inspeciona colunas do CSV ZARC oficial
-    
-    Returns:
-        Lista de nomes de colunas ou None se falhar
-    """
-    try:
-        dataset = get_zarc_dataset(safra)
-        
-        if not dataset or not dataset.get("records"):
-            print("Nenhum registro ZARC disponível")
-            return None
-        
-        # Pegar colunas do primeiro registro
-        if dataset["records"]:
-            colunas = list(dataset["records"][0].keys())
-            print(f"\nColunas do CSV ZARC ({dataset['source']}):")
-            for i, col in enumerate(colunas, 1):
-                print(f"  {i}. {col}")
-            return colunas
-        
-        return None
-        
-    except Exception as e:
-        print(f"Erro ao inspecionar colunas ZARC: {e}")
-        return None
+    raise RuntimeError(
+        "inspect_zarc_columns() foi removido por depender de get_zarc_dataset(). "
+        "Use iter_zarc_records() e inspecione a primeira linha."
+    )
 
 def get_zarc_fallback() -> List[Dict[str, Any]]:
     """
