@@ -2,6 +2,29 @@
  * Tipos TypeScript para AgroPlan AI
  */
 
+export interface PriceData {
+  ativo: boolean;
+  source?: string;
+  fallback?: boolean;
+  cultura?: string;
+  uf?: string;
+  preco?: number;
+  unidade?: string;
+  data_referencia?: string;
+  observacao?: string;
+}
+
+export interface PriceSummary {
+  ativo: boolean;
+  source?: string;
+  fallback_count?: number;
+  culturas_com_preco?: number;
+  culturas_sem_preco?: number;
+  total_culturas?: number;
+  aplicado_no_lucro?: boolean;
+  uf?: string;
+}
+
 export interface Talhao {
   id: number;
   area: number;
@@ -41,6 +64,7 @@ export interface PlanoItem {
   nota: number;
   tempo: number;
   zarc?: any; // Dados ZARC opcionais
+  preco_real?: PriceData; // Dados de preço opcionais
 }
 
 export interface DashboardData {
@@ -84,6 +108,7 @@ export interface DashboardData {
     culturas_com_zarc?: number;
     total_culturas?: number;
   };
+  precos?: PriceSummary;
 }
 
 export interface Cenario {
@@ -110,6 +135,7 @@ export interface ResultadoOtimizacao {
     melhor_fitness: number;
     fitness_medio: number;
   }>;
+  precos?: PriceSummary;
 }
 
 export interface ResultadoValidacao {

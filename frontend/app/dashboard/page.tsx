@@ -15,6 +15,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { ClimateRegionCard } from "@/components/climate/climate-region-card";
 import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
 import { ZarcImpactBanner } from "@/components/zarc/zarc-impact-banner";
+import { PriceImpactBanner } from "@/components/prices/price-impact-banner";
 import { formatCurrencyBRL, formatPercent, formatFitness, formatCurrencyCompactBRL, formatLargeNumber } from "@/lib/formatters";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { Button } from "@/components/ui/button";
@@ -236,6 +237,11 @@ export default function DashboardPage() {
                   zarc={dashboard.zarc}
                   onChangeRegion={() => setShowClimateSelector(true)}
                 />
+              )}
+
+              {/* Banner de Preços */}
+              {dashboard.precos?.ativo && (
+                <PriceImpactBanner precos={dashboard.precos} />
               )}
 
               {/* Aviso se tem clima mas não tem ZARC */}
