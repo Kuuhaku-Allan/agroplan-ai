@@ -85,6 +85,36 @@ O sistema normaliza automaticamente diferentes unidades de medida para uma base 
 
 **Importante**: Os preços são normalizados para R$/tonelada, mas o lucro principal ainda não é recalculado automaticamente. O **lucro de mercado** é exibido apenas como **comparação experimental** ao lado do lucro do sistema. Isso permite validar preços e produtividades antes de ativar o recálculo automático.
 
+### Validação do Lucro de Mercado
+
+O sistema compara o lucro interno (base do sistema) com o lucro calculado usando preços de mercado normalizados, classificando a **confiabilidade** de cada estimativa:
+
+#### Classificação de Confiabilidade
+
+| Confiabilidade | Critério | Significado |
+|----------------|----------|-------------|
+| 🟢 **Alta** | Diferença < 50% | Dados confiáveis, preço real disponível |
+| 🟡 **Média** | Diferença 50-100% ou fallback | Requer atenção, pode usar fallback |
+| 🔴 **Baixa** | Diferença > 100% ou dados incompletos | Requer validação antes de usar |
+
+#### Por que validar?
+
+Diferenças altas entre lucro do sistema e lucro de mercado podem indicar:
+- **Preço desatualizado** ou não reflete mercado local
+- **Produtividade** diferente da realidade
+- **Custo** não condiz com a operação
+- **Unidade comercial** incorreta
+
+#### Status Atual
+
+**O lucro de mercado é exibido apenas como comparação experimental.** O lucro principal do sistema continua usando a base interna enquanto os valores de mercado são validados.
+
+- **`PRICE_APPLY_TO_PROFIT=false`** (padrão): Lucro de mercado não afeta otimização
+- **Endpoint de diagnóstico**: `GET /debug/lucro-mercado?uf=SP` para análise detalhada
+- **Interface visual**: Dashboard, Talhões e Genético mostram confiabilidade com cores
+
+**Próxima etapa**: Após validação extensiva, o sistema poderá usar lucro de mercado na otimização com `PRICE_APPLY_TO_PROFIT=true`.
+
 📖 **Documentação completa**: [docs/API_PROVIDERS.md](docs/API_PROVIDERS.md)
 
 ---

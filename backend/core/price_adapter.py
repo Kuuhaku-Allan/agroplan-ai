@@ -1,6 +1,6 @@
 """
 Adaptador de Preços Agrícolas
-Integra preços reais no planejamento com normalização de unidades
+Integra preços reais no planejamento com normalização de unidades e validação
 """
 
 import os
@@ -12,6 +12,7 @@ from core.price_normalizer import (
     calcular_lucro_com_preco_normalizado,
     obter_estatisticas_normalizacao
 )
+from core.market_profit_validator import validar_plano_lucro_mercado
 
 # Configuração
 PRICE_APPLY_TO_PROFIT = os.getenv("PRICE_APPLY_TO_PROFIT", "false").lower() == "true"
@@ -170,6 +171,9 @@ def aplicar_precos_no_plano(
             "culturas_nao_normalizadas": len(culturas) - culturas_normalizadas
         }
     }
+    
+    # Validar lucro de mercado e adicionar classificação de confiabilidade
+    resultado = validar_plano_lucro_mercado(resultado)
     
     return resultado
 

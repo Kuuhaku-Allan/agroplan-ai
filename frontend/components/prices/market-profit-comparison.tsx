@@ -1,17 +1,20 @@
-import { TrendingUp, TrendingDown, ArrowRight, Info } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight, Info, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MarketProfitValidation } from "@/lib/types";
 
 interface MarketProfitComparisonProps {
   lucroSistema: number;
   lucroMercado?: number;
   aplicado?: boolean;
+  validacao?: MarketProfitValidation;
 }
 
 export function MarketProfitComparison({ 
   lucroSistema, 
   lucroMercado, 
-  aplicado = false 
+  aplicado = false,
+  validacao
 }: MarketProfitComparisonProps) {
   if (lucroMercado === undefined || lucroMercado === null) {
     return null;
@@ -51,6 +54,41 @@ export function MarketProfitComparison({
     return "text-emerald-400";
   };
 
+  const getConfiabilidadeConfig = (confiabilidade?: string) => {
+    switch (confiabilidade) {
+      case "alta":
+        return {
+          color: "text-emerald-400",
+          bgColor: "bg-emerald-500/10",
+          borderColor: "border-emerald-500/30",
+          icon: <CheckCircle2 className="w-3 h-3" />,
+          label: "Alta"
+        };
+      case "media":
+        return {
+          color: "text-amber-400",
+          bgColor: "bg-amber-500/10",
+          borderColor: "border-amber-500/30",
+          icon: <Info className="w-3 h-3" />,
+          label: "Média"
+        };
+      case "baixa":
+        return {
+          color: "text-red-400",
+          bgColor: "bg-red-500/10",
+          borderColor: "border-red-500/30",
+          icon: <AlertTriangle className="w-3 h-3" />,
+          label: "Baixa"
+        };
+      default:
+        return null;
+    }
+  };
+
+  const confiabilidadeConfig = validacao?.confiabilidade 
+    ? getConfiabilidadeConfig(validacao.confiabilidade)
+    : null;
+
   return (
     <Card className="bg-slate-900/50 border-slate-800/50 p-4">
       <div className="space-y-3">
@@ -59,15 +97,26 @@ export function MarketProfitComparison({
           <h3 className="text-sm font-medium text-slate-200">
             Comparação de Lucro
           </h3>
-          <Badge 
-            variant="outline" 
-            className={aplicado 
-              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
-              : "bg-blue-500/10 text-blue-400 border-blue-500/30"
-            }
-          >
-            {aplicado ? "Aplicado" : "Comparativo"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {confiabilidadeConfig && (
+              <Badge 
+                variant="outline" 
+                className={`${confiabilidadeConfig.bgColor} ${confiabilidadeConfig.color} ${confiabilidadeConfig.borderColor} flex items-center gap-1`}
+              >
+                {confiabilidadeConfig.icon}
+                <span>{confiabilidadeConfig.label}</span>
+              </Badge>
+            )}
+            <Badge 
+              variant="outline" 
+              className={aplicado 
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" 
+                : "bg-blue-500/10 text-blue-400 border-blue-500/30"
+              }
+            >
+              {aplicado ? "Aplicado" : "Comparativo"}
+            </Badge>
+          </div>
         </div>
 
         {/* Lucros */}
@@ -102,6 +151,39 @@ export function MarketProfitComparison({
             </div>
           </div>
         </div>
+
+        {/* Confiabilidade da Estimativa */}
+        {validacao && confiabilidadeConfig && (
+          <div className="pt-3 border-t border-slate-700/50">
+            <div className="text-xs text-slate-500 mb-2">Confiabilidade da estimativa:</div>
+            <div className={`flex items-start gap-2 p-2 ${confiabilidadeConfig.bgColor} rounded text-xs ${confiabilidadeConfig.color}`}>
+              {confiabilidadeConfig.icon}
+              <div className="flex-1">
+                <div className="font-medium mb-1">{confiabilidadeConfig.label}</div>
+                {validacao.motivos && validacao.motivos.length > 0 && (
+                  <ul className="space-y-0.5 text-slate-400">
+                    {validacao.motivos.map((motivo, idx) => (
+                      <li key={idx}>• {motivo}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Aviso de baixa confiabilidade */}
+        {validacao?.confiabilidade === "baixa" && (
+          <div className="pt-2">
+            <div className="flex items-start gap-2 p-2 bg-red-500/10 rounded text-xs text-red-400">
+              <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              <span>
+                <strong>Este valor exige validação antes de ser usado na otimização.</strong> 
+                {" "}Verifique produtividade, custos e unidade comercial.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Aviso */}
         {!aplicado && (

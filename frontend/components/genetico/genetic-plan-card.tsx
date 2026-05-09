@@ -110,19 +110,40 @@ export function GeneticPlanCard({ plano }: GeneticPlanCardProps) {
                 <div className="mt-3 pt-3 border-t border-slate-700/50">
                   <PriceInfoCard preco={item.preco_real} cultura={item.cultura} compact />
                   
-                  {/* Lucro de Mercado */}
+                  {/* Lucro de Mercado com Badge de Confiabilidade */}
                   {item.lucro_mercado_estimado !== undefined && item.lucro_mercado_estimado !== null && (
-                    <div className="mt-2 flex items-center justify-between text-xs">
-                      <span className="text-slate-500">Lucro mercado:</span>
-                      <span className={`font-semibold ${
-                        item.lucro_mercado_estimado < 0 
-                          ? 'text-red-400' 
-                          : item.lucro_mercado_estimado < item.lucro_estimado * 0.5
-                          ? 'text-amber-400'
-                          : 'text-emerald-400'
-                      }`}>
-                        {formatCurrencyBRL(item.lucro_mercado_estimado)}
-                      </span>
+                    <div className="mt-2 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-500">Lucro mercado:</span>
+                        <span className={`font-semibold ${
+                          item.lucro_mercado_estimado < 0 
+                            ? 'text-red-400' 
+                            : item.lucro_mercado_estimado < item.lucro_estimado * 0.5
+                            ? 'text-amber-400'
+                            : 'text-emerald-400'
+                        }`}>
+                          {formatCurrencyBRL(item.lucro_mercado_estimado)}
+                        </span>
+                      </div>
+                      
+                      {/* Badge de Confiabilidade */}
+                      {item.validacao_lucro_mercado?.confiabilidade && (
+                        <div className="flex items-center justify-end">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs ${
+                              item.validacao_lucro_mercado.confiabilidade === 'alta'
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                : item.validacao_lucro_mercado.confiabilidade === 'media'
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                : 'bg-red-500/10 text-red-400 border-red-500/30'
+                            }`}
+                          >
+                            {item.validacao_lucro_mercado.confiabilidade === 'alta' ? 'Alta' :
+                             item.validacao_lucro_mercado.confiabilidade === 'media' ? 'Média' : 'Baixa'}
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

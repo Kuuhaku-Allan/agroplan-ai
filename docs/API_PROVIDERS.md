@@ -443,6 +443,153 @@ O sistema funciona identicamente em:
 
 Ambas suportam os mesmos provedores e configurações.
 
+## Validação do Lucro de Mercado
+
+### Endpoint de Diagnóstico
+
+**Endpoint**: `GET /debug/lucro-mercado`
+
+**Parâmetros**:
+- `uf`: Unidade Federativa (opcional)
+- `municipio`: Município (opcional)
+- `safra`: Safra ZARC (opcional, padrão: 2025/2026)
+
+**Exemplo**:
+```bash
+GET /debug/lucro-mercado?uf=SP
+```
+
+**Resposta**:
+```json
+{
+  "diagnostico": {
+    "uf": "SP",
+    "total_culturas": 6,
+    "culturas": {
+      "soja": {
+        "total_talhoes": 2,
+        "lucro_sistema_medio": 97200.0,
+        "lucro_mercado_medio": 65200.13,
+        "diferenca": {
+          "diferenca_absoluta": -31999.87,
+          "diferenca_percentual": -32.92,
+          "direcao": "menor"
+        },
+        "confiabilidade": "alta",
+        "motivos": ["Diferença aceitável (32.9%)"],
+        "preco_original": 130.0,
+        "unidade_original": "saca_60kg",
+        "preco_por_tonelada": 2166.67,
+        "normalizado": true,
+        "fallback": false
+      }
+    }
+  },
+  "validacao_resumo": {
+    "ativo": true,
+    "total_itens": 10,
+    "itens_alta_confiabilidade": 2,
+    "itens_media_confiabilidade": 8,
+    "itens_baixa_confiabilidade": 0,
+    "percentual_alta_confiabilidade": 20.0,
+    "percentual_baixa_confiabilidade": 0.0,
+    "alertas": [],
+    "total_alertas": 0,
+    "recomendacao": "Confiabilidade mista. Revise itens com baixa confiabilidade e valide dados de mercado."
+  }
+}
+```
+
+### Classificação de Confiabilidade
+
+O sistema classifica automaticamente a confiabilidade do lucro de mercado:
+
+| Confiabilidade | Critério | Ação Recomendada |
+|----------------|----------|------------------|
+| 🟢 **Alta** | Diferença < 50% entre lucro sistema e mercado | Dados confiáveis para uso |
+| 🟡 **Média** | Diferença 50-100%, uso de fallback, ou lucro negativo | Usar com cautela, validar |
+| 🔴 **Baixa** | Diferença > 100%, dados incompletos, ou preço não disponível | Validar antes de usar |
+
+### Motivos de Classificação
+
+O sistema fornece motivos específicos para cada classificação:
+
+**Alta Confiabilidade**:
+- Diferença aceitável entre lucro sistema e mercado
+- Preço real disponível (não fallback)
+- Dados completos de produtividade e custo
+
+**Média Confiabilidade**:
+- Diferença moderada (50-100%)
+- Preço usando fallback (referência)
+- Lucro de mercado indica prejuízo
+
+**Baixa Confiabilidade**:
+- Diferença muito alta (>100%)
+- Preço não normalizado ou não disponível
+- Produtividade ou custo não disponível
+
+### Integração Automática
+
+A validação é aplicada automaticamente em todos os endpoints principais:
+
+- **`/dashboard`**: Inclui `validacao_lucro_mercado` no resultado
+- **`/recomendacoes`**: Cada item tem `validacao_lucro_mercado`
+- **`/otimizar`**: Plano otimizado inclui validação
+- **`/relatorio`**: Relatório inclui seção de validação
+
+### Interface Visual
+
+O frontend mostra a validação de forma clara:
+
+**Dashboard**:
+- Banner com resumo de confiabilidade
+- Estatísticas: alta/média/baixa
+- Alertas principais
+
+**Talhões**:
+- Badge de confiabilidade no painel de detalhes
+- Motivos da classificação
+- Aviso para baixa confiabilidade
+
+**Genético**:
+- Badge compacto ao lado do lucro de mercado
+- Cores: verde (alta), âmbar (média), vermelho (baixa)
+
+**Relatórios**:
+- Seção completa de validação
+- Tabela detalhada por talhão
+- Explicação sobre classificação
+
+### Status Atual
+
+**O lucro principal do sistema NÃO é substituído automaticamente.**
+
+- `PRICE_APPLY_TO_PROFIT=false` (padrão)
+- Lucro de mercado é apenas comparação experimental
+- Validação identifica valores que precisam revisão
+- Próxima etapa: Ativar após validação extensiva
+
+### Por que Validar?
+
+Diferenças altas entre lucro sistema e mercado podem indicar:
+
+1. **Preço desatualizado**: Preço de referência não reflete mercado local
+2. **Produtividade incorreta**: Estimativa não condiz com realidade
+3. **Custo impreciso**: Custo operacional diferente do cadastrado
+4. **Unidade comercial**: Unidade de medida incorreta ou mal convertida
+
+### Recomendações
+
+**Alta Confiabilidade (≥70%)**:
+> "Lucro de mercado apresenta boa confiabilidade. Considere validação detalhada antes de ativar PRICE_APPLY_TO_PROFIT."
+
+**Confiabilidade Mista**:
+> "Confiabilidade mista. Revise itens com baixa confiabilidade e valide dados de mercado."
+
+**Baixa Confiabilidade (≥30%)**:
+> "Muitos itens com baixa confiabilidade. Valide preços, produtividades e custos antes de usar lucro de mercado."
+
 ## Normalização de Unidades (Próxima Fase)
 
 Atualmente, os preços agrícolas são exibidos como referência e não afetam o cálculo de lucro. A próxima fase incluirá:

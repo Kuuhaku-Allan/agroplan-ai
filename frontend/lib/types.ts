@@ -25,6 +25,32 @@ export interface PriceData {
   normalizacao?: PriceNormalization;
 }
 
+export interface MarketProfitValidation {
+  diferenca_absoluta?: number;
+  diferenca_percentual?: number;
+  direcao?: "maior" | "menor" | "igual";
+  confiabilidade?: "alta" | "media" | "baixa";
+  motivos?: string[];
+  diferenca?: {
+    diferenca_absoluta: number;
+    diferenca_percentual: number;
+    direcao: string;
+  };
+}
+
+export interface MarketProfitValidationSummary {
+  ativo: boolean;
+  total_itens?: number;
+  itens_alta_confiabilidade?: number;
+  itens_media_confiabilidade?: number;
+  itens_baixa_confiabilidade?: number;
+  percentual_alta_confiabilidade?: number;
+  percentual_baixa_confiabilidade?: number;
+  alertas?: string[];
+  total_alertas?: number;
+  recomendacao?: string;
+}
+
 export interface PriceSummary {
   ativo: boolean;
   source?: string;
@@ -89,6 +115,7 @@ export interface PlanoItem {
   lucro_original?: number; // Lucro original antes de aplicar mercado
   produtividade?: number; // Produtividade em t/ha
   custo?: number; // Custo por hectare
+  validacao_lucro_mercado?: MarketProfitValidation; // Validação de confiabilidade
 }
 
 export interface DashboardData {
@@ -133,6 +160,7 @@ export interface DashboardData {
     total_culturas?: number;
   };
   precos?: PriceSummary;
+  validacao_lucro_mercado?: MarketProfitValidationSummary;
 }
 
 export interface Cenario {
@@ -160,6 +188,7 @@ export interface ResultadoOtimizacao {
     fitness_medio: number;
   }>;
   precos?: PriceSummary;
+  validacao_lucro_mercado?: MarketProfitValidationSummary;
 }
 
 export interface ResultadoValidacao {

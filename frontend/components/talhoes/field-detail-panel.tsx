@@ -6,6 +6,7 @@ import { formatCurrencyBRL } from "@/lib/formatters";
 import { ZarcWindowCard } from "@/components/zarc/zarc-window-card";
 import { PriceInfoCard } from "@/components/prices/price-info-card";
 import { MarketProfitComparison } from "@/components/prices/market-profit-comparison";
+import { MarketProfitValidation } from "@/lib/types";
 
 interface FieldDetailPanelProps {
   talhao: {
@@ -23,6 +24,7 @@ interface FieldDetailPanelProps {
     preco_real?: any; // Dados de preço
     lucro_mercado_estimado?: number; // Lucro de mercado
     lucro_mercado_aplicado?: boolean; // Se aplicado
+    validacao_lucro_mercado?: MarketProfitValidation; // Validação de confiabilidade
   };
   onClose: () => void;
 }
@@ -204,6 +206,7 @@ export function FieldDetailPanel({ talhao, onClose }: FieldDetailPanelProps) {
                         lucroSistema={talhao.lucro_estimado || 0}
                         lucroMercado={talhao.lucro_mercado_estimado}
                         aplicado={talhao.lucro_mercado_aplicado}
+                        validacao={talhao.validacao_lucro_mercado}
                       />
                     </div>
                   )}

@@ -166,6 +166,24 @@ export default function RelatoriosPage() {
           </div>
         </div>
 
+        {/* Aviso de Validação de Lucro de Mercado */}
+        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-emerald-500 mt-0.5">🔍</div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-emerald-500 mb-1">
+                Validação de Confiabilidade
+              </h3>
+              <p className="text-sm text-slate-300">
+                Este relatório incluirá validação de confiabilidade do lucro de mercado, classificando cada item como alta, média ou baixa confiabilidade.
+              </p>
+              <p className="text-xs text-slate-400 mt-2">
+                ✓ A validação compara lucro do sistema vs lucro de mercado e identifica valores que exigem validação adicional antes de serem usados na otimização.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Configuração e Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Painel de Configuração */}

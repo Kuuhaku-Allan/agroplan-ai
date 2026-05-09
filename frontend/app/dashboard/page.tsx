@@ -16,6 +16,7 @@ import { ClimateRegionCard } from "@/components/climate/climate-region-card";
 import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
 import { ZarcImpactBanner } from "@/components/zarc/zarc-impact-banner";
 import { PriceImpactBanner } from "@/components/prices/price-impact-banner";
+import { MarketProfitValidationBanner } from "@/components/prices/market-profit-validation-banner";
 import { formatCurrencyBRL, formatPercent, formatFitness, formatCurrencyCompactBRL, formatLargeNumber } from "@/lib/formatters";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { Button } from "@/components/ui/button";
@@ -242,6 +243,11 @@ export default function DashboardPage() {
               {/* Banner de Preços */}
               {dashboard.precos?.ativo && (
                 <PriceImpactBanner precos={dashboard.precos} />
+              )}
+
+              {/* Banner de Validação de Lucro de Mercado */}
+              {dashboard.validacao_lucro_mercado?.ativo && (
+                <MarketProfitValidationBanner validacao={dashboard.validacao_lucro_mercado} />
               )}
 
               {/* Aviso se tem clima mas não tem ZARC */}

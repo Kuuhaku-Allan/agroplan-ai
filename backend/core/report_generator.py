@@ -169,6 +169,11 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
     secao_precos = gerar_secao_precos_relatorio(resultado_temp["plano"], uf, formato)
     conteudo += "\n\n" + secao_precos
     
+    # Adicionar seção de validação de lucro de mercado
+    if resultado_temp.get("validacao_lucro_mercado", {}).get("ativo"):
+        secao_validacao = gerar_secao_validacao_lucro_mercado(resultado_temp, formato)
+        conteudo += "\n\n" + secao_validacao
+    
     # Salva arquivo
     os.makedirs('reports', exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -245,6 +250,193 @@ def gerar_secao_climatica(contexto_climatico, formato='md'):
         secao += "ajustando automaticamente os níveis de risco de cada cultura com base nas "
         secao += "condições meteorológicas observadas. Este ajuste proporciona maior precisão "
         secao += "nas recomendações de plantio.\n"
+    
+    return secao
+
+
+def gerar_secao_validacao_lucro_mercado(resultado, formato='md'):
+    """
+    Gera seção de validação de lucro de mercado para o relatório
+    
+    Args:
+        resultado: Resultado com validacao_lucro_mercado
+        formato: 'md' ou 'txt'
+    
+    Returns:
+        String com seção formatada
+    """
+    validacao = resultado.get("validacao_lucro_mercado", {})
+    
+    if not validacao.get("ativo"):
+        return ""
+    
+    if formato == "md":
+        secao = "## 🔍 Validação do Lucro de Mercado\n\n"
+        
+        secao += "### Resumo de Confiabilidade\n\n"
+        
+        total = validacao.get("total_itens", 0)
+        alta = validacao.get("itens_alta_confiabilidade", 0)
+        media = validacao.get("itens_media_confiabilidade", 0)
+        baixa = validacao.get("itens_baixa_confiabilidade", 0)
+        
+        perc_alta = validacao.get("percentual_alta_confiabilidade", 0)
+        perc_baixa = validacao.get("percentual_baixa_confiabilidade", 0)
+        
+        secao += f"- **Total de itens analisados**: {total}\n"
+        secao += f"- **Alta confiabilidade**: {alta} ({perc_alta:.1f}%) 🟢\n"
+        secao += f"- **Média confiabilidade**: {media} ({100 - perc_alta - perc_baixa:.1f}%) 🟡\n"
+        secao += f"- **Baixa confiabilidade**: {baixa} ({perc_baixa:.1f}%) 🔴\n\n"
+        
+        # Recomendação
+        recomendacao = validacao.get("recomendacao", "")
+        if recomendacao:
+            secao += f"**Recomendação**: {recomendacao}\n\n"
+        
+        # Alertas
+        alertas = validacao.get("alertas", [])
+        if alertas:
+            secao += "### ⚠️ Alertas\n\n"
+            for alerta in alertas:
+                secao += f"- {alerta}\n"
+            secao += "\n"
+            
+            total_alertas = validacao.get("total_alertas", 0)
+            if total_alertas > len(alertas):
+                secao += f"*Mostrando {len(alertas)} de {total_alertas} alertas*\n\n"
+        
+        # Detalhes por item
+        secao += "### Detalhes por Talhão\n\n"
+        secao += "| Talhão | Cultura | Lucro Sistema | Lucro Mercado | Diferença % | Confiabilidade |\n"
+        secao += "|--------|---------|---------------|---------------|-------------|----------------|\n"
+        
+        for item in resultado["plano"]:
+            validacao_item = item.get("validacao_lucro_mercado", {})
+            if not validacao_item:
+                continue
+            
+            talhao = item.get("talhao", "N/A")
+            cultura = item.get("cultura", "").upper()
+            lucro_sistema = item.get("lucro_estimado", 0)
+            lucro_mercado = item.get("lucro_mercado_estimado", 0)
+            
+            lucro_sistema_fmt = f"R$ {lucro_sistema:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            
+            if lucro_mercado is not None:
+                lucro_mercado_fmt = f"R$ {lucro_mercado:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                diferenca = validacao_item.get("diferenca", {})
+                diferenca_perc = diferenca.get("diferenca_percentual", 0)
+                diferenca_fmt = f"{diferenca_perc:.1f}%"
+            else:
+                lucro_mercado_fmt = "N/A"
+                diferenca_fmt = "N/A"
+            
+            confiabilidade = validacao_item.get("confiabilidade", "baixa")
+            conf_emoji = "🟢" if confiabilidade == "alta" else "🟡" if confiabilidade == "media" else "🔴"
+            conf_label = confiabilidade.title()
+            
+            secao += f"| {talhao} | {cultura} | {lucro_sistema_fmt} | {lucro_mercado_fmt} | {diferenca_fmt} | {conf_emoji} {conf_label} |\n"
+        
+        secao += "\n"
+        
+        # Explicação
+        secao += "### 📊 Sobre a Classificação de Confiabilidade\n\n"
+        secao += "A confiabilidade do lucro de mercado é classificada com base em:\n\n"
+        secao += "- **Alta (🟢)**: Diferença < 50% entre lucro sistema e mercado, preço normalizado disponível\n"
+        secao += "- **Média (🟡)**: Diferença 50-100%, uso de fallback, ou lucro negativo\n"
+        secao += "- **Baixa (🔴)**: Diferença > 100%, dados incompletos, ou preço não disponível\n\n"
+        
+        secao += "### ⚠️ Aviso Importante\n\n"
+        secao += "**O lucro de mercado ainda é experimental e não substitui o lucro principal do sistema.**\n\n"
+        secao += "Os valores são exibidos apenas como comparação para validação. Diferenças altas indicam "
+        secao += "necessidade de validação de produtividade, custos ou unidade comercial.\n\n"
+        secao += "**Status atual**: `PRICE_APPLY_TO_PROFIT=false` (lucro de mercado não afeta otimização)\n"
+        
+    else:  # txt
+        secao = "VALIDAÇÃO DO LUCRO DE MERCADO\n\n"
+        
+        secao += "Resumo de Confiabilidade:\n\n"
+        
+        total = validacao.get("total_itens", 0)
+        alta = validacao.get("itens_alta_confiabilidade", 0)
+        media = validacao.get("itens_media_confiabilidade", 0)
+        baixa = validacao.get("itens_baixa_confiabilidade", 0)
+        
+        perc_alta = validacao.get("percentual_alta_confiabilidade", 0)
+        perc_baixa = validacao.get("percentual_baixa_confiabilidade", 0)
+        
+        secao += f"  Total de itens analisados: {total}\n"
+        secao += f"  Alta confiabilidade: {alta} ({perc_alta:.1f}%)\n"
+        secao += f"  Média confiabilidade: {media} ({100 - perc_alta - perc_baixa:.1f}%)\n"
+        secao += f"  Baixa confiabilidade: {baixa} ({perc_baixa:.1f}%)\n\n"
+        
+        # Recomendação
+        recomendacao = validacao.get("recomendacao", "")
+        if recomendacao:
+            secao += f"Recomendação: {recomendacao}\n\n"
+        
+        # Alertas
+        alertas = validacao.get("alertas", [])
+        if alertas:
+            secao += "Alertas:\n\n"
+            for alerta in alertas:
+                secao += f"  - {alerta}\n"
+            secao += "\n"
+            
+            total_alertas = validacao.get("total_alertas", 0)
+            if total_alertas > len(alertas):
+                secao += f"  (Mostrando {len(alertas)} de {total_alertas} alertas)\n\n"
+        
+        # Detalhes por item
+        secao += "Detalhes por Talhão:\n\n"
+        
+        for item in resultado["plano"]:
+            validacao_item = item.get("validacao_lucro_mercado", {})
+            if not validacao_item:
+                continue
+            
+            talhao = item.get("talhao", "N/A")
+            cultura = item.get("cultura", "").upper()
+            lucro_sistema = item.get("lucro_estimado", 0)
+            lucro_mercado = item.get("lucro_mercado_estimado", 0)
+            
+            lucro_sistema_fmt = f"R$ {lucro_sistema:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            
+            secao += f"  Talhão {talhao} ({cultura}):\n"
+            secao += f"    Lucro Sistema: {lucro_sistema_fmt}\n"
+            
+            if lucro_mercado is not None:
+                lucro_mercado_fmt = f"R$ {lucro_mercado:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                diferenca = validacao_item.get("diferenca", {})
+                diferenca_perc = diferenca.get("diferenca_percentual", 0)
+                secao += f"    Lucro Mercado: {lucro_mercado_fmt}\n"
+                secao += f"    Diferença: {diferenca_perc:.1f}%\n"
+            else:
+                secao += f"    Lucro Mercado: N/A\n"
+            
+            confiabilidade = validacao_item.get("confiabilidade", "baixa")
+            secao += f"    Confiabilidade: {confiabilidade.title()}\n"
+            
+            motivos = validacao_item.get("motivos", [])
+            if motivos:
+                secao += f"    Motivos: {', '.join(motivos)}\n"
+            
+            secao += "\n"
+        
+        # Explicação
+        secao += "Sobre a Classificação de Confiabilidade:\n\n"
+        secao += "A confiabilidade do lucro de mercado é classificada com base em:\n\n"
+        secao += "  - Alta: Diferença < 50% entre lucro sistema e mercado\n"
+        secao += "  - Média: Diferença 50-100%, uso de fallback, ou lucro negativo\n"
+        secao += "  - Baixa: Diferença > 100%, dados incompletos, ou preço não disponível\n\n"
+        
+        secao += "Aviso Importante:\n\n"
+        secao += "O lucro de mercado ainda é experimental e não substitui o lucro principal\n"
+        secao += "do sistema. Os valores são exibidos apenas como comparação para validação.\n"
+        secao += "Diferenças altas indicam necessidade de validação de produtividade, custos\n"
+        secao += "ou unidade comercial.\n\n"
+        secao += "Status atual: PRICE_APPLY_TO_PROFIT=false (lucro de mercado não afeta\n"
+        secao += "otimização)\n"
     
     return secao
 

@@ -523,6 +523,63 @@ def get_precos_comparar(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/debug/lucro-mercado")
+def get_debug_lucro_mercado(
+    uf: Optional[str] = Query(None, description="Unidade Federativa (ex: SP, PR)"),
+    municipio: Optional[str] = Query(None, description="Município"),
+    safra: str = Query("2025/2026", description="Safra ZARC")
+):
+    """Diagnóstico detalhado do lucro de mercado para validação"""
+    try:
+        from core.loader import carregar_dados
+        from core.planner import gerar_plano_inteligente
+        from core.price_adapter import aplicar_precos_no_plano
+        from core.market_profit_validator import gerar_diagnostico_lucro_mercado
+        
+        # Carregar dados
+        culturas, talhoes, regras = carregar_dados()
+        
+        # Gerar plano inteligente
+        plano_inteligente = gerar_plano_inteligente(culturas, talhoes, regras)
+        
+        # Mapear para formato esperado pelo price_adapter
+        plano = []
+        for item in plano_inteligente:
+            plano.append({
+                'talhao': item['talhao'],
+                'area': item['area'],
+                'solo': item['solo'],
+                'clima': item['clima'],
+                'relevo': item['relevo'],
+                'agua': item['agua'],
+                'cultura': item['cultura_recomendada'],  # Mapear cultura_recomendada -> cultura
+                'lucro_estimado': item['lucro_estimado'],
+                'risco': item['risco'],
+                'nota': item['nota'],
+                'tempo': item['tempo']
+            })
+        
+        resultado = {"plano": plano}
+        
+        # Aplicar preços e normalização
+        resultado = aplicar_precos_no_plano(resultado, uf=uf)
+        
+        # Gerar diagnóstico
+        diagnostico = gerar_diagnostico_lucro_mercado(resultado["plano"], uf=uf)
+        
+        # Adicionar resumo de validação
+        validacao = resultado.get("validacao_lucro_mercado", {})
+        
+        return {
+            "diagnostico": diagnostico,
+            "validacao_resumo": validacao,
+            "municipio": municipio,
+            "safra": safra
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/dashboard")
 def get_dashboard(
     lat: Optional[float] = None,
