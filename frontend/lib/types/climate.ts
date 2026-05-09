@@ -6,6 +6,7 @@ export interface ClimateLocation {
   lat: number;
   lon: number;
   label: string;
+  badge?: string;  // Badge opcional para exibir separadamente
   days?: number;
   uf?: string;
   municipio?: string;
@@ -36,7 +37,8 @@ export const CLIMATE_PRESETS: ClimateLocation[] = [
   {
     lat: -21.56,
     lon: -50.45,
-    label: "Clementina - SP 🌾 Exemplo ZARC oficial",
+    label: "Clementina - SP",
+    badge: "🌾 Exemplo ZARC oficial",
     days: 30,
     uf: "SP",
     municipio: "Clementina",

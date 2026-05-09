@@ -121,14 +121,21 @@ export function ClimateRegionSelector({ onSelect, onClose, currentLocation }: Cl
                 <Button
                   key={preset.label}
                   variant="outline"
-                  className="justify-start h-auto py-3 px-4 border-slate-700 hover:border-emerald-500/50 hover:bg-emerald-500/10"
+                  className="justify-start h-auto py-3 px-4 border-slate-700 hover:border-emerald-500/50 hover:bg-emerald-500/10 whitespace-normal text-left"
                   onClick={() => handlePresetSelect(preset)}
                 >
-                  <div className="flex items-start gap-3 w-full">
+                  <div className="flex items-start gap-3 w-full min-w-0">
                     <MapPin className="h-5 w-5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    <div className="text-left">
-                      <p className="font-medium text-slate-200">{preset.label}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                    <div className="text-left min-w-0 flex-1">
+                      <p className="font-medium text-slate-200 leading-tight break-words">
+                        {preset.label}
+                      </p>
+                      {preset.badge && (
+                        <span className="inline-flex mt-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                          {preset.badge}
+                        </span>
+                      )}
+                      <p className="text-xs text-slate-400 mt-1">
                         {preset.lat.toFixed(2)}, {preset.lon.toFixed(2)}
                       </p>
                     </div>

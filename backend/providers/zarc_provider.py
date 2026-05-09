@@ -304,6 +304,36 @@ def normalizar_solo(solo: str) -> str:
     """Normaliza tipo de solo"""
     return normalizar_texto(solo)
 
+def normalizar_solo_zarc(solo: str) -> str:
+    """
+    Normaliza tipo de solo para busca ZARC
+    
+    Mapeia variações de solo para os tipos reconhecidos pelo ZARC:
+    - misto -> medio
+    - siltoso -> medio
+    
+    Args:
+        solo: Tipo de solo original
+    
+    Returns:
+        Tipo de solo normalizado para ZARC
+    """
+    if not solo:
+        return ""
+    
+    solo_norm = normalizar_solo(solo)
+    
+    # Mapeamento de solos para ZARC
+    mapa_zarc = {
+        "arenoso": "arenoso",
+        "medio": "medio",
+        "misto": "medio",      # misto -> medio
+        "siltoso": "medio",    # siltoso -> medio
+        "argiloso": "argiloso"
+    }
+    
+    return mapa_zarc.get(solo_norm, solo_norm)
+
 def get_cache_path(safra: str) -> str:
     """Retorna caminho do arquivo de cache para a safra"""
     os.makedirs(ZARC_CACHE_DIR, exist_ok=True)
@@ -427,15 +457,15 @@ def buscar_zarc_indexado(
     # Tentar diferentes combinações de solo
     solos_tentar = []
     if solo:
-        solo_norm = normalizar_solo(solo)
+        solo_norm = normalizar_solo_zarc(solo)  # Usa normalização ZARC (misto->medio, siltoso->medio)
         # Tentar o solo especificado primeiro, depois outros como fallback
-        solos_tentar = [solo_norm, "medio", "arenoso", "argiloso", "misto"]
+        solos_tentar = [solo_norm, "medio", "arenoso", "argiloso"]
         # Remover duplicatas mantendo ordem
         seen = set()
         solos_tentar = [s for s in solos_tentar if not (s in seen or seen.add(s))]
     else:
         # Se não especificou solo, tentar todos (preferir medio/argiloso)
-        solos_tentar = ["medio", "argiloso", "arenoso", "misto"]
+        solos_tentar = ["medio", "argiloso", "arenoso"]
     
     # Buscar no índice
     for solo_test in solos_tentar:
@@ -680,6 +710,48 @@ def get_zarc_fallback() -> List[Dict[str, Any]]:
             "janela_fim": "31/03",
             "risco": "baixo",
             "safra": "2025/2026"
+        },
+        # Sorgo
+        {
+            "cultura": "sorgo",
+            "uf": "SP",
+            "municipio": "ribeirao preto",
+            "solo": "medio",
+            "janela_inicio": "15/10",
+            "janela_fim": "15/12",
+            "risco": "medio",
+            "safra": "2025/2026"
+        },
+        {
+            "cultura": "sorgo",
+            "uf": "MG",
+            "municipio": "uberlandia",
+            "solo": "medio",
+            "janela_inicio": "01/10",
+            "janela_fim": "30/11",
+            "risco": "medio",
+            "safra": "2025/2026"
+        },
+        # Mandioca
+        {
+            "cultura": "mandioca",
+            "uf": "SP",
+            "municipio": "sao paulo",
+            "solo": "medio",
+            "janela_inicio": "01/09",
+            "janela_fim": "31/03",
+            "risco": "baixo",
+            "safra": "2025/2026"
+        },
+        {
+            "cultura": "mandioca",
+            "uf": "PR",
+            "municipio": "londrina",
+            "solo": "medio",
+            "janela_inicio": "15/08",
+            "janela_fim": "31/03",
+            "risco": "baixo",
+            "safra": "2025/2026"
         }
     ]
 
@@ -689,11 +761,13 @@ def buscar_zarc(
     municipio: Optional[str] = None,
     solo: Optional[str] = None,
     safra: str = ZARC_SAFRA_DEFAULT
-) -> Optional[Dict[str, Any]]:
+) -> Dict[str, Any]:
     """
     Busca dados ZARC para cultura/região específica
     
     PERFORMANCE: Tenta índice primeiro (rápido), depois streaming (lento)
+    
+    SEMPRE retorna um dicionário, nunca None
     
     Args:
         cultura: Nome da cultura
@@ -703,7 +777,7 @@ def buscar_zarc(
         safra: Safra (padrão: 2025/2026)
     
     Returns:
-        Dicionário com dados ZARC ou None se não encontrar
+        Dicionário com dados ZARC (sempre retorna, nunca None)
     """
     # FAST PATH: Tentar índice primeiro (O(1) lookup)
     if ZARC_FAST_INDEX_ENABLED:
@@ -718,7 +792,14 @@ def buscar_zarc(
         return buscar_zarc_fallback(cultura, uf, municipio, solo, safra)
     
     # Full scan permitido (desenvolvimento local)
-    return buscar_zarc_streaming(cultura, uf, municipio, solo, safra)
+    resultado_streaming = buscar_zarc_streaming(cultura, uf, municipio, solo, safra)
+    
+    # buscar_zarc_streaming pode retornar None se arquivo não disponível
+    # Nesse caso, usar fallback
+    if resultado_streaming is None:
+        return buscar_zarc_fallback(cultura, uf, municipio, solo, safra)
+    
+    return resultado_streaming
 
 def buscar_zarc_streaming(
     cultura: str,
@@ -737,7 +818,7 @@ def buscar_zarc_streaming(
     cultura_norm = normalizar_cultura(cultura)
     uf_norm = normalizar_uf(uf) if uf else None
     municipio_norm = normalizar_municipio(municipio) if municipio else None
-    solo_norm = normalizar_solo(solo) if solo else None
+    solo_norm = normalizar_solo_zarc(solo) if solo else None  # Usa normalização ZARC
     
     # Tentar obter arquivo ZARC
     file_info = ensure_zarc_file(safra)
@@ -768,7 +849,7 @@ def buscar_zarc_streaming(
             # Solo (se fornecido)
             if solo_norm:
                 solo_registro = mapear_codigo_solo(registro.get("Cod_Solo", ""))
-                if normalizar_solo(solo_registro) == solo_norm:
+                if normalizar_solo_zarc(solo_registro) == solo_norm:  # Usa normalização ZARC
                     score += 2
             
             # Manter apenas o melhor match (não acumula lista)
@@ -837,15 +918,17 @@ def buscar_zarc_fallback(
     municipio: Optional[str] = None,
     solo: Optional[str] = None,
     safra: str = ZARC_SAFRA_DEFAULT
-) -> Optional[Dict[str, Any]]:
+) -> Dict[str, Any]:
     """
     Busca ZARC em dados simplificados (fallback)
+    
+    SEMPRE retorna um dicionário, nunca None
     """
     # Normalizar parâmetros
     cultura_norm = normalizar_cultura(cultura)
     uf_norm = normalizar_uf(uf) if uf else None
     municipio_norm = normalizar_municipio(municipio) if municipio else None
-    solo_norm = normalizar_solo(solo) if solo else None
+    solo_norm = normalizar_solo_zarc(solo) if solo else None  # Usa normalização ZARC
     
     # Fallback: usar dados simplificados (lista pequena em memória)
     fallback_data = get_zarc_fallback()
@@ -869,7 +952,7 @@ def buscar_zarc_fallback(
             score += 3
         
         # Solo (se fornecido)
-        if solo_norm and normalizar_solo(registro.get("solo", "")) == solo_norm:
+        if solo_norm and normalizar_solo_zarc(registro.get("solo", "")) == solo_norm:  # Usa normalização ZARC
             score += 2
         
         if score > melhor_score:
@@ -894,4 +977,11 @@ def buscar_zarc_fallback(
             "observacao": "Dados simplificados locais usados porque o CSV oficial não estava disponível."
         }
     
-    return None
+    # Nenhum match encontrado - retornar estado "unavailable" em vez de None
+    return {
+        "encontrado": False,
+        "source": "zarc-unavailable",
+        "fallback": False,
+        "message": "ZARC consultado, mas nenhuma recomendação foi encontrada para esta cultura, solo e região.",
+        "observacao": "A cultura pode não estar disponível no índice ZARC compacto para a região selecionada."
+    }

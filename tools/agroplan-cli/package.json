@@ -1,6 +1,6 @@
 {
   "name": "agroplan-ai-cli",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "CLI global para AgroPlan AI - modo local acelerado",
   "type": "module",
   "bin": {
@@ -14,6 +14,8 @@
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target bun",
     "postbuild": "node -e \"const fs=require('fs'); let content=fs.readFileSync('dist/index.js','utf8'); if(!content.startsWith('#!/usr/bin/env bun')) content='#!/usr/bin/env bun\\n'+content; fs.writeFileSync('dist/index.js',content);\"",
+    "prepack": "bun run build",
+    "prepublishOnly": "bun run build",
     "dev": "bun run src/index.ts",
     "agroplan": "bun run src/index.ts"
   },

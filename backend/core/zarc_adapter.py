@@ -78,10 +78,10 @@ def enriquecer_plano_com_zarc(
             if zarc_data.get("fallback"):
                 tem_fallback = True
         else:
-            # ZARC não encontrado
+            # ZARC não encontrado - usar mensagem honesta
             item["zarc"] = {
                 "ativo": False,
-                "message": zarc_data.get("message") if zarc_data else "ZARC não consultado"
+                "message": zarc_data.get("message", "ZARC consultado, mas sem recomendação disponível para esta cultura/região.")
             }
     
     # Determinar source geral
