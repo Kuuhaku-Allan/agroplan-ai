@@ -1,5 +1,6 @@
-import { DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
+import { DollarSign, TrendingUp, AlertTriangle, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import type { PriceData } from "@/lib/types";
 
 interface PriceInfoCardProps {
@@ -44,18 +45,35 @@ export function PriceInfoCard({ preco, cultura, compact = false }: PriceInfoCard
     }
   };
 
+  const normalizacao = preco.normalizacao || (preco as any).preco_normalizado;
+  const isNormalizado = normalizacao?.normalizado;
+
   if (compact) {
     return (
-      <div className="flex items-center gap-2 text-sm">
-        <DollarSign className="w-4 h-4 text-emerald-500" />
-        <span className="text-slate-300">
-          Preço ref.: <strong className="text-white">{formatPrice(preco.preco || 0)}</strong>
-          {preco.unidade && ` / ${preco.unidade}`}
-        </span>
-        {preco.fallback && (
-          <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded">
-            Fallback
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 text-sm">
+          <DollarSign className="w-4 h-4 text-emerald-500" />
+          <span className="text-slate-300">
+            Preço ref.: <strong className="text-white">{formatPrice(preco.preco || 0)}</strong>
+            {preco.unidade && ` / ${preco.unidade.replace(/_/g, " ")}`}
           </span>
+          {preco.fallback && (
+            <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded">
+              Fallback
+            </span>
+          )}
+        </div>
+        
+        {isNormalizado && normalizacao.preco_por_tonelada && (
+          <div className="flex items-center gap-2 text-xs text-slate-400 pl-6">
+            <ArrowRight className="w-3 h-3" />
+            <span>
+              R$/t: <strong className="text-slate-300">{formatPrice(normalizacao.preco_por_tonelada)}</strong>
+            </span>
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs px-1.5 py-0">
+              Normalizado
+            </Badge>
+          </div>
         )}
       </div>
     );
@@ -78,10 +96,17 @@ export function PriceInfoCard({ preco, cultura, compact = false }: PriceInfoCard
                 Fallback
               </span>
             )}
+            {isNormalizado && (
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                Normalizado
+              </Badge>
+            )}
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
+            {/* Preço Original */}
             <div>
+              <div className="text-xs text-slate-500 mb-1">Preço Original</div>
               <div className="text-2xl font-bold text-white">
                 {formatPrice(preco.preco || 0)}
               </div>
@@ -91,6 +116,29 @@ export function PriceInfoCard({ preco, cultura, compact = false }: PriceInfoCard
                 </div>
               )}
             </div>
+            
+            {/* Preço Normalizado */}
+            {isNormalizado && normalizacao.preco_por_tonelada && (
+              <div className="pt-2 border-t border-slate-700/50">
+                <div className="text-xs text-slate-500 mb-1">Preço por Tonelada</div>
+                <div className="text-xl font-bold text-emerald-400">
+                  {formatPrice(normalizacao.preco_por_tonelada)}
+                </div>
+                <div className="text-xs text-slate-400 mt-0.5">
+                  por tonelada (fator: ×{normalizacao.fator_conversao?.toFixed(2)})
+                </div>
+              </div>
+            )}
+            
+            {/* Alerta se não normalizado */}
+            {!isNormalizado && normalizacao?.error && (
+              <div className="pt-2 border-t border-slate-700/50">
+                <div className="flex items-start gap-2 p-2 bg-amber-500/10 rounded text-xs text-amber-400">
+                  <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                  <span>{normalizacao.error}</span>
+                </div>
+              </div>
+            )}
             
             <div className="pt-2 border-t border-slate-700/50 space-y-1 text-xs">
               <div className="flex justify-between">

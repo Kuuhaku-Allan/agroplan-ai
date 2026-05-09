@@ -69,7 +69,21 @@ O AgroPlan AI integra múltiplos provedores de dados reais para enriquecer as re
 - Preços de referência para as principais culturas
 - Índice local com fallback para cobertura completa
 - Fonte: dados de mercado e referências regionais
-- **Importante**: Os preços são exibidos como referência. O cálculo de lucro ainda utiliza a base interna do sistema até a normalização de unidades.
+- **Normalização de unidades**: Todos os preços convertidos para R$/tonelada
+- **Lucro de mercado**: Estimativa experimental para comparação
+
+#### Normalização de Unidades
+
+O sistema normaliza automaticamente diferentes unidades de medida para uma base comum (R$/tonelada):
+
+| Unidade Original | Fator | Exemplo |
+|-----------------|-------|---------|
+| `tonelada` | ×1.0 | R$ 98/ton → R$ 98/ton |
+| `saca_60kg` | ×16.67 | R$ 130/saca → R$ 2.166,67/ton |
+| `saca_50kg` | ×20.0 | R$ 85/saca → R$ 1.700/ton |
+| `arroba_15kg` | ×66.67 | R$ 3.200/arroba → R$ 213.333,33/ton |
+
+**Importante**: Os preços são normalizados para R$/tonelada, mas o lucro principal ainda não é recalculado automaticamente. O **lucro de mercado** é exibido apenas como **comparação experimental** ao lado do lucro do sistema. Isso permite validar preços e produtividades antes de ativar o recálculo automático.
 
 📖 **Documentação completa**: [docs/API_PROVIDERS.md](docs/API_PROVIDERS.md)
 

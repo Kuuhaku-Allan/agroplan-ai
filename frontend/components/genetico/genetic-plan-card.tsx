@@ -109,6 +109,22 @@ export function GeneticPlanCard({ plano }: GeneticPlanCardProps) {
               {item.preco_real && item.preco_real.ativo && (
                 <div className="mt-3 pt-3 border-t border-slate-700/50">
                   <PriceInfoCard preco={item.preco_real} cultura={item.cultura} compact />
+                  
+                  {/* Lucro de Mercado */}
+                  {item.lucro_mercado_estimado !== undefined && item.lucro_mercado_estimado !== null && (
+                    <div className="mt-2 flex items-center justify-between text-xs">
+                      <span className="text-slate-500">Lucro mercado:</span>
+                      <span className={`font-semibold ${
+                        item.lucro_mercado_estimado < 0 
+                          ? 'text-red-400' 
+                          : item.lucro_mercado_estimado < item.lucro_estimado * 0.5
+                          ? 'text-amber-400'
+                          : 'text-emerald-400'
+                      }`}>
+                        {formatCurrencyBRL(item.lucro_mercado_estimado)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

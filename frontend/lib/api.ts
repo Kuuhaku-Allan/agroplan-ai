@@ -568,3 +568,23 @@ export async function getClimateData(location: ClimateLocation) {
     throw error;
   }
 }
+
+
+/**
+ * Obtém comparação de preços normalizados
+ */
+export async function getComparacaoPrecos(uf?: string) {
+  const params = new URLSearchParams();
+  if (uf) params.append("uf", uf);
+  const query = params.toString();
+  
+  const response = await apiFetch(`/dados/precos/comparar${query ? `?${query}` : ""}`, {
+    cache: "no-store"
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Falha ao obter comparação de preços: ${response.status}`);
+  }
+  
+  return response.json();
+}

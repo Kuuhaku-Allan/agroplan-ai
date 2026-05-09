@@ -238,7 +238,37 @@ GET /dados/precos/lote?uf=SP
 }
 ```
 
-**⚠️ Importante**: Os preços agrícolas são exibidos como referência. O cálculo de lucro ainda utiliza a base interna do sistema até a normalização de unidades. Isso garante consistência nos cálculos enquanto as unidades de medida são padronizadas.
+**⚠️ Importante**: Os preços agrícolas são normalizados para R$/tonelada. O cálculo de lucro principal ainda utiliza a base interna do sistema, mas o **lucro de mercado estimado** é exibido como comparação experimental. Isso garante consistência nos cálculos enquanto os preços e produtividades são validados.
+
+### Normalização de Unidades
+
+Todos os preços são automaticamente convertidos para R$/tonelada usando os seguintes fatores:
+
+| Unidade Original | Fator de Conversão | Cálculo | Exemplo |
+|-----------------|-------------------|---------|---------|
+| `tonelada` | 1.0 | preço × 1 | R$ 98/ton → R$ 98/ton |
+| `saca_60kg` | 16.6667 | preço × (1000/60) | R$ 130/saca → R$ 2.166,67/ton |
+| `saca_50kg` | 20.0 | preço × (1000/50) | R$ 85/saca → R$ 1.700/ton |
+| `arroba_15kg` | 66.6667 | preço × (1000/15) | R$ 3.200/arroba → R$ 213.333,33/ton |
+
+### Lucro de Mercado vs Lucro do Sistema
+
+O sistema agora exibe **dois lucros** para comparação:
+
+1. **Lucro do Sistema** (principal):
+   - Usa preços internos do CSV
+   - Base para decisões do algoritmo genético
+   - Mantém consistência histórica
+
+2. **Lucro de Mercado** (experimental):
+   - Usa preços normalizados de mercado
+   - Calcula: `(preço/ton × produtividade × área) - (custo × área)`
+   - Exibido apenas para comparação
+   - Não afeta o lucro principal
+
+**Variável de controle**: `PRICE_APPLY_TO_PROFIT=false` (padrão)
+
+Quando `true`, o lucro de mercado substitui o lucro do sistema. Recomenda-se validação extensiva antes de ativar.
 
 ## Risco Climático
 

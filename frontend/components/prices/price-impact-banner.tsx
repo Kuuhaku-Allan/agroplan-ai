@@ -1,4 +1,4 @@
-import { DollarSign, TrendingUp, AlertCircle } from "lucide-react";
+import { DollarSign, TrendingUp, AlertCircle, CheckCircle2, Info } from "lucide-react";
 import type { PriceSummary } from "@/lib/types";
 
 interface PriceImpactBannerProps {
@@ -17,6 +17,7 @@ export function PriceImpactBanner({ precos, onViewDetails }: PriceImpactBannerPr
   
   const hasFallback = (precos.fallback_count || 0) > 0;
   const isFullCoverage = coveragePercent === 100;
+  const isNormalized = precos.normalizacao?.ativa && (precos.normalizacao?.culturas_normalizadas || 0) > 0;
   
   // Determinar cor baseado na cobertura e fallback
   const colorClass = isFullCoverage && !hasFallback
@@ -53,11 +54,29 @@ export function PriceImpactBanner({ precos, onViewDetails }: PriceImpactBannerPr
               </span>
             </div>
             
+            {isNormalized && (
+              <div className="flex items-center gap-2 text-sm text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>
+                  <strong>{precos.normalizacao?.culturas_normalizadas || 0}</strong> culturas normalizadas para R$/tonelada
+                </span>
+              </div>
+            )}
+            
             {hasFallback && (
               <div className="flex items-start gap-2 text-sm text-amber-400">
                 <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <span>
                   {precos.fallback_count} cultura(s) usando preço de referência (fallback)
+                </span>
+              </div>
+            )}
+            
+            {precos.lucro_recalculado_disponivel && (
+              <div className="flex items-start gap-2 text-sm text-blue-400">
+                <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>
+                  Lucro de mercado disponível como comparação experimental
                 </span>
               </div>
             )}
@@ -82,7 +101,7 @@ export function PriceImpactBanner({ precos, onViewDetails }: PriceImpactBannerPr
               
               {!precos.aplicado_no_lucro && (
                 <div className="mt-2 p-2 bg-slate-800/50 rounded text-xs text-slate-400">
-                  ℹ️ Os preços são exibidos como referência. O cálculo de lucro ainda utiliza a base interna do sistema.
+                  ℹ️ Os preços são normalizados para R$/tonelada, mas o lucro principal ainda utiliza a base interna do sistema. O lucro de mercado é exibido apenas como comparação experimental.
                 </div>
               )}
             </div>

@@ -148,10 +148,10 @@ export default function RelatoriosPage() {
             <div className="text-blue-500 mt-0.5">💰</div>
             <div className="flex-1">
               <h3 className="text-sm font-medium text-blue-500 mb-1">
-                Preços Agrícolas de Referência
+                Preços Agrícolas Normalizados
               </h3>
               <p className="text-sm text-slate-300">
-                Este relatório incluirá preços agrícolas de referência.
+                Este relatório incluirá preços agrícolas normalizados para R$/tonelada e lucro de mercado estimado para comparação.
                 {climateLocation?.uf && (
                   <> Preços considerados para UF: <strong>{climateLocation.uf}</strong>.</>
                 )}
@@ -160,7 +160,7 @@ export default function RelatoriosPage() {
                 )}
               </p>
               <p className="text-xs text-slate-400 mt-2">
-                ℹ️ Os preços são exibidos como referência e não alteram o cálculo de lucro nesta versão.
+                ℹ️ Os preços são normalizados para R$/tonelada, mas o lucro principal ainda utiliza a base interna do sistema. O lucro de mercado é exibido apenas como comparação experimental.
               </p>
             </div>
           </div>

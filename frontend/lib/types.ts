@@ -2,6 +2,16 @@
  * Tipos TypeScript para AgroPlan AI
  */
 
+export interface PriceNormalization {
+  preco_original?: number;
+  unidade_original?: string;
+  preco_por_tonelada?: number;
+  unidade_normalizada?: string;
+  fator_conversao?: number;
+  normalizado?: boolean;
+  error?: string;
+}
+
 export interface PriceData {
   ativo: boolean;
   source?: string;
@@ -12,6 +22,7 @@ export interface PriceData {
   unidade?: string;
   data_referencia?: string;
   observacao?: string;
+  normalizacao?: PriceNormalization;
 }
 
 export interface PriceSummary {
@@ -22,7 +33,14 @@ export interface PriceSummary {
   culturas_sem_preco?: number;
   total_culturas?: number;
   aplicado_no_lucro?: boolean;
+  lucro_recalculado_disponivel?: boolean;
   uf?: string;
+  normalizacao?: {
+    ativa?: boolean;
+    unidade_base?: string;
+    culturas_normalizadas?: number;
+    culturas_nao_normalizadas?: number;
+  };
 }
 
 export interface Talhao {
@@ -65,6 +83,12 @@ export interface PlanoItem {
   tempo: number;
   zarc?: any; // Dados ZARC opcionais
   preco_real?: PriceData; // Dados de preço opcionais
+  preco_normalizado?: PriceNormalization; // Normalização de preço
+  lucro_mercado_estimado?: number; // Lucro calculado com preço de mercado
+  lucro_mercado_aplicado?: boolean; // Se lucro de mercado foi aplicado
+  lucro_original?: number; // Lucro original antes de aplicar mercado
+  produtividade?: number; // Produtividade em t/ha
+  custo?: number; // Custo por hectare
 }
 
 export interface DashboardData {

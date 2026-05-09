@@ -490,6 +490,39 @@ def get_precos_lote(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/dados/precos/comparar")
+def get_precos_comparar(
+    uf: Optional[str] = Query(None, description="Unidade Federativa (ex: SP, PR)")
+):
+    """Compara preços originais com preços normalizados para tonelada"""
+    try:
+        from providers.price_provider import buscar_precos_lote
+        from core.price_normalizer import normalizar_precos_lote, obter_estatisticas_normalizacao
+        
+        # Culturas do AgroPlan
+        culturas = ["soja", "milho", "feijao", "trigo", "algodao", "cafe", "cana", "arroz", "sorgo", "mandioca"]
+        
+        # Buscar preços em lote
+        precos_data = buscar_precos_lote(culturas=culturas, uf=uf)
+        
+        # Converter para dict por cultura
+        precos_dict = {p["cultura"]: p for p in precos_data}
+        
+        # Normalizar preços
+        precos_normalizados = normalizar_precos_lote(precos_dict)
+        
+        # Obter estatísticas
+        stats = obter_estatisticas_normalizacao(precos_normalizados)
+        
+        return {
+            "uf": uf,
+            "precos_normalizados": precos_normalizados,
+            "estatisticas": stats
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/dashboard")
 def get_dashboard(
     lat: Optional[float] = None,

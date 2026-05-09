@@ -5,6 +5,7 @@ import { X, MapPin, Layers, Thermometer, Mountain, Droplets, Sprout, TrendingUp,
 import { formatCurrencyBRL } from "@/lib/formatters";
 import { ZarcWindowCard } from "@/components/zarc/zarc-window-card";
 import { PriceInfoCard } from "@/components/prices/price-info-card";
+import { MarketProfitComparison } from "@/components/prices/market-profit-comparison";
 
 interface FieldDetailPanelProps {
   talhao: {
@@ -20,6 +21,8 @@ interface FieldDetailPanelProps {
     nota?: number;
     zarc?: any; // Dados ZARC
     preco_real?: any; // Dados de preço
+    lucro_mercado_estimado?: number; // Lucro de mercado
+    lucro_mercado_aplicado?: boolean; // Se aplicado
   };
   onClose: () => void;
 }
@@ -193,9 +196,21 @@ export function FieldDetailPanel({ talhao, onClose }: FieldDetailPanelProps) {
                 <div className="border-t border-slate-800 pt-6">
                   <h3 className="text-lg font-semibold text-slate-50 mb-4">Preço de Referência</h3>
                   <PriceInfoCard preco={talhao.preco_real} cultura={talhao.cultura} />
+                  
+                  {/* Comparação de Lucro de Mercado */}
+                  {talhao.lucro_mercado_estimado !== undefined && talhao.lucro_mercado_estimado !== null && (
+                    <div className="mt-4">
+                      <MarketProfitComparison
+                        lucroSistema={talhao.lucro_estimado || 0}
+                        lucroMercado={talhao.lucro_mercado_estimado}
+                        aplicado={talhao.lucro_mercado_aplicado}
+                      />
+                    </div>
+                  )}
+                  
                   <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                     <p className="text-xs text-blue-400">
-                      ℹ️ Preço apenas referencial; não altera o lucro estimado nesta versão.
+                      ℹ️ O lucro principal ainda usa a base interna do sistema. O lucro de mercado é uma estimativa experimental.
                     </p>
                   </div>
                 </div>
