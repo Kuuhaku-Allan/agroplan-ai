@@ -104,29 +104,47 @@ GET /recomendacoes?uf=SP&municipio=Clementina&safra=2025/2026
 
 ---
 
-## Parte 2 - Frontend ⏳ PRÓXIMO
+## Parte 2 - Frontend ✅ TIPOS E COMPONENTES COMPLETOS
 
-### 2.1 Tipos e API (Próximo)
+### 2.1 Tipos e API ✅
 
-- [ ] Atualizar `ClimateLocation` para incluir `uf`, `municipio`, `safra`
-- [ ] Atualizar presets com dados completos:
-  - Clementina - SP (exemplo ZARC oficial)
-  - São Paulo - SP
-  - Brasília - DF
-  - Ribeirão Preto - SP
-  - Campo Grande - MS
-  - Londrina - PR
-- [ ] Atualizar `api.ts` para enviar uf/municipio/safra
+- ✅ Atualizado `ClimateLocation` para incluir `uf`, `municipio`, `safra`
+- ✅ Atualizado presets com dados completos:
+  - ✅ Clementina - SP 🌾 (exemplo ZARC oficial) - DESTAQUE
+  - ✅ São Paulo - SP
+  - ✅ Brasília - DF
+  - ✅ Ribeirão Preto - SP
+  - ✅ Campo Grande - MS
+  - ✅ Londrina - PR
+- ✅ Criado `zarc.ts` com tipos ZARC
+- ✅ Atualizado `api.ts` para enviar uf/municipio/safra:
+  - ✅ getDashboard
+  - ✅ getCenarios
+  - ✅ getRecomendacoes
+  - ✅ otimizar
+  - ✅ gerarRelatorio
 
-### 2.2 Componentes ZARC (Próximo)
+### 2.2 Componentes ZARC ✅
 
-- [ ] Criar `zarc-impact-banner.tsx` - Banner de status ZARC
-- [ ] Criar `zarc-window-card.tsx` - Card de janela de plantio
-- [ ] Atualizar Talhões para mostrar ZARC
-- [ ] Atualizar Dashboard para mostrar banner ZARC
+- ✅ Criado `zarc-impact-banner.tsx` - Banner de status ZARC
+  - Mostra: ativo, município/UF, safra, fonte, cobertura
+  - Badges: oficial (verde), cache (azul), fallback (amarelo), misto (roxo)
+  - Barra de progresso de cobertura
+  - Botão "Alterar Região"
+- ✅ Criado `zarc-window-card.tsx` - Card de janela de plantio
+  - Mostra: janela (início-fim), risco, safra, fonte, observação
+  - Badges de risco: baixo (verde), médio (amarelo), alto (vermelho)
+  - Modo compact e completo
+  - Mensagem amigável quando não encontrado
+
+### 2.3 Integração em Páginas ⏳ PRÓXIMO
+
+- [ ] Atualizar Dashboard para mostrar ZarcImpactBanner
+- [ ] Atualizar Talhões para mostrar ZARC por cultura
 - [ ] Atualizar Relatórios com aviso ZARC
+- [ ] Atualizar Genético para enviar região
 
-### 2.3 Testes Frontend (Próximo)
+### 2.4 Testes Frontend ⏳ PRÓXIMO
 
 - [ ] Testar seleção de região com ZARC
 - [ ] Testar Talhões com janela de plantio
@@ -143,11 +161,25 @@ GET /recomendacoes?uf=SP&municipio=Clementina&safra=2025/2026
 
 ---
 
-## Arquivos Modificados (Backend)
+## Arquivos Modificados
 
+### Backend ✅
 1. ✅ `backend/core/zarc_adapter.py` - Criado
 2. ✅ `backend/api.py` - Endpoints atualizados
 3. ✅ `backend/core/report_generator.py` - Seção ZARC adicionada
+
+### Frontend ✅ (Tipos e Componentes)
+4. ✅ `frontend/lib/types/climate.ts` - ClimateLocation com ZARC
+5. ✅ `frontend/lib/types/zarc.ts` - Tipos ZARC criados
+6. ✅ `frontend/lib/api.ts` - Funções atualizadas com ZARC
+7. ✅ `frontend/components/zarc/zarc-impact-banner.tsx` - Criado
+8. ✅ `frontend/components/zarc/zarc-window-card.tsx` - Criado
+
+### Frontend ⏳ (Páginas - Próximo)
+9. [ ] `frontend/app/dashboard/page.tsx` - Integrar ZarcImpactBanner
+10. [ ] `frontend/app/talhoes/page.tsx` - Integrar ZarcWindowCard
+11. [ ] `frontend/app/relatorios/page.tsx` - Aviso ZARC
+12. [ ] `frontend/app/genetico/page.tsx` - Enviar região
 
 ## Próximos Passos
 
@@ -160,4 +192,12 @@ GET /recomendacoes?uf=SP&municipio=Clementina&safra=2025/2026
 
 ---
 
-**Status Atual:** Backend 100% completo e testado. Frontend aguardando implementação.
+**Status Atual:** 
+- Backend 100% completo e testado ✅
+- Frontend tipos e componentes 100% completos ✅
+- Frontend páginas aguardando integração ⏳
+
+**Commits:**
+- 079951b - Backend ZARC integration
+- e4a52cc - Progress document
+- ec3d703 - Frontend types, API, and components
