@@ -11,11 +11,13 @@ import { doctorCommand } from "./commands/doctor";
 import { serveOnCommand, serveOffCommand, serveStatusCommand, serveLogsCommand } from "./commands/serve";
 import { openCommand } from "./commands/open";
 import { setupCommand } from "./commands/setup";
+import { updateCommand } from "./commands/update";
 
 const COMMANDS = {
   setup: "Configura a API local no seu computador",
   "setup --force": "Reinstala a API local (remove instalação anterior)",
   "setup --python=<path>": "Usa Python específico para instalação",
+  update: "Atualiza a API local para a versão mais recente",
   doctor: "Verifica se o sistema está configurado corretamente",
   "serve on": "Inicia a API local em http://localhost:8000",
   "serve off": "Para a API local",
@@ -25,7 +27,7 @@ const COMMANDS = {
 };
 
 function showHelp(): void {
-  console.log("🌱 AgroPlan AI - CLI Local v1.0.8");
+  console.log("🌱 AgroPlan AI - CLI Local v1.0.20");
   console.log("   Launcher para modo local acelerado\n");
   
   console.log("📋 Comandos disponíveis:");
@@ -38,6 +40,9 @@ function showHelp(): void {
   console.log("   2. agroplan serve on        # Iniciar API local");
   console.log("   3. agroplan open            # Abrir no navegador");
   console.log("   4. agroplan serve off       # Parar quando terminar");
+  
+  console.log("\n🔄 Atualização:");
+  console.log("   agroplan update             # Atualizar API local");
   
   console.log("\n🐍 Para Python 3.13 (Windows):");
   console.log("   agroplan setup --python=\"C:\\Python311\\python.exe\"");
@@ -77,6 +82,10 @@ async function main(): Promise<void> {
     switch (command) {
       case "setup":
         await setupCommand(force, pythonPath);
+        break;
+      
+      case "update":
+        await updateCommand();
         break;
         
       case "doctor":

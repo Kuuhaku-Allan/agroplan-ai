@@ -45,11 +45,32 @@ export async function doctorCommand(): Promise<void> {
   const setupComplete = isSetupComplete();
   const setupState = readSetupState();
   
+  // Obter versão atual da CLI
+  let currentVersion = "1.0.20";
+  try {
+    const packagePath = require.resolve('agroplan-ai-cli/package.json');
+    const packageJson = require(packagePath);
+    currentVersion = packageJson.version || "1.0.20";
+  } catch {
+    currentVersion = "1.0.20";
+  }
+  
   if (setupComplete && setupState) {
+    const installedVersion = setupState.version || "unknown";
     console.log("   ✅ Setup concluído");
     console.log(`   📅 Instalado em: ${new Date(setupState.installedAt).toLocaleString()}`);
-    console.log(`   📦 Versão: ${setupState.version}`);
+    console.log(`   📦 Versão: ${installedVersion}`);
     console.log(`   🐍 Python: ${setupState.python}`);
+    
+    // Verificar se está desatualizado
+    if (installedVersion !== currentVersion) {
+      console.log(`\n   ⚠️  API local desatualizada!`);
+      console.log(`      Instalada: ${installedVersion}`);
+      console.log(`      CLI atual: ${currentVersion}`);
+      console.log(`\n      Execute: agroplan update`);
+      console.log(`      ou: agroplan setup --force --python="${setupState.pythonPath || 'python'}"`);
+      allGood = false;
+    }
   } else {
     console.log("   ❌ Setup não concluído");
     console.log("      Execute: agroplan setup");

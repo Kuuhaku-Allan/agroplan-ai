@@ -17,9 +17,34 @@ export async function setupCommand(force: boolean = false, pythonPath?: string):
   
   console.log(`📁 Diretório de instalação: ${homeDir}`);
   
+  // Obter versão atual da CLI
+  let currentVersion = "1.0.20";
+  try {
+    const packagePath = require.resolve('agroplan-ai-cli/package.json');
+    const packageJson = require(packagePath);
+    currentVersion = packageJson.version || "1.0.20";
+  } catch {
+    currentVersion = "1.0.20";
+  }
+  
   // Verificar se já está configurado (a menos que seja --force)
   if (!force && isSetupComplete()) {
+    const setupState = require("../utils/setup-state").readSetupState();
+    const installedVersion = setupState?.version || "unknown";
+    
+    // Comparar versões
+    if (installedVersion !== currentVersion) {
+      console.log("\n⚠️  API local instalada está desatualizada!");
+      console.log(`   Instalada: ${installedVersion}`);
+      console.log(`   CLI atual: ${currentVersion}`);
+      console.log("\n💡 Para atualizar:");
+      console.log("   agroplan update");
+      console.log("   ou: agroplan setup --force");
+      return;
+    }
+    
     console.log("\n✅ API local já está configurada!");
+    console.log(`   Versão: ${installedVersion}`);
     console.log("\n🚀 Próximos passos:");
     console.log("   agroplan serve on     # Iniciar API local");
     console.log("   agroplan open         # Abrir no navegador");
@@ -186,15 +211,15 @@ export async function setupCommand(force: boolean = false, pythonPath?: string):
   console.log("   ✅ Servidor web configurado");
   
   // Salvar estado do setup
-  let version = "1.0.5";
+  let version = "1.0.20";
   try {
     // Tentar encontrar o package.json da CLI instalada
     const packagePath = require.resolve('agroplan-ai-cli/package.json');
     const packageJson = require(packagePath);
-    version = packageJson.version || "1.0.5";
+    version = packageJson.version || "1.0.20";
   } catch {
     // Fallback para versão hardcoded se não conseguir encontrar
-    version = "1.0.5";
+    version = "1.0.20";
   }
   
   saveSetupState({

@@ -24,6 +24,37 @@ export async function serveOnCommand(): Promise<void> {
     return;
   }
   
+  // Verificar se versão está desatualizada
+  const { readSetupState } = await import("../utils/setup-state");
+  const setupState = readSetupState();
+  
+  if (setupState) {
+    let currentVersion = "1.0.20";
+    try {
+      const packagePath = require.resolve('agroplan-ai-cli/package.json');
+      const packageJson = require(packagePath);
+      currentVersion = packageJson.version || "1.0.20";
+    } catch {
+      currentVersion = "1.0.20";
+    }
+    
+    const installedVersion = setupState.version || "unknown";
+    
+    if (installedVersion !== currentVersion) {
+      console.log("⚠️  API local desatualizada detectada!");
+      console.log(`   Instalada: ${installedVersion}`);
+      console.log(`   CLI atual: ${currentVersion}`);
+      console.log("\n   Algumas funcionalidades podem não funcionar corretamente.");
+      console.log("   Recomendamos atualizar antes de continuar:\n");
+      console.log("   agroplan update");
+      console.log(`   ou: agroplan setup --force --python="${setupState.pythonPath || 'python'}"`);
+      console.log("\n   Pressione Ctrl+C para cancelar ou aguarde 5 segundos para continuar...\n");
+      
+      // Aguardar 5 segundos
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
+  
   // Verificar se já está rodando
   const existingPid = readPid();
   if (existingPid && isProcessRunning(existingPid)) {
