@@ -31,6 +31,7 @@ export interface MarketProfitValidation {
   direcao?: "maior" | "menor" | "igual";
   confiabilidade?: "alta" | "media" | "baixa";
   motivos?: string[];
+  critico?: boolean;
   diferenca?: {
     diferenca_absoluta: number;
     diferenca_percentual: number;
@@ -44,8 +45,10 @@ export interface MarketProfitValidationSummary {
   itens_alta_confiabilidade?: number;
   itens_media_confiabilidade?: number;
   itens_baixa_confiabilidade?: number;
+  itens_criticos?: number;
   percentual_alta_confiabilidade?: number;
   percentual_baixa_confiabilidade?: number;
+  percentual_critico?: number;
   alertas?: string[];
   total_alertas?: number;
   recomendacao?: string;

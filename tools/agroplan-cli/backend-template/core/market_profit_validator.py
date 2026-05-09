@@ -47,20 +47,27 @@ def classificar_confiabilidade_lucro(item: Dict) -> Dict:
     """
     Classifica confiabilidade do lucro de mercado para um item do plano.
     
+    Critérios refinados (Fase 9.5):
+    - Baixa: diferença >= 150%, dados incompletos, lucro invertido, fallback com diferença >= 100%
+    - Média: diferença 50-150%, fallback, lucro negativo
+    - Alta: diferença < 50%, sem fallback, dados completos
+    
     Args:
         item: Item do plano com dados de lucro
     
     Returns:
-        Dict com confiabilidade (alta/media/baixa) e motivos
+        Dict com confiabilidade (alta/media/baixa), motivos e flag crítico
     """
     motivos = []
+    critico = False
     
     # Verificar se tem preço normalizado
     preco_norm = item.get("preco_normalizado", {})
     if not preco_norm.get("normalizado"):
         return {
             "confiabilidade": "baixa",
-            "motivos": ["Preço não normalizado ou não disponível"]
+            "motivos": ["Preço não normalizado ou não disponível"],
+            "critico": True
         }
     
     # Verificar se tem produtividade e custo
@@ -76,7 +83,8 @@ def classificar_confiabilidade_lucro(item: Dict) -> Dict:
     if motivos:
         return {
             "confiabilidade": "baixa",
-            "motivos": motivos
+            "motivos": motivos,
+            "critico": True
         }
     
     # Verificar se tem lucro de mercado calculado
@@ -84,7 +92,8 @@ def classificar_confiabilidade_lucro(item: Dict) -> Dict:
     if lucro_mercado is None:
         return {
             "confiabilidade": "baixa",
-            "motivos": ["Lucro de mercado não calculado"]
+            "motivos": ["Lucro de mercado não calculado"],
+            "critico": True
         }
     
     # Calcular diferença com lucro do sistema
@@ -92,34 +101,61 @@ def classificar_confiabilidade_lucro(item: Dict) -> Dict:
     diferenca = calcular_diferenca_lucro(lucro_sistema, lucro_mercado)
     diferenca_percentual = abs(diferenca["diferenca_percentual"])
     
-    # Classificar baseado na diferença percentual
-    if diferenca_percentual > 100:
+    # Verificar se é fallback
+    preco_real = item.get("preco_real", {})
+    is_fallback = preco_real.get("fallback", False)
+    
+    # Verificar inversão de sinal (lucro vira prejuízo ou vice-versa)
+    lucro_invertido = (lucro_sistema > 0 and lucro_mercado < 0) or (lucro_sistema < 0 and lucro_mercado > 0)
+    
+    # CRITÉRIOS REFINADOS (Fase 9.5)
+    
+    # Baixa confiabilidade (crítico)
+    if diferenca_percentual >= 150:
+        confiabilidade = "baixa"
+        motivos.append(f"Diferença extrema ({diferenca_percentual:.1f}%) entre lucro sistema e mercado")
+        critico = True
+    elif lucro_invertido and lucro_sistema > 0:
+        confiabilidade = "baixa"
+        motivos.append("Lucro do sistema é positivo mas lucro de mercado indica prejuízo")
+        critico = True
+    elif is_fallback and diferenca_percentual >= 100:
+        confiabilidade = "baixa"
+        motivos.append(f"Preço de fallback com diferença muito alta ({diferenca_percentual:.1f}%)")
+        critico = True
+    elif diferenca_percentual >= 100:
+        # Diferença > 100% mesmo sem fallback é baixa confiabilidade
         confiabilidade = "baixa"
         motivos.append(f"Diferença muito alta ({diferenca_percentual:.1f}%) entre lucro sistema e mercado")
-    elif diferenca_percentual > 50:
+        critico = False  # Não crítico se não for fallback
+    
+    # Média confiabilidade
+    elif diferenca_percentual >= 50:
         confiabilidade = "media"
         motivos.append(f"Diferença moderada ({diferenca_percentual:.1f}%) entre lucro sistema e mercado")
+    elif is_fallback:
+        confiabilidade = "media"
+        motivos.append("Preço de referência (fallback) - pode não refletir mercado local")
+    elif lucro_mercado < 0:
+        confiabilidade = "media"
+        motivos.append("Lucro de mercado indica prejuízo - requer validação")
+    
+    # Alta confiabilidade
     else:
         confiabilidade = "alta"
         motivos.append(f"Diferença aceitável ({diferenca_percentual:.1f}%) entre lucro sistema e mercado")
+        if not is_fallback:
+            motivos.append("Preço real disponível (não fallback)")
     
-    # Verificar se lucro de mercado é negativo (prejuízo)
-    if lucro_mercado < 0:
-        if confiabilidade == "alta":
-            confiabilidade = "media"
-        motivos.append("Lucro de mercado indica prejuízo - requer validação de preço/produtividade")
-    
-    # Verificar se é fallback
-    preco_real = item.get("preco_real", {})
-    if preco_real.get("fallback"):
-        if confiabilidade == "alta":
-            confiabilidade = "media"
-        motivos.append("Preço usando fallback (referência) - pode não refletir mercado local")
+    # Adicionar informação sobre normalização bem-sucedida
+    if preco_norm.get("normalizado") and confiabilidade != "baixa":
+        motivos.append("Unidade comercial normalizada com sucesso")
     
     return {
         "confiabilidade": confiabilidade,
         "motivos": motivos,
-        "diferenca": diferenca
+        "diferenca": diferenca,
+        "critico": critico
     }
 
 
@@ -140,6 +176,7 @@ def validar_plano_lucro_mercado(resultado: Dict) -> Dict:
     alta_confiabilidade = 0
     media_confiabilidade = 0
     baixa_confiabilidade = 0
+    itens_criticos = 0
     alertas = []
     
     # Validar cada item do plano
@@ -160,11 +197,16 @@ def validar_plano_lucro_mercado(resultado: Dict) -> Dict:
             cultura = item.get("cultura", "desconhecida")
             talhao = item.get("talhao", "?")
             alertas.append(f"Talhão {talhao} ({cultura}): {', '.join(validacao['motivos'])}")
+        
+        # Contabilizar itens críticos
+        if validacao.get("critico", False):
+            itens_criticos += 1
     
     # Adicionar resumo de validação
     total = len(resultado["plano"])
     percentual_alta = (alta_confiabilidade / total * 100) if total > 0 else 0
     percentual_baixa = (baixa_confiabilidade / total * 100) if total > 0 else 0
+    percentual_critico = (itens_criticos / total * 100) if total > 0 else 0
     
     resultado["validacao_lucro_mercado"] = {
         "ativo": True,
@@ -172,31 +214,38 @@ def validar_plano_lucro_mercado(resultado: Dict) -> Dict:
         "itens_alta_confiabilidade": alta_confiabilidade,
         "itens_media_confiabilidade": media_confiabilidade,
         "itens_baixa_confiabilidade": baixa_confiabilidade,
+        "itens_criticos": itens_criticos,
         "percentual_alta_confiabilidade": round(percentual_alta, 1),
         "percentual_baixa_confiabilidade": round(percentual_baixa, 1),
+        "percentual_critico": round(percentual_critico, 1),
         "alertas": alertas[:5],  # Limitar a 5 alertas principais
         "total_alertas": len(alertas),
-        "recomendacao": _gerar_recomendacao(percentual_alta, percentual_baixa)
+        "recomendacao": _gerar_recomendacao(percentual_alta, percentual_baixa, percentual_critico)
     }
     
     return resultado
 
 
-def _gerar_recomendacao(percentual_alta: float, percentual_baixa: float) -> str:
+def _gerar_recomendacao(percentual_alta: float, percentual_baixa: float, percentual_critico: float = 0) -> str:
     """
     Gera recomendação baseada nos percentuais de confiabilidade.
     
     Args:
         percentual_alta: Percentual de itens com alta confiabilidade
         percentual_baixa: Percentual de itens com baixa confiabilidade
+        percentual_critico: Percentual de itens críticos
     
     Returns:
         String com recomendação
     """
-    if percentual_alta >= 70:
+    if percentual_critico >= 30:
+        return "Há valores críticos no lucro de mercado. Eles não devem ser usados para otimização sem validação manual."
+    elif percentual_alta >= 70:
         return "Lucro de mercado apresenta boa confiabilidade. Considere validação detalhada antes de ativar PRICE_APPLY_TO_PROFIT."
     elif percentual_baixa >= 50:
         return "Muitos itens com baixa confiabilidade. Valide preços, produtividades e custos antes de usar lucro de mercado."
+    elif percentual_critico > 0:
+        return "Alguns valores críticos detectados. Revise itens com baixa confiabilidade antes de usar lucro de mercado."
     else:
         return "Confiabilidade mista. Revise itens com baixa confiabilidade e valide dados de mercado."
 

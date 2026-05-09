@@ -175,9 +175,14 @@ export function MarketProfitComparison({
         {/* Aviso de baixa confiabilidade */}
         {validacao?.confiabilidade === "baixa" && (
           <div className="pt-2">
-            <div className="flex items-start gap-2 p-2 bg-red-500/10 rounded text-xs text-red-400">
+            <div className={`flex items-start gap-2 p-2 rounded text-xs ${
+              validacao.critico 
+                ? "bg-red-600/20 border border-red-600/40 text-red-300" 
+                : "bg-red-500/10 text-red-400"
+            }`}>
               <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
               <span>
+                {validacao.critico && <strong>⚠️ VALOR CRÍTICO: </strong>}
                 <strong>Este valor exige validação antes de ser usado na otimização.</strong> 
                 {" "}Verifique produtividade, custos e unidade comercial.
               </span>

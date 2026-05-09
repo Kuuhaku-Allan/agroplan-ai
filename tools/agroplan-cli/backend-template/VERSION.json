@@ -1,6 +1,6 @@
 {
-  "cli_version": "1.0.26",
-  "backend_template_version": "1.0.26",
+  "cli_version": "1.0.27",
+  "backend_template_version": "1.0.27",
   "zarc_index_version": "2025-2026-fast-index-v2",
   "price_index_version": "2025-05-reference-v1",
   "features": [
@@ -14,7 +14,8 @@
     "price_display_only",
     "price_unit_normalization",
     "market_profit_estimate",
-    "market_profit_validation"
+    "market_profit_validation",
+    "market_profit_confidence_refinement"
   ],
-  "generated_at": "2026-05-09T22:00:00Z"
+  "generated_at": "2026-05-09T23:00:00Z"
 }

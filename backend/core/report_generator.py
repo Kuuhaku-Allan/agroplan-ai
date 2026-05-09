@@ -279,14 +279,31 @@ def gerar_secao_validacao_lucro_mercado(resultado, formato='md'):
         alta = validacao.get("itens_alta_confiabilidade", 0)
         media = validacao.get("itens_media_confiabilidade", 0)
         baixa = validacao.get("itens_baixa_confiabilidade", 0)
+        criticos = validacao.get("itens_criticos", 0)
         
         perc_alta = validacao.get("percentual_alta_confiabilidade", 0)
         perc_baixa = validacao.get("percentual_baixa_confiabilidade", 0)
+        perc_critico = validacao.get("percentual_critico", 0)
         
         secao += f"- **Total de itens analisados**: {total}\n"
         secao += f"- **Alta confiabilidade**: {alta} ({perc_alta:.1f}%) 🟢\n"
         secao += f"- **Média confiabilidade**: {media} ({100 - perc_alta - perc_baixa:.1f}%) 🟡\n"
-        secao += f"- **Baixa confiabilidade**: {baixa} ({perc_baixa:.1f}%) 🔴\n\n"
+        secao += f"- **Baixa confiabilidade**: {baixa} ({perc_baixa:.1f}%) 🔴\n"
+        
+        if criticos > 0:
+            secao += f"- **⚠️ Itens críticos**: {criticos} ({perc_critico:.1f}%)\n"
+        
+        secao += "\n"
+        
+        # Aviso de itens críticos
+        if criticos > 0:
+            secao += "### ⚠️ ATENÇÃO: Valores Críticos Detectados\n\n"
+            secao += f"**{criticos} item(ns) apresenta(m) valores críticos** que indicam possível desalinhamento entre:\n"
+            secao += "- Preço de mercado vs preço interno\n"
+            secao += "- Produtividade estimada vs real\n"
+            secao += "- Custos operacionais\n"
+            secao += "- Unidade comercial\n\n"
+            secao += "**Estes valores não devem ser usados para otimização sem validação manual.**\n\n"
         
         # Recomendação
         recomendacao = validacao.get("recomendacao", "")
@@ -332,8 +349,14 @@ def gerar_secao_validacao_lucro_mercado(resultado, formato='md'):
                 diferenca_fmt = "N/A"
             
             confiabilidade = validacao_item.get("confiabilidade", "baixa")
-            conf_emoji = "🟢" if confiabilidade == "alta" else "🟡" if confiabilidade == "media" else "🔴"
-            conf_label = confiabilidade.title()
+            critico = validacao_item.get("critico", False)
+            
+            if critico:
+                conf_emoji = "⚠️🔴"
+                conf_label = "**CRÍTICO**"
+            else:
+                conf_emoji = "🟢" if confiabilidade == "alta" else "🟡" if confiabilidade == "media" else "🔴"
+                conf_label = confiabilidade.title()
             
             secao += f"| {talhao} | {cultura} | {lucro_sistema_fmt} | {lucro_mercado_fmt} | {diferenca_fmt} | {conf_emoji} {conf_label} |\n"
         
@@ -343,8 +366,9 @@ def gerar_secao_validacao_lucro_mercado(resultado, formato='md'):
         secao += "### 📊 Sobre a Classificação de Confiabilidade\n\n"
         secao += "A confiabilidade do lucro de mercado é classificada com base em:\n\n"
         secao += "- **Alta (🟢)**: Diferença < 50% entre lucro sistema e mercado, preço normalizado disponível\n"
-        secao += "- **Média (🟡)**: Diferença 50-100%, uso de fallback, ou lucro negativo\n"
-        secao += "- **Baixa (🔴)**: Diferença > 100%, dados incompletos, ou preço não disponível\n\n"
+        secao += "- **Média (🟡)**: Diferença 50-150%, uso de fallback, ou lucro negativo\n"
+        secao += "- **Baixa (🔴)**: Diferença > 150%, dados incompletos, ou preço não disponível\n"
+        secao += "- **⚠️ CRÍTICO**: Diferença extrema (>150%), lucro invertido, ou fallback com diferença >100%\n\n"
         
         secao += "### ⚠️ Aviso Importante\n\n"
         secao += "**O lucro de mercado ainda é experimental e não substitui o lucro principal do sistema.**\n\n"

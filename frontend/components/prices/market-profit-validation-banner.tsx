@@ -16,12 +16,22 @@ export function MarketProfitValidationBanner({ validacao }: MarketProfitValidati
   const alta = validacao.itens_alta_confiabilidade || 0;
   const media = validacao.itens_media_confiabilidade || 0;
   const baixa = validacao.itens_baixa_confiabilidade || 0;
+  const criticos = validacao.itens_criticos || 0;
   const percBaixa = validacao.percentual_baixa_confiabilidade || 0;
   const percAlta = validacao.percentual_alta_confiabilidade || 0;
+  const percCritico = validacao.percentual_critico || 0;
 
   // Determinar cor e ícone baseado na confiabilidade geral
   const getStatusConfig = () => {
-    if (percBaixa >= 30) {
+    if (percCritico >= 30 || percBaixa >= 50) {
+      return {
+        color: "text-red-400",
+        bgColor: "bg-red-500/10",
+        borderColor: "border-red-500/30",
+        icon: <AlertTriangle className="w-5 h-5" />,
+        title: "⚠️ Atenção: Valores Críticos Detectados"
+      };
+    } else if (percBaixa >= 30) {
       return {
         color: "text-red-400",
         bgColor: "bg-red-500/10",
@@ -64,8 +74,16 @@ export function MarketProfitValidationBanner({ validacao }: MarketProfitValidati
               {statusConfig.title}
             </h3>
             <p className="text-xs text-slate-400">
-              Lucro de mercado disponível como comparação experimental. 
-              O lucro principal do sistema permanece inalterado.
+              {criticos > 0 ? (
+                <span className="text-red-400 font-medium">
+                  Há valores críticos no lucro de mercado. Eles não devem ser usados para otimização sem validação manual.
+                </span>
+              ) : (
+                <>
+                  Lucro de mercado disponível como comparação experimental. 
+                  O lucro principal do sistema permanece inalterado.
+                </>
+              )}
             </p>
           </div>
 
@@ -101,6 +119,15 @@ export function MarketProfitValidationBanner({ validacao }: MarketProfitValidati
                 <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/30 flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
                   <span>{baixa} Baixa</span>
+                </Badge>
+              </div>
+            )}
+
+            {criticos > 0 && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-red-600/20 text-red-300 border-red-600/40 flex items-center gap-1 font-semibold">
+                  <AlertTriangle className="w-3 h-3" />
+                  <span>{criticos} Crítico{criticos > 1 ? 's' : ''}</span>
                 </Badge>
               </div>
             )}
