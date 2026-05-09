@@ -314,7 +314,147 @@ def is_cache_valid(cache_path: str) -> bool:
     file_age = datetime.now() - datetime.fromtimestamp(os.path.getmtime(cache_path))
     return file_age.total_seconds() < ZARC_CACHE_TTL
 
-def download_zarc_dataset(safra: str) -> Optional[str]:
+def get_zarc_status(safra: str = ZARC_SAFRA_DEFAULT) -> Dict[str, Any]:
+    """
+    Retorna status do ZARC sem carregar dados
+    
+    MEMORY SAFE: Não carrega CSV, apenas verifica arquivos
+    
+    Returns:
+        Status do ZARC (configuração, cache, etc)
+    """
+    cache_path = get_cache_path(safra)
+    
+    status = {
+        "status": "configured",
+        "safra": safra,
+        "source": ZARC_SOURCE,
+        "cache_exists": os.path.exists(cache_path),
+        "cache_valid": False,
+        "cache_size_mb": 0
+    }
+    
+    if os.path.exists(cache_path):
+        try:
+            # Tamanho do arquivo em MB
+            size_bytes = os.path.getsize(cache_path)
+            status["cache_size_mb"] = round(size_bytes / (1024 * 1024), 2)
+            
+            # Verificar se cache é válido
+            status["cache_valid"] = is_cache_valid(cache_path)
+        except Exception:
+            pass
+    
+    return status
+
+def iter_zarc_records(file_path: str):
+    """
+    Itera sobre registros ZARC em streaming
+    
+    MEMORY SAFE: Usa yield para processar linha por linha
+    
+    Args:
+        file_path: Caminho do arquivo CSV
+    
+    Yields:
+        Dicionário com dados de cada linha
+    """
+    with open(file_path, 'r', encoding='utf-8-sig', newline='') as f:
+        # Detectar delimitador
+        primeira_linha = f.readline()
+        f.seek(0)
+        
+        delimiter = ';' if ';' in primeira_linha else ','
+        
+        reader = csv.DictReader(f, delimiter=delimiter)
+        
+        for row in reader:
+            yield row
+
+def ensure_zarc_file(safra: str = ZARC_SAFRA_DEFAULT) -> Optional[Dict[str, Any]]:
+    """
+    Garante que arquivo ZARC existe, baixando se necessário
+    
+    MEMORY SAFE: Não carrega registros, apenas gerencia arquivo
+    
+    Returns:
+        Metadata do arquivo ou None se não disponível
+    """
+    cache_path = get_cache_path(safra)
+    
+    # Verificar cache válido
+    if is_cache_valid(cache_path):
+        return {
+            "file_path": cache_path,
+            "source": "zarc-cache",
+            "fallback": False,
+            "error": None
+        }
+    
+    # Tentar download se source for official
+    if ZARC_SOURCE == "official":
+        url = ZARC_URLS.get(safra)
+        if url:
+            try:
+                # Criar request com User-Agent
+                req = urllib.request.Request(
+                    url,
+                    headers={
+                        'User-Agent': 'AgroPlan-AI/1.0 (https://github.com/Kuuhaku-Allan/agroplan-ai)'
+                    }
+                )
+                
+                # Download
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    content = response.read().decode('utf-8')
+                
+                # Salvar
+                with open(cache_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                
+                return {
+                    "file_path": cache_path,
+                    "source": "zarc-oficial",
+                    "fallback": False,
+                    "error": None
+                }
+            except Exception as e:
+                # Se download falhar, tentar usar cache antigo
+                if os.path.exists(cache_path):
+                    return {
+                        "file_path": cache_path,
+                        "source": "zarc-cache",
+                        "fallback": False,
+                        "error": f"Download falhou, usando cache antigo: {str(e)}"
+                    }
+    
+    # Usar cache antigo se existir (mesmo expirado)
+    if os.path.exists(cache_path):
+        return {
+            "file_path": cache_path,
+            "source": "zarc-cache",
+            "fallback": False,
+            "error": "Cache expirado mas usado"
+        }
+    
+    # Nenhum arquivo disponível
+    return None
+
+# OBSOLETO: Funções antigas que carregavam CSV inteiro em memória
+# Mantidas apenas para referência, não devem ser usadas
+# Use: ensure_zarc_file() + iter_zarc_records() + buscar_zarc()
+
+# def download_zarc_dataset(safra: str) -> Optional[str]:
+#     """OBSOLETO - Não usar, causa problemas de memória"""
+#     pass
+
+# def get_zarc_dataset(safra: str = ZARC_SAFRA_DEFAULT) -> Dict[str, Any]:
+#     """OBSOLETO - Não usar, carrega 1M+ registros em memória"""
+#     pass
+
+# def load_zarc_from_file(file_path: str) -> List[Dict[str, Any]]:
+#     """OBSOLETO - Não usar, carrega CSV inteiro em lista"""
+#     pass
     """
     Baixa dataset ZARC oficial
     
@@ -576,6 +716,8 @@ def buscar_zarc(
     """
     Busca dados ZARC para cultura/região específica
     
+    MEMORY SAFE: Usa streaming para processar CSV linha por linha
+    
     Args:
         cultura: Nome da cultura
         uf: Unidade Federativa (opcional)
@@ -586,27 +728,23 @@ def buscar_zarc(
     Returns:
         Dicionário com dados ZARC ou None se não encontrar
     """
-    dataset_info = get_zarc_dataset(safra)
-    if not dataset_info or not dataset_info.get("records"):
-        return None
-    
-    dataset = dataset_info["records"]
-    source = dataset_info["source"]
-    is_fallback = dataset_info["fallback"]
-    
     # Normalizar parâmetros de busca
     cultura_norm = normalizar_cultura(cultura)
     uf_norm = normalizar_uf(uf) if uf else None
     municipio_norm = normalizar_municipio(municipio) if municipio else None
     solo_norm = normalizar_solo(solo) if solo else None
     
-    # Se estiver usando dados oficiais, processar decêndios
-    if not is_fallback:
-        # Buscar no CSV oficial
+    # Tentar obter arquivo ZARC
+    file_info = ensure_zarc_file(safra)
+    
+    if file_info:
+        # Usar arquivo oficial/cache com streaming
+        source = file_info["source"]
         melhor_match = None
         melhor_score = 0
         
-        for registro in dataset:
+        # Processar CSV em streaming (linha por linha)
+        for registro in iter_zarc_records(file_info["file_path"]):
             score = 0
             
             # Cultura deve bater
@@ -628,9 +766,10 @@ def buscar_zarc(
                 if normalizar_solo(solo_registro) == solo_norm:
                     score += 2
             
+            # Manter apenas o melhor match (não acumula lista)
             if score > melhor_score:
                 melhor_score = score
-                melhor_match = registro
+                melhor_match = registro.copy()  # Copia apenas este registro
         
         if melhor_match:
             # Extrair janelas de plantio dos decêndios
@@ -684,11 +823,12 @@ def buscar_zarc(
                 "message": "Nenhuma recomendação ZARC encontrada para os parâmetros informados."
             }
     
-    # Fallback: usar dados simplificados
+    # Fallback: usar dados simplificados (lista pequena em memória)
+    fallback_data = get_zarc_fallback()
     melhor_match = None
     melhor_score = 0
     
-    for registro in dataset:
+    for registro in fallback_data:
         score = 0
         
         # Cultura deve bater

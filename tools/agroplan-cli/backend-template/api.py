@@ -73,6 +73,9 @@ class OtimizarRequest(BaseModel):
     lat: Optional[float] = None
     lon: Optional[float] = None
     days: Optional[int] = 30
+    uf: Optional[str] = None
+    municipio: Optional[str] = None
+    safra: Optional[str] = "2025/2026"
 
 class ValidarRequest(BaseModel):
     objetivo: str = "equilibrado"
@@ -84,6 +87,9 @@ class RelatorioRequest(BaseModel):
     lat: Optional[float] = None
     lon: Optional[float] = None
     days: Optional[int] = 30
+    uf: Optional[str] = None
+    municipio: Optional[str] = None
+    safra: Optional[str] = "2025/2026"
 
 class RodadasRequest(BaseModel):
     objetivo: str = "equilibrado"
@@ -141,6 +147,10 @@ def health():
         culturas, talhoes, regras = get_dados()
         provider_cache_stats = get_cache_stats()
         
+        # Verificar status ZARC (memory safe - não carrega CSV)
+        from providers.zarc_provider import get_zarc_status
+        zarc_status = get_zarc_status()
+        
         return {
             "status": "healthy",
             "culturas": len(culturas),
@@ -149,7 +159,8 @@ def health():
             "cache_items": len(_resultados_cache),
             "data_mode": DATA_MODE,
             "providers": {
-                "weather": "available" if WEATHER_PROVIDER else "disabled"
+                "weather": "available" if WEATHER_PROVIDER else "disabled",
+                "zarc": zarc_status
             },
             "provider_cache": provider_cache_stats
         }
@@ -186,13 +197,71 @@ def get_clima(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/dados/zarc")
+def get_zarc(
+    cultura: Optional[str] = Query(None, description="Nome da cultura"),
+    uf: Optional[str] = Query(None, description="Unidade Federativa (ex: SP, PR)"),
+    municipio: Optional[str] = Query(None, description="Nome do município"),
+    solo: Optional[str] = Query(None, description="Tipo de solo"),
+    safra: str = Query("2025/2026", description="Safra (ex: 2025/2026)")
+):
+    """Obtém dados ZARC (Zoneamento Agrícola de Risco Climático)"""
+    try:
+        # Importar provider ZARC
+        from providers.zarc_provider import buscar_zarc
+        
+        # Se cultura não foi fornecida, retornar mensagem amigável
+        if not cultura:
+            return {
+                "message": "Informe a cultura para consultar dados ZARC.",
+                "exemplo_soja_sp": "/dados/zarc?cultura=soja&uf=SP&municipio=Sao%20Paulo&solo=argiloso",
+                "exemplo_milho_pr": "/dados/zarc?cultura=milho&uf=PR&municipio=Londrina&solo=argiloso",
+                "parametros": {
+                    "cultura": "Nome da cultura (obrigatório)",
+                    "uf": "Unidade Federativa (opcional)",
+                    "municipio": "Nome do município (opcional)",
+                    "solo": "Tipo de solo (opcional)",
+                    "safra": "Safra, padrão 2025/2026"
+                },
+                "culturas_disponiveis": ["soja", "milho", "feijao", "cafe", "cana", "trigo", "algodao"],
+                "safras_disponiveis": ["2025/2026", "2026/2027"]
+            }
+        
+        # Buscar dados ZARC
+        zarc_data = buscar_zarc(
+            cultura=cultura,
+            uf=uf,
+            municipio=municipio,
+            solo=solo,
+            safra=safra
+        )
+        
+        if zarc_data:
+            return zarc_data
+        else:
+            return {
+                "message": "Dados ZARC não encontrados para os parâmetros fornecidos.",
+                "cultura": cultura,
+                "uf": uf,
+                "municipio": municipio,
+                "solo": solo,
+                "safra": safra,
+                "sugestao": "Tente com parâmetros mais genéricos (apenas cultura e UF)"
+            }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/dashboard")
 def get_dashboard(
     lat: Optional[float] = None,
     lon: Optional[float] = None,
-    days: int = Query(30, description="Número de dias para análise climática")
+    days: int = Query(30, description="Número de dias para análise climática"),
+    uf: Optional[str] = None,
+    municipio: Optional[str] = None,
+    safra: str = Query("2025/2026", description="Safra ZARC")
 ):
-    """Retorna resumo do dashboard com contexto climático opcional"""
+    """Retorna resumo do dashboard com contexto climático e ZARC opcional"""
     try:
         culturas, talhoes, regras = get_dados()
         
@@ -202,10 +271,12 @@ def get_dashboard(
             from core.climate_adapter import obter_contexto_climatico_por_coordenadas
             contexto_climatico = obter_contexto_climatico_por_coordenadas(lat, lon, days)
         
-        # Gerar chave de cache considerando clima
+        # Gerar chave de cache considerando clima e ZARC
         cache_params = {"objetivo": "equilibrado", "seed": 42}
         if lat is not None and lon is not None:
             cache_params.update({"lat": lat, "lon": lon, "days": days})
+        if uf:
+            cache_params.update({"uf": uf, "municipio": municipio or "", "safra": safra})
         
         cache_key = get_cache_key("dashboard", **cache_params)
         
@@ -301,6 +372,18 @@ def get_dashboard(
             else:
                 resultado_base["clima_real"] = {"ativo": False}
             
+            # Enriquecer com ZARC se UF foi fornecida
+            if uf:
+                from core.zarc_adapter import enriquecer_plano_com_zarc
+                resultado_base = enriquecer_plano_com_zarc(
+                    resultado_base,
+                    uf=uf,
+                    municipio=municipio,
+                    safra=safra
+                )
+            else:
+                resultado_base["zarc"] = {"ativo": False}
+            
             return resultado_base
         
         # Usa cache para dashboard com contexto climático
@@ -323,8 +406,12 @@ def get_talhoes():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/recomendacoes")
-def get_recomendacoes():
-    """Retorna recomendações de culturas por talhão"""
+def get_recomendacoes(
+    uf: Optional[str] = None,
+    municipio: Optional[str] = None,
+    safra: str = Query("2025/2026", description="Safra ZARC")
+):
+    """Retorna recomendações de culturas por talhão com ZARC opcional"""
     try:
         culturas, talhoes, regras = get_dados()
         
@@ -347,9 +434,24 @@ def get_recomendacoes():
                 "agua": str(p['agua'])
             })
         
-        return {
-            "recomendacoes": recomendacoes
-        }
+        resultado = {"recomendacoes": recomendacoes}
+        
+        # Enriquecer com ZARC se UF foi fornecida
+        if uf:
+            from core.zarc_adapter import enriquecer_plano_com_zarc
+            resultado_temp = {"plano": recomendacoes}
+            resultado_temp = enriquecer_plano_com_zarc(
+                resultado_temp,
+                uf=uf,
+                municipio=municipio,
+                safra=safra
+            )
+            resultado["recomendacoes"] = resultado_temp["plano"]
+            resultado["zarc"] = resultado_temp.get("zarc", {"ativo": False})
+        else:
+            resultado["zarc"] = {"ativo": False}
+        
+        return resultado
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -590,6 +692,18 @@ def otimizar(request: OtimizarRequest):
         # Converte tipos numpy para Python nativos
         resultado_convertido = converter_tipos_python(resultado)
         
+        # Enriquecer com ZARC se UF foi fornecida
+        if request.uf:
+            from core.zarc_adapter import enriquecer_plano_com_zarc
+            resultado_convertido = enriquecer_plano_com_zarc(
+                resultado_convertido,
+                uf=request.uf,
+                municipio=request.municipio,
+                safra=request.safra
+            )
+        else:
+            resultado_convertido["zarc"] = {"ativo": False}
+        
         return resultado_convertido
     except HTTPException:
         raise
@@ -677,12 +791,15 @@ def relatorio(request: RelatorioRequest):
             from core.climate_adapter import obter_contexto_climatico_por_coordenadas
             contexto_climatico = obter_contexto_climatico_por_coordenadas(request.lat, request.lon, request.days)
         
-        # Gera relatório com contexto climático integrado
+        # Gera relatório com contexto climático e ZARC integrado
         caminho = gerar_relatorio_completo(
             culturas, talhoes, regras,
             objetivo=request.objetivo,
             formato=request.formato,
-            contexto_climatico=contexto_climatico
+            contexto_climatico=contexto_climatico,
+            uf=request.uf,
+            municipio=request.municipio,
+            safra=request.safra
         )
         
         # Lê conteúdo
@@ -747,57 +864,3 @@ def limpar_cache(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=HOST, port=PORT)
-
-@app.get("/dados/zarc")
-def get_zarc(
-    cultura: Optional[str] = Query(None, description="Nome da cultura"),
-    uf: Optional[str] = Query(None, description="Unidade Federativa (ex: SP, PR)"),
-    municipio: Optional[str] = Query(None, description="Nome do município"),
-    solo: Optional[str] = Query(None, description="Tipo de solo"),
-    safra: str = Query("2025/2026", description="Safra (ex: 2025/2026)")
-):
-    """Obtém dados ZARC (Zoneamento Agrícola de Risco Climático)"""
-    try:
-        # Importar provider ZARC
-        from providers.zarc_provider import buscar_zarc
-        
-        # Se cultura não foi fornecida, retornar mensagem amigável
-        if not cultura:
-            return {
-                "message": "Informe a cultura para consultar dados ZARC.",
-                "exemplo_soja_sp": "/dados/zarc?cultura=soja&uf=SP&municipio=Sao%20Paulo&solo=argiloso",
-                "exemplo_milho_pr": "/dados/zarc?cultura=milho&uf=PR&municipio=Londrina&solo=argiloso",
-                "parametros": {
-                    "cultura": "Nome da cultura (obrigatório)",
-                    "uf": "Unidade Federativa (opcional)",
-                    "municipio": "Nome do município (opcional)",
-                    "solo": "Tipo de solo (opcional)",
-                    "safra": "Safra, padrão 2025/2026"
-                },
-                "culturas_disponiveis": ["soja", "milho", "feijao", "cafe", "cana", "trigo", "algodao"],
-                "safras_disponiveis": ["2025/2026", "2026/2027"]
-            }
-        
-        # Buscar dados ZARC
-        zarc_data = buscar_zarc(
-            cultura=cultura,
-            uf=uf,
-            municipio=municipio,
-            solo=solo,
-            safra=safra
-        )
-        
-        if zarc_data:
-            return zarc_data
-        else:
-            return {
-                "message": "Dados ZARC não encontrados para os parâmetros fornecidos.",
-                "cultura": cultura,
-                "uf": uf,
-                "municipio": municipio,
-                "solo": solo,
-                "safra": safra,
-                "sugestao": "Tente com parâmetros mais genéricos (apenas cultura e UF)"
-            }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
