@@ -16,6 +16,11 @@ ZARC_CACHE_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'zarc')
 ZARC_CACHE_TTL = int(os.getenv("ZARC_CACHE_TTL", "86400"))  # 24 horas
 ZARC_SOURCE = os.getenv("ZARC_SOURCE", "official")  # official, fallback
 ZARC_SAFRA_DEFAULT = os.getenv("ZARC_SAFRA", "2025/2026")
+ZARC_FAST_INDEX_ENABLED = os.getenv("ZARC_FAST_INDEX_ENABLED", "true").lower() == "true"
+ZARC_ALLOW_FULL_SCAN = os.getenv("ZARC_ALLOW_FULL_SCAN", "false").lower() == "true"
+
+# Cache do índice em memória (pequeno, pode ficar em RAM)
+_zarc_index_cache = {}
 
 # URLs oficiais do Portal de Dados Abertos do Ministério da Agricultura
 ZARC_URLS = {
@@ -325,10 +330,17 @@ def get_zarc_status(safra: str = ZARC_SAFRA_DEFAULT) -> Dict[str, Any]:
     """
     cache_path = get_cache_path(safra)
     
+    # Verificar índice
+    safra_filename = safra.replace("/", "-")
+    index_path = os.path.join(ZARC_CACHE_DIR, f"zarc_index_{safra_filename}.json")
+    
     status = {
         "status": "configured",
         "safra": safra,
         "source": ZARC_SOURCE,
+        "fast_index": ZARC_FAST_INDEX_ENABLED,
+        "full_scan": ZARC_ALLOW_FULL_SCAN,
+        "index_exists": os.path.exists(index_path),
         "cache_exists": os.path.exists(cache_path),
         "cache_valid": False,
         "cache_size_mb": 0
@@ -346,6 +358,94 @@ def get_zarc_status(safra: str = ZARC_SAFRA_DEFAULT) -> Dict[str, Any]:
             pass
     
     return status
+
+def load_zarc_index(safra: str = ZARC_SAFRA_DEFAULT) -> Optional[Dict[str, Any]]:
+    """
+    Carrega índice ZARC compacto em memória
+    
+    MEMORY SAFE: Índice é pequeno (~35KB), pode ficar em RAM
+    
+    Returns:
+        Índice ZARC ou None se não existir
+    """
+    global _zarc_index_cache
+    
+    # Verificar cache em memória
+    if safra in _zarc_index_cache:
+        return _zarc_index_cache[safra]
+    
+    # Carregar do arquivo
+    safra_filename = safra.replace("/", "-")
+    index_path = os.path.join(ZARC_CACHE_DIR, f"zarc_index_{safra_filename}.json")
+    
+    if not os.path.exists(index_path):
+        return None
+    
+    try:
+        with open(index_path, 'r', encoding='utf-8') as f:
+            index = json.load(f)
+        
+        # Cachear em memória
+        _zarc_index_cache[safra] = index
+        
+        return index
+    except Exception as e:
+        print(f"Erro ao carregar índice ZARC: {e}")
+        return None
+
+def buscar_zarc_indexado(
+    cultura: str,
+    uf: Optional[str] = None,
+    municipio: Optional[str] = None,
+    solo: Optional[str] = None,
+    safra: str = ZARC_SAFRA_DEFAULT
+) -> Optional[Dict[str, Any]]:
+    """
+    Busca ZARC no índice compacto (rápido)
+    
+    PERFORMANCE: Lookup O(1) em vez de O(n) no CSV
+    
+    Returns:
+        Dados ZARC ou None se não encontrar no índice
+    """
+    if not ZARC_FAST_INDEX_ENABLED:
+        return None
+    
+    index = load_zarc_index(safra)
+    if not index:
+        return None
+    
+    # Normalizar parâmetros
+    cultura_norm = normalizar_cultura(cultura)
+    
+    if not uf or not municipio:
+        return None
+    
+    uf_norm = normalizar_uf(uf)
+    municipio_norm = normalizar_municipio(municipio)
+    
+    # Tentar diferentes combinações de solo
+    solos_tentar = []
+    if solo:
+        solo_norm = normalizar_solo(solo)
+        # Tentar o solo especificado primeiro, depois outros como fallback
+        solos_tentar = [solo_norm, "medio", "arenoso", "argiloso", "misto"]
+        # Remover duplicatas mantendo ordem
+        seen = set()
+        solos_tentar = [s for s in solos_tentar if not (s in seen or seen.add(s))]
+    else:
+        # Se não especificou solo, tentar todos (preferir medio/argiloso)
+        solos_tentar = ["medio", "argiloso", "arenoso", "misto"]
+    
+    # Buscar no índice
+    for solo_test in solos_tentar:
+        # Chave: UF|municipio|cultura|solo
+        chave = f"{uf_norm}|{municipio_norm}|{cultura_norm}|{solo_test}"
+        
+        if chave in index["records"]:
+            return index["records"][chave]
+    
+    return None
 
 def iter_zarc_records(file_path: str):
     """
@@ -716,7 +816,7 @@ def buscar_zarc(
     """
     Busca dados ZARC para cultura/região específica
     
-    MEMORY SAFE: Usa streaming para processar CSV linha por linha
+    PERFORMANCE: Tenta índice primeiro (rápido), depois streaming (lento)
     
     Args:
         cultura: Nome da cultura
@@ -727,6 +827,34 @@ def buscar_zarc(
     
     Returns:
         Dicionário com dados ZARC ou None se não encontrar
+    """
+    # FAST PATH: Tentar índice primeiro (O(1) lookup)
+    if ZARC_FAST_INDEX_ENABLED:
+        resultado_indexado = buscar_zarc_indexado(cultura, uf, municipio, solo, safra)
+        if resultado_indexado:
+            return resultado_indexado
+    
+    # SLOW PATH: Full scan no CSV (apenas se permitido)
+    if not ZARC_ALLOW_FULL_SCAN:
+        # Não encontrou no índice e full scan não é permitido
+        # Tentar fallback
+        return buscar_zarc_fallback(cultura, uf, municipio, solo, safra)
+    
+    # Full scan permitido (desenvolvimento local)
+    return buscar_zarc_streaming(cultura, uf, municipio, solo, safra)
+
+def buscar_zarc_streaming(
+    cultura: str,
+    uf: Optional[str] = None,
+    municipio: Optional[str] = None,
+    solo: Optional[str] = None,
+    safra: str = ZARC_SAFRA_DEFAULT
+) -> Optional[Dict[str, Any]]:
+    """
+    Busca ZARC usando streaming no CSV (LENTO mas memory-safe)
+    
+    PERFORMANCE: O(n) - varre todo o CSV
+    Usar apenas em desenvolvimento ou quando índice não disponível
     """
     # Normalizar parâmetros de busca
     cultura_norm = normalizar_cultura(cultura)
@@ -822,6 +950,25 @@ def buscar_zarc(
                 "encontrado": False,
                 "message": "Nenhuma recomendação ZARC encontrada para os parâmetros informados."
             }
+    
+    # Arquivo não disponível, usar fallback
+    return buscar_zarc_fallback(cultura, uf, municipio, solo, safra)
+
+def buscar_zarc_fallback(
+    cultura: str,
+    uf: Optional[str] = None,
+    municipio: Optional[str] = None,
+    solo: Optional[str] = None,
+    safra: str = ZARC_SAFRA_DEFAULT
+) -> Optional[Dict[str, Any]]:
+    """
+    Busca ZARC em dados simplificados (fallback)
+    """
+    # Normalizar parâmetros
+    cultura_norm = normalizar_cultura(cultura)
+    uf_norm = normalizar_uf(uf) if uf else None
+    municipio_norm = normalizar_municipio(municipio) if municipio else None
+    solo_norm = normalizar_solo(solo) if solo else None
     
     # Fallback: usar dados simplificados (lista pequena em memória)
     fallback_data = get_zarc_fallback()

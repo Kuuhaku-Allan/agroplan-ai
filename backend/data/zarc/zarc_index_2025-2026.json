@@ -1,0 +1,1612 @@
+{
+  "metadata": {
+    "source": "zarc-oficial-derived",
+    "safra": "2025/2026",
+    "generated_at": "2026-05-08T21:39:42.569966",
+    "generated_from": "zarc-cache",
+    "regions": [
+      "Clementina/SP",
+      "São Paulo/SP",
+      "Ribeirão Preto/SP",
+      "Campo Grande/MS",
+      "Londrina/PR",
+      "Brasília/DF"
+    ],
+    "cultures": [
+      "soja",
+      "milho",
+      "feijao",
+      "trigo",
+      "algodao",
+      "cafe",
+      "cana",
+      "arroz",
+      "sorgo",
+      "mandioca"
+    ],
+    "soils": [
+      "arenoso",
+      "medio",
+      "argiloso",
+      "misto"
+    ],
+    "total_records": 54
+  },
+  "records": {
+    "SP|clementina|trigo|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Trigo",
+      "uf": "SP",
+      "municipio": "Clementina",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/04",
+        "fim": "10/06"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "geocodigo": "3511904",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|clementina|trigo|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Trigo",
+      "uf": "SP",
+      "municipio": "Clementina",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/04",
+        "fim": "10/06"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "geocodigo": "3511904",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|ribeirao preto|trigo|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Trigo",
+      "uf": "SP",
+      "municipio": "Ribeirão Preto",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/04",
+        "fim": "10/06"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "geocodigo": "3543402",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|ribeirao preto|trigo|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Trigo",
+      "uf": "SP",
+      "municipio": "Ribeirão Preto",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/04",
+        "fim": "10/06"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "geocodigo": "3543402",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "DF|brasilia|trigo|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Trigo",
+      "uf": "DF",
+      "municipio": "Brasília",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/04",
+        "fim": "10/06"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "geocodigo": "5300108",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "DF|brasilia|trigo|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Trigo",
+      "uf": "DF",
+      "municipio": "Brasília",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/04",
+        "fim": "10/06"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "geocodigo": "5300108",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "MS|campo grande|trigo|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Trigo",
+      "uf": "MS",
+      "municipio": "Campo Grande",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/04",
+        "fim": "10/06"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "geocodigo": "5002704",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "MS|campo grande|trigo|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Trigo",
+      "uf": "MS",
+      "municipio": "Campo Grande",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/04",
+        "fim": "10/06"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "geocodigo": "5002704",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "DF|brasilia|feijao|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "DF",
+      "municipio": "Brasília",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/01",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "5300108",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "DF|brasilia|feijao|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "DF",
+      "municipio": "Brasília",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/01",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "5300108",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "MS|campo grande|feijao|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "MS",
+      "municipio": "Campo Grande",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/01",
+        "fim": "20/07"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "geocodigo": "5002704",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "MS|campo grande|feijao|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "MS",
+      "municipio": "Campo Grande",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/01",
+        "fim": "20/07"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "geocodigo": "5002704",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|ribeirao preto|feijao|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "SP",
+      "municipio": "Ribeirão Preto",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/01",
+        "fim": "31/07"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "geocodigo": "3543402",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|ribeirao preto|feijao|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "SP",
+      "municipio": "Ribeirão Preto",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/01",
+        "fim": "31/07"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "geocodigo": "3543402",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "PR|londrina|feijao|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "PR",
+      "municipio": "Londrina",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/06",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "4113700",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "PR|londrina|feijao|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "PR",
+      "municipio": "Londrina",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/06",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "4113700",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|clementina|feijao|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "SP",
+      "municipio": "Clementina",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/01",
+        "fim": "10/07"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "geocodigo": "3511904",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|clementina|feijao|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "SP",
+      "municipio": "Clementina",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/01",
+        "fim": "10/07"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "geocodigo": "3511904",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|sao paulo|feijao|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "SP",
+      "municipio": "São Paulo",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/07",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3550308",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|sao paulo|feijao|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Feijão",
+      "uf": "SP",
+      "municipio": "São Paulo",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/07",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3550308",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|clementina|soja|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "SP",
+      "municipio": "Clementina",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/09",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3511904",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|clementina|soja|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "SP",
+      "municipio": "Clementina",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "21/09",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3511904",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "PR|londrina|soja|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "PR",
+      "municipio": "Londrina",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/09",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "4113700",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "PR|londrina|soja|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "PR",
+      "municipio": "Londrina",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/09",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "4113700",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "MS|campo grande|soja|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "MS",
+      "municipio": "Campo Grande",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "5002704",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "MS|campo grande|soja|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "MS",
+      "municipio": "Campo Grande",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/09",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "5002704",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|ribeirao preto|soja|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "SP",
+      "municipio": "Ribeirão Preto",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "21/09",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3543402",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|ribeirao preto|soja|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "SP",
+      "municipio": "Ribeirão Preto",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "21/09",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3543402",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "DF|brasilia|soja|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "DF",
+      "municipio": "Brasília",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "5300108",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "DF|brasilia|soja|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "DF",
+      "municipio": "Brasília",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "5300108",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|sao paulo|soja|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "SP",
+      "municipio": "São Paulo",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "21/09",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3550308",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|sao paulo|soja|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Soja",
+      "uf": "SP",
+      "municipio": "São Paulo",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "21/09",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3550308",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|sao paulo|arroz|argiloso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "SP",
+      "municipio": "São Paulo",
+      "solo": "argiloso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3550308",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|sao paulo|arroz|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "SP",
+      "municipio": "São Paulo",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3550308",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|sao paulo|arroz|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "SP",
+      "municipio": "São Paulo",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3550308",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|clementina|arroz|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "SP",
+      "municipio": "Clementina",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "20/12"
+      },
+      "risco": "medio",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ],
+      "geocodigo": "3511904",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|clementina|arroz|argiloso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "SP",
+      "municipio": "Clementina",
+      "solo": "argiloso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3511904",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|clementina|arroz|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "SP",
+      "municipio": "Clementina",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/11",
+        "fim": "30/11"
+      },
+      "risco": "alto",
+      "decendios_recomendados": [
+        31,
+        32,
+        33
+      ],
+      "geocodigo": "3511904",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "DF|brasilia|arroz|argiloso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "DF",
+      "municipio": "Brasília",
+      "solo": "argiloso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "5300108",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "DF|brasilia|arroz|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "DF",
+      "municipio": "Brasília",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "5300108",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "DF|brasilia|arroz|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "DF",
+      "municipio": "Brasília",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "medio",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "5300108",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "MS|campo grande|arroz|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "MS",
+      "municipio": "Campo Grande",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "20/12"
+      },
+      "risco": "medio",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ],
+      "geocodigo": "5002704",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "MS|campo grande|arroz|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "MS",
+      "municipio": "Campo Grande",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/11",
+        "fim": "31/12"
+      },
+      "risco": "alto",
+      "decendios_recomendados": [
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "5002704",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "MS|campo grande|arroz|argiloso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "MS",
+      "municipio": "Campo Grande",
+      "solo": "argiloso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "20/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ],
+      "geocodigo": "5002704",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "PR|londrina|arroz|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "PR",
+      "municipio": "Londrina",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/10",
+        "fim": "20/12"
+      },
+      "risco": "medio",
+      "decendios_recomendados": [
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ],
+      "geocodigo": "4113700",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "PR|londrina|arroz|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "PR",
+      "municipio": "Londrina",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "11/11",
+        "fim": "20/12"
+      },
+      "risco": "alto",
+      "decendios_recomendados": [
+        32,
+        33,
+        34,
+        35
+      ],
+      "geocodigo": "4113700",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|ribeirao preto|arroz|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "SP",
+      "municipio": "Ribeirão Preto",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "20/12"
+      },
+      "risco": "medio",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ],
+      "geocodigo": "3543402",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|ribeirao preto|arroz|argiloso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "SP",
+      "municipio": "Ribeirão Preto",
+      "solo": "argiloso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "31/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "geocodigo": "3543402",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "SP|ribeirao preto|arroz|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "SP",
+      "municipio": "Ribeirão Preto",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "20/12"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ],
+      "geocodigo": "3543402",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "PR|londrina|arroz|argiloso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Arroz",
+      "uf": "PR",
+      "municipio": "Londrina",
+      "solo": "argiloso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/10",
+        "fim": "20/12"
+      },
+      "risco": "medio",
+      "decendios_recomendados": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
+      ],
+      "geocodigo": "4113700",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "PR|londrina|trigo|medio": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Trigo",
+      "uf": "PR",
+      "municipio": "Londrina",
+      "solo": "medio",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/04",
+        "fim": "10/06"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "geocodigo": "4113700",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    },
+    "PR|londrina|trigo|arenoso": {
+      "source": "zarc-oficial-derived",
+      "fallback": false,
+      "cultura": "Trigo",
+      "uf": "PR",
+      "municipio": "Londrina",
+      "solo": "arenoso",
+      "safra": "2025/2026",
+      "janela_plantio": {
+        "inicio": "01/04",
+        "fim": "10/05"
+      },
+      "risco": "baixo",
+      "decendios_recomendados": [
+        10,
+        11,
+        12,
+        13
+      ],
+      "geocodigo": "4113700",
+      "encontrado": true,
+      "observacao": "Dados derivados da Tábua de Risco oficial do ZARC."
+    }
+  }
+}

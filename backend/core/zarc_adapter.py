@@ -27,6 +27,9 @@ def enriquecer_plano_com_zarc(
         resultado["zarc"] = {"ativo": False}
         return resultado
     
+    # Cache local por requisição para evitar lookups repetidos
+    lookup_cache = {}
+    
     # Processar cada item do plano
     culturas_com_zarc = 0
     total_culturas = 0
@@ -38,14 +41,23 @@ def enriquecer_plano_com_zarc(
         cultura = item.get("cultura")
         solo = item.get("solo")
         
-        # Buscar ZARC para esta cultura/solo
-        zarc_data = buscar_zarc(
-            cultura=cultura,
-            uf=uf,
-            municipio=municipio,
-            solo=solo,
-            safra=safra
-        )
+        # Chave de cache: cultura|uf|municipio|solo|safra
+        cache_key = f"{cultura}|{uf}|{municipio}|{solo}|{safra}"
+        
+        # Verificar cache local
+        if cache_key in lookup_cache:
+            zarc_data = lookup_cache[cache_key]
+        else:
+            # Buscar ZARC para esta cultura/solo
+            zarc_data = buscar_zarc(
+                cultura=cultura,
+                uf=uf,
+                municipio=municipio,
+                solo=solo,
+                safra=safra
+            )
+            # Cachear resultado
+            lookup_cache[cache_key] = zarc_data
         
         if zarc_data and zarc_data.get("encontrado"):
             # ZARC encontrado
