@@ -3,7 +3,6 @@
 import { Calendar, AlertCircle, Info, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ZarcData } from "@/lib/types/zarc";
 
 interface ZarcWindowCardProps {
@@ -15,12 +14,12 @@ interface ZarcWindowCardProps {
 export function ZarcWindowCard({ zarc, cultura, compact = false }: ZarcWindowCardProps) {
   if (!zarc.ativo) {
     return (
-      <Alert variant="default" className="border-amber-500/20 bg-amber-500/5">
-        <AlertCircle className="h-4 w-4 text-amber-600" />
-        <AlertDescription className="text-sm">
+      <div className="flex items-start gap-3 p-3 rounded-lg border border-amber-500/20 bg-amber-500/5">
+        <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+        <p className="text-sm text-amber-600">
           {zarc.message || "Sem recomendação ZARC encontrada para esta cultura/região."}
-        </AlertDescription>
-      </Alert>
+        </p>
+      </div>
     );
   }
 
@@ -144,12 +143,12 @@ export function ZarcWindowCard({ zarc, cultura, compact = false }: ZarcWindowCar
 
         {/* Observação */}
         {zarc.observacao && (
-          <Alert className="mt-3">
-            <Info className="h-4 w-4" />
-            <AlertDescription className="text-xs">
+          <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/50 mt-3">
+            <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-muted-foreground">
               {zarc.observacao}
-            </AlertDescription>
-          </Alert>
+            </p>
+          </div>
         )}
 
         {/* Decêndios (opcional, para debug) */}

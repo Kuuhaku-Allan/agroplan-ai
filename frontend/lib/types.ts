@@ -73,6 +73,16 @@ export interface DashboardData {
     fallback?: boolean;
     error?: string | null;
   };
+  zarc?: {
+    ativo: boolean;
+    uf?: string;
+    municipio?: string;
+    safra?: string;
+    source?: string;
+    fallback?: boolean;
+    culturas_com_zarc?: number;
+    total_culturas?: number;
+  };
 }
 
 export interface Cenario {

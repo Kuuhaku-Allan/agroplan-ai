@@ -14,6 +14,7 @@ import { LoadingCard, LoadingChart } from "@/components/shared/loading-card";
 import { ErrorState } from "@/components/shared/error-state";
 import { ClimateRegionCard } from "@/components/climate/climate-region-card";
 import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
+import { ZarcImpactBanner } from "@/components/zarc/zarc-impact-banner";
 import { formatCurrencyBRL, formatPercent, formatFitness, formatCurrencyCompactBRL, formatLargeNumber } from "@/lib/formatters";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { Button } from "@/components/ui/button";
@@ -197,7 +198,7 @@ export default function DashboardPage() {
               <RecommendedPlan plano={dashboard.plano} />
             </div>
 
-            {/* Coluna direita: Clima, Decisão e Ações (1/3 da largura) */}
+            {/* Coluna direita: Clima, ZARC, Decisão e Ações (1/3 da largura) */}
             <div className="space-y-6">
               {/* Card de Clima Real */}
               {climateLocation ? (
@@ -226,6 +227,23 @@ export default function DashboardPage() {
                     <MapPin className="h-4 w-4 mr-2" />
                     Selecionar Região
                   </Button>
+                </div>
+              )}
+
+              {/* Banner ZARC */}
+              {dashboard.zarc?.ativo && (
+                <ZarcImpactBanner
+                  zarc={dashboard.zarc}
+                  onChangeRegion={() => setShowClimateSelector(true)}
+                />
+              )}
+
+              {/* Aviso se tem clima mas não tem ZARC */}
+              {climateLocation && !climateLocation.uf && (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                  <p className="text-xs text-amber-600">
+                    💡 ZARC requer município e UF. Selecione uma região predefinida como Clementina-SP.
+                  </p>
                 </div>
               )}
               
