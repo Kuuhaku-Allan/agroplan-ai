@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlanoItem } from "@/lib/types";
 import { formatCurrencyBRL, formatPercent, formatArea, normalizeCompatibility, clampPercent } from "@/lib/formatters";
-import { Sprout, TrendingUp, AlertTriangle } from "lucide-react";
+import { Sprout, TrendingUp, AlertTriangle, Calendar } from "lucide-react";
 
 interface GeneticPlanCardProps {
   plano: PlanoItem[];
@@ -85,6 +85,24 @@ export function GeneticPlanCard({ plano }: GeneticPlanCardProps) {
                   />
                 </div>
               </div>
+
+              {/* ZARC Info */}
+              {item.zarc && item.zarc.ativo && (
+                <div className="mt-3 pt-3 border-t border-slate-700/50">
+                  <div className="flex items-start gap-2">
+                    <Calendar className="w-4 h-4 text-emerald-500 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-xs text-slate-400 mb-1">Janela ZARC</p>
+                      <p className="text-sm font-medium text-slate-200">
+                        {item.zarc.janela_plantio?.inicio} a {item.zarc.janela_plantio?.fim}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Risco: {item.zarc.risco} • {item.zarc.source === 'zarc-oficial-derived' ? '✓ Oficial' : 'Fallback'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

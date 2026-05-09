@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X, MapPin, Layers, Thermometer, Mountain, Droplets, Sprout, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { formatCurrencyBRL } from "@/lib/formatters";
+import { ZarcWindowCard } from "@/components/zarc/zarc-window-card";
 
 interface FieldDetailPanelProps {
   talhao: {
@@ -16,6 +17,7 @@ interface FieldDetailPanelProps {
     lucro_estimado?: number;
     risco?: number;
     nota?: number;
+    zarc?: any; // Dados ZARC
   };
   onClose: () => void;
 }
@@ -165,6 +167,24 @@ export function FieldDetailPanel({ talhao, onClose }: FieldDetailPanelProps) {
                   um bom equilíbrio entre retorno financeiro e adequação agronômica.
                 </p>
               </div>
+
+              {/* Janela de Plantio ZARC */}
+              {talhao.zarc && talhao.zarc.ativo && (
+                <div className="border-t border-slate-800 pt-6">
+                  <h3 className="text-lg font-semibold text-slate-50 mb-4">Janela de Plantio ZARC</h3>
+                  <ZarcWindowCard zarc={talhao.zarc} cultura={talhao.cultura} />
+                </div>
+              )}
+
+              {talhao.zarc && !talhao.zarc.ativo && (
+                <div className="border-t border-slate-800 pt-6">
+                  <div className="p-4 bg-slate-800/50 rounded-lg">
+                    <p className="text-sm text-slate-400">
+                      {talhao.zarc.message || "Sem janela ZARC encontrada para esta cultura, solo e região."}
+                    </p>
+                  </div>
+                </div>
+              )}
             </>
           )}
 

@@ -104,6 +104,44 @@ export default function RelatoriosPage() {
           />
         )}
 
+        {/* Aviso ZARC */}
+        {climateLocation && climateLocation.uf && climateLocation.municipio ? (
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="text-emerald-500 mt-0.5">🌾</div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-emerald-500 mb-1">
+                  ZARC Ativo
+                </h3>
+                <p className="text-sm text-slate-300">
+                  O relatório incluirá janelas de plantio ZARC para <strong>{climateLocation.municipio}/{climateLocation.uf}</strong>, 
+                  safra <strong>{climateLocation.safra || '2025/2026'}</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : climateLocation ? (
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="text-yellow-500 mt-0.5">⚠️</div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-yellow-500 mb-1">
+                  ZARC não disponível
+                </h3>
+                <p className="text-sm text-slate-300">
+                  Para incluir janelas de plantio ZARC no relatório, selecione uma região com município e UF específicos.
+                </p>
+                <button
+                  onClick={() => setShowClimateSelector(true)}
+                  className="mt-2 text-sm text-yellow-400 hover:text-yellow-300 underline"
+                >
+                  Selecionar região
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {/* Configuração e Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Painel de Configuração */}

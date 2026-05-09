@@ -10,7 +10,7 @@ interface ErrorStateProps {
 
 export function ErrorState({ 
   title = "Erro ao carregar dados",
-  message = "Não foi possível conectar ao backend. Verifique se o FastAPI está rodando em http://localhost:8000.",
+  message = "Não foi possível conectar à API ativa. Se estiver usando API Render, ela pode estar acordando ou demorando para responder. Tente novamente ou selecione API Local nas configurações.",
   onRetry
 }: ErrorStateProps) {
   return (

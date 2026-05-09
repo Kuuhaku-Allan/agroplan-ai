@@ -40,6 +40,7 @@ export interface PlanoItem {
   risco: number;
   nota: number;
   tempo: number;
+  zarc?: any; // Dados ZARC opcionais
 }
 
 export interface DashboardData {

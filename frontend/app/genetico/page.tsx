@@ -16,11 +16,22 @@ import { otimizar, getClimateLocation, setClimateLocation } from "@/lib/api";
 import { ResultadoOtimizacao } from "@/lib/types";
 import type { ClimateLocation, ClimateData } from "@/lib/types/climate";
 import { Sparkles } from "lucide-react";
+import { ZarcImpactBanner } from "@/components/zarc/zarc-impact-banner";
 
 interface ResultadoOtimizacaoComClima extends ResultadoOtimizacao {
   clima_real?: ClimateData;
   ajuste_climatico_aplicado?: boolean;
   contexto_climatico?: any;
+  zarc?: {
+    ativo: boolean;
+    uf?: string;
+    municipio?: string;
+    safra?: string;
+    source?: string;
+    fallback?: boolean;
+    culturas_com_zarc?: number;
+    total_culturas?: number;
+  };
 }
 
 export default function GeneticoPage() {
@@ -100,6 +111,37 @@ export default function GeneticoPage() {
             onActivate={() => setShowClimateSelector(true)}
             message="Otimização usando dados climáticos simulados"
           />
+        )}
+
+        {/* Banner ZARC */}
+        {resultado?.zarc && resultado.zarc.ativo && climateLocation?.uf && climateLocation?.municipio && (
+          <ZarcImpactBanner
+            zarc={resultado.zarc}
+            onChangeRegion={() => setShowClimateSelector(true)}
+          />
+        )}
+
+        {/* Aviso se tem clima mas não tem UF/município */}
+        {climateLocation && (!climateLocation.uf || !climateLocation.municipio) && !resultado && (
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="text-yellow-500 mt-0.5">⚠️</div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-yellow-500 mb-1">
+                  ZARC não disponível
+                </h3>
+                <p className="text-sm text-slate-300">
+                  Para incluir janelas de plantio ZARC na otimização, selecione uma região com município e UF específicos.
+                </p>
+                <button
+                  onClick={() => setShowClimateSelector(true)}
+                  className="mt-2 text-sm text-yellow-400 hover:text-yellow-300 underline"
+                >
+                  Selecionar região
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Configuração */}

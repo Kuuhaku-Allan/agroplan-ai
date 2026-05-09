@@ -13,6 +13,7 @@ import { ClimateInactiveBanner } from "@/components/climate/climate-impact-banne
 import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
 import { getTalhoes, getRecomendacoes, getClimateLocation, setClimateLocation } from "@/lib/api";
 import type { ClimateLocation } from "@/lib/types/climate";
+import { ZarcImpactBanner } from "@/components/zarc/zarc-impact-banner";
 
 interface Talhao {
   id: number;
@@ -25,6 +26,21 @@ interface Talhao {
   lucro_estimado?: number;
   risco?: number;
   nota?: number;
+  zarc?: any; // Dados ZARC da recomendação
+}
+
+interface RecomendacoesResponse {
+  recomendacoes: any[];
+  zarc?: {
+    ativo: boolean;
+    uf?: string;
+    municipio?: string;
+    safra?: string;
+    source?: string;
+    fallback?: boolean;
+    culturas_com_zarc?: number;
+    total_culturas?: number;
+  };
 }
 
 export default function TalhoesPage() {
@@ -34,6 +50,7 @@ export default function TalhoesPage() {
   const [selectedTalhao, setSelectedTalhao] = useState<Talhao | null>(null);
   const [climateLocation, setClimateLocationState] = useState<ClimateLocation | null>(null);
   const [showClimateSelector, setShowClimateSelector] = useState(false);
+  const [zarcSummary, setZarcSummary] = useState<RecomendacoesResponse['zarc'] | null>(null);
 
   // Filtros
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,8 +70,13 @@ export default function TalhoesPage() {
       // Busca talhões e recomendações em paralelo
       const [talhoesData, recomendacoesData] = await Promise.all([
         getTalhoes(),
-        getRecomendacoes()
+        getRecomendacoes(savedLocation || undefined) // Passa location para incluir ZARC
       ]);
+      
+      // Salvar resumo ZARC
+      if (recomendacoesData.zarc) {
+        setZarcSummary(recomendacoesData.zarc);
+      }
       
       // Combina dados dos talhões com recomendações
       const talhoesComRecomendacao = talhoesData.talhoes.map((talhao: any) => {
@@ -70,7 +92,8 @@ export default function TalhoesPage() {
           cultura: recomendacao?.cultura,
           lucro_estimado: recomendacao?.lucro_estimado,
           risco: recomendacao?.risco,
-          nota: recomendacao?.nota
+          nota: recomendacao?.nota,
+          zarc: recomendacao?.zarc // Incluir dados ZARC
         };
       });
 
@@ -86,6 +109,8 @@ export default function TalhoesPage() {
   const handleClimateLocationChange = (location: ClimateLocation | null) => {
     setClimateLocation(location);
     setClimateLocationState(location);
+    // Recarregar dados com nova localização
+    loadData();
   };
 
   useEffect(() => {
@@ -167,6 +192,37 @@ export default function TalhoesPage() {
             onActivate={() => setShowClimateSelector(true)}
             message={`Recomendações ajustadas pelo clima real da região: ${climateLocation.label}`}
           />
+        )}
+
+        {/* Banner ZARC */}
+        {zarcSummary && zarcSummary.ativo && climateLocation?.uf && climateLocation?.municipio && (
+          <ZarcImpactBanner
+            zarc={zarcSummary}
+            onChangeRegion={() => setShowClimateSelector(true)}
+          />
+        )}
+
+        {/* Aviso se tem clima mas não tem UF/município */}
+        {climateLocation && (!climateLocation.uf || !climateLocation.municipio) && (
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="text-yellow-500 mt-0.5">⚠️</div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-yellow-500 mb-1">
+                  ZARC não disponível
+                </h3>
+                <p className="text-sm text-slate-300">
+                  Para incluir janelas de plantio ZARC, selecione uma região com município e UF específicos.
+                </p>
+                <button
+                  onClick={() => setShowClimateSelector(true)}
+                  className="mt-2 text-sm text-yellow-400 hover:text-yellow-300 underline"
+                >
+                  Selecionar região
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Erro */}
