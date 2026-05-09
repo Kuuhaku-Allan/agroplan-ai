@@ -622,6 +622,10 @@ def get_dashboard(
             else:
                 resultado_base["zarc"] = {"ativo": False}
             
+            # Enriquecer com preços agrícolas
+            from core.price_adapter import aplicar_precos_no_plano
+            resultado_base = aplicar_precos_no_plano(resultado_base, uf=uf)
+            
             return resultado_base
         
         # Usa cache para dashboard com contexto climático
@@ -688,6 +692,13 @@ def get_recomendacoes(
             resultado["zarc"] = resultado_temp.get("zarc", {"ativo": False})
         else:
             resultado["zarc"] = {"ativo": False}
+        
+        # Enriquecer com preços agrícolas
+        from core.price_adapter import aplicar_precos_no_plano
+        resultado_temp = {"plano": resultado["recomendacoes"]}
+        resultado_temp = aplicar_precos_no_plano(resultado_temp, uf=uf)
+        resultado["recomendacoes"] = resultado_temp["plano"]
+        resultado["precos"] = resultado_temp.get("precos", {"ativo": False})
         
         return resultado
     except Exception as e:
@@ -941,6 +952,10 @@ def otimizar(request: OtimizarRequest):
             )
         else:
             resultado_convertido["zarc"] = {"ativo": False}
+        
+        # Enriquecer com preços agrícolas
+        from core.price_adapter import aplicar_precos_no_plano
+        resultado_convertido = aplicar_precos_no_plano(resultado_convertido, uf=request.uf)
         
         return resultado_convertido
     except HTTPException:

@@ -1,7 +1,7 @@
 # Fase 9.1 - Provider de Preços Agrícolas - Em Progresso
 
 **Data:** 09/05/2026  
-**Status:** 🚧 Em Progresso (Parte 1 e 2 concluídas)
+**Status:** 🚧 Em Progresso (Partes 1-3 concluídas)
 
 ## 🎯 Objetivo
 
@@ -115,6 +115,64 @@ Invoke-RestMethod -Uri "http://localhost:8000/dados/precos/lote?uf=SP"
 # ✅ Retornou: provider=local, index_records=5, fallback_records=10
 ```
 
+## ✅ Parte 3 - Integração no Cálculo (CONCLUÍDO)
+
+**Endpoints atualizados:**
+1. **`/dashboard`**: Aplica `aplicar_precos_no_plano()` após clima e ZARC
+2. **`/recomendacoes`**: Aplica preços e retorna resumo
+3. **`/otimizar`**: Aplica preços após ZARC
+4. **`/relatorio`**: Gera seção de preços no relatório
+
+**Testes realizados:**
+```powershell
+# Dashboard com preços
+(Invoke-RestMethod "http://localhost:8000/dashboard?uf=SP").precos
+# ✅ Retornou: ativo=True, culturas_com_preco=5, aplicado_no_lucro=False
+
+# Item do plano com preço
+(Invoke-RestMethod "http://localhost:8000/dashboard?uf=SP").plano[0].preco_real
+# ✅ Retornou: cana, R$ 98,00, tonelada, price-local-index
+```
+
+**Nota importante:** `PRICE_APPLY_TO_PROFIT=false` - preços são apenas exibidos, não recalculam lucro.
+
+## ✅ Parte 4 - Integração nos Endpoints (CONCLUÍDO)
+
+Todos os endpoints principais foram atualizados:
+- ✅ `/dashboard` - Retorna `precos` no response
+- ✅ `/recomendacoes` - Retorna `precos` no response
+- ✅ `/otimizar` - Retorna `precos` no response
+- ✅ `/relatorio` - Inclui seção de preços
+
+## ✅ Parte 5 - Relatórios (CONCLUÍDO)
+
+**Arquivo atualizado:** `backend/core/report_generator.py`
+
+**Mudanças:**
+- Adiciona seção "Preços Agrícolas Utilizados" após ZARC
+- Usa `gerar_secao_precos_relatorio()` do price_adapter
+- Tabela com: cultura, preço, unidade, fonte, observação
+- Aviso claro: "Os preços são exibidos como referência, mas o cálculo de lucro ainda utiliza a base interna simulada."
+
+**Formato MD:**
+```markdown
+## 💰 Preços Agrícolas Utilizados
+
+**Região:** SP
+
+### Preços por Cultura
+
+| Cultura | Preço | Unidade | Fonte | Observação |
+|---------|-------|---------|-------|------------|
+| CANA | R$ 98,00 | tonelada | price-local-index | Preço de referência para SP |
+| SOJA | R$ 130,00 | saca_60kg | price-local-index | Preço de referência para SP |
+...
+
+### Observações
+
+ℹ️ **Os preços são exibidos como referência, mas o cálculo de lucro ainda utiliza a base interna simulada.**
+```
+
 ## 🚧 Parte 3 - Integração no Cálculo (PENDENTE)
 
 **Próximos passos:**
@@ -187,10 +245,10 @@ Páginas a atualizar:
 
 ## 🎯 Próxima Ação
 
-Continuar com Parte 3: Integração no cálculo
-- Atualizar `/dashboard` para aplicar preços
-- Testar com `PRICE_APPLY_TO_PROFIT=false` (apenas exibir)
-- Validar que nada quebra
+Continuar com Parte 6: Frontend
+- Criar tipos TypeScript (PriceData, PriceSummary)
+- Criar componentes (PriceImpactBanner, PriceInfoCard)
+- Integrar no Dashboard, Talhões, Genético, Relatórios
 
 ## 📝 Observações
 

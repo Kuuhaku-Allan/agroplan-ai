@@ -162,6 +162,13 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
         secao_zarc = gerar_secao_zarc_relatorio(resultado_temp["plano"], uf, municipio, safra, formato)
         conteudo += "\n\n" + secao_zarc
     
+    # Adicionar seção de preços agrícolas
+    from core.price_adapter import aplicar_precos_no_plano, gerar_secao_precos_relatorio
+    resultado_temp = {"plano": resultado_ag["plano"]}
+    resultado_temp = aplicar_precos_no_plano(resultado_temp, uf=uf)
+    secao_precos = gerar_secao_precos_relatorio(resultado_temp["plano"], uf, formato)
+    conteudo += "\n\n" + secao_precos
+    
     # Salva arquivo
     os.makedirs('reports', exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
