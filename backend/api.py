@@ -580,6 +580,63 @@ def get_debug_lucro_mercado(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/comparar/lucro-mercado")
+def comparar_lucro_mercado(
+    objetivo: str = Query("equilibrado", description="Objetivo de otimização"),
+    seed: int = Query(42, description="Seed para reprodutibilidade"),
+    geracoes: int = Query(100, description="Número de gerações do AG"),
+    populacao: int = Query(50, description="Tamanho da população"),
+    lat: Optional[float] = Query(None, description="Latitude"),
+    lon: Optional[float] = Query(None, description="Longitude"),
+    days: int = Query(30, description="Dias para análise climática"),
+    uf: Optional[str] = Query(None, description="Unidade Federativa (ex: SP, PR)"),
+    municipio: Optional[str] = Query(None, description="Município"),
+    safra: str = Query("2025/2026", description="Safra ZARC")
+):
+    """
+    Avalia o plano do sistema usando lucro de mercado para comparação.
+    
+    NÃO gera um plano otimizado por mercado. Apenas:
+    1. Gera plano normal com AG usando lucro do sistema
+    2. Avalia esse mesmo plano com lucro de mercado normalizado
+    3. Compara os dois valores de lucro
+    
+    Retorna:
+    - modo: "avaliacao_comparativa"
+    - plano_sistema: Plano otimizado pelo AG normal
+    - avaliacao_mercado: Avaliação do mesmo plano com lucro de mercado
+    - comparacao: Diferenças e validação
+    """
+    try:
+        from core.market_profit_comparator import comparar_plano_sistema_com_avaliacao_mercado
+        
+        culturas, talhoes, regras = get_dados()
+        
+        resultado = comparar_plano_sistema_com_avaliacao_mercado(
+            culturas=culturas,
+            talhoes=talhoes,
+            regras=regras,
+            uf=uf,
+            municipio=municipio,
+            safra=safra,
+            objetivo=objetivo,
+            seed=seed,
+            geracoes=geracoes,
+            populacao=populacao
+        )
+        
+        return converter_tipos_python(resultado)
+        
+    except Exception as e:
+        import traceback
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "traceback": traceback.format_exc()
+            }
+        )
+
 @app.get("/dashboard")
 def get_dashboard(
     lat: Optional[float] = None,
