@@ -151,6 +151,10 @@ def health():
         from providers.zarc_provider import get_zarc_status
         zarc_status = get_zarc_status()
         
+        # Verificar status de preços
+        from providers.price_provider import get_price_status
+        price_status = get_price_status()
+        
         # Carregar VERSION.json se existir
         version_info = {}
         version_path = os.path.join(os.path.dirname(__file__), "VERSION.json")
@@ -168,7 +172,8 @@ def health():
             "data_mode": DATA_MODE,
             "providers": {
                 "weather": "available" if WEATHER_PROVIDER else "disabled",
-                "zarc": zarc_status
+                "zarc": zarc_status,
+                "prices": price_status
             },
             "provider_cache": provider_cache_stats
         }
@@ -416,6 +421,71 @@ def get_zarc(
                 "safra": safra,
                 "sugestao": "Tente com parâmetros mais genéricos (apenas cultura e UF)"
             }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/dados/precos")
+def get_precos(
+    cultura: Optional[str] = Query(None, description="Nome da cultura"),
+    uf: Optional[str] = Query(None, description="Unidade Federativa (ex: SP, PR)")
+):
+    """Obtém preços agrícolas"""
+    try:
+        # Importar provider de preços
+        from providers.price_provider import buscar_preco
+        
+        # Se cultura não foi fornecida, retornar mensagem amigável
+        if not cultura:
+            return {
+                "message": "Informe a cultura para consultar preços agrícolas.",
+                "exemplo_soja_sp": "/dados/precos?cultura=soja&uf=SP",
+                "exemplo_milho_pr": "/dados/precos?cultura=milho&uf=PR",
+                "parametros": {
+                    "cultura": "Nome da cultura (obrigatório)",
+                    "uf": "Unidade Federativa (opcional)"
+                },
+                "culturas_disponiveis": [
+                    "soja", "milho", "feijao", "trigo", "algodao", 
+                    "cafe", "cana", "arroz", "sorgo", "mandioca"
+                ]
+            }
+        
+        # Buscar preço
+        preco_data = buscar_preco(cultura=cultura, uf=uf)
+        
+        return preco_data
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/dados/precos/lote")
+def get_precos_lote(
+    uf: Optional[str] = Query(None, description="Unidade Federativa (ex: SP, PR)")
+):
+    """Obtém preços agrícolas para todas as culturas do AgroPlan"""
+    try:
+        # Importar provider de preços
+        from providers.price_provider import buscar_precos_lote
+        
+        # Culturas do AgroPlan
+        culturas = ["soja", "milho", "feijao", "trigo", "algodao", "cafe", "cana", "arroz", "sorgo", "mandioca"]
+        
+        # Buscar preços em lote
+        precos_data = buscar_precos_lote(culturas=culturas, uf=uf)
+        
+        # Estatísticas
+        total = len(precos_data)
+        com_preco = sum(1 for p in precos_data if p.get("ativo"))
+        fallback = sum(1 for p in precos_data if p.get("fallback"))
+        
+        return {
+            "uf": uf,
+            "total_culturas": total,
+            "culturas_com_preco": com_preco,
+            "culturas_fallback": fallback,
+            "precos": precos_data
+        }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1041,13 +1111,23 @@ def limpar_cache(request: Request):
     except Exception:
         pass
     
+    # Limpa cache de preços em memória
+    price_cache_cleared = False
+    try:
+        from providers.price_provider import clear_price_cache
+        clear_price_cache()
+        price_cache_cleared = True
+    except Exception:
+        pass
+    
     return {
         "status": "ok",
         "message": f"Cache limpo completamente.",
         "details": {
             "resultados_cache": items_removidos,
             "provider_cache": provider_items_removidos,
-            "zarc_index_cache": "cleared" if zarc_cache_cleared else "not_found"
+            "zarc_index_cache": "cleared" if zarc_cache_cleared else "not_found",
+            "price_cache": "cleared" if price_cache_cleared else "not_found"
         },
         "protected": bool(cache_admin_token)
     }

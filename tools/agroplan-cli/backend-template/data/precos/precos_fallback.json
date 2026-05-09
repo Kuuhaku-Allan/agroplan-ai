@@ -1,0 +1,87 @@
+{
+  "generated_at": "2026-05-09T19:30:00Z",
+  "source": "price-fallback",
+  "description": "Preços de referência para fallback quando dados reais não estão disponíveis",
+  "precos": [
+    {
+      "cultura": "soja",
+      "preco": 128.50,
+      "unidade": "saca_60kg",
+      "fonte": "fallback",
+      "fallback": true,
+      "observacao": "Preço de referência baseado em média histórica"
+    },
+    {
+      "cultura": "milho",
+      "preco": 65.00,
+      "unidade": "saca_60kg",
+      "fonte": "fallback",
+      "fallback": true,
+      "observacao": "Preço de referência baseado em média histórica"
+    },
+    {
+      "cultura": "feijao",
+      "preco": 180.00,
+      "unidade": "saca_60kg",
+      "fonte": "fallback",
+      "fallback": true,
+      "observacao": "Preço de referência baseado em média histórica"
+    },
+    {
+      "cultura": "trigo",
+      "preco": 75.00,
+      "unidade": "saca_60kg",
+      "fonte": "fallback",
+      "fallback": true,
+      "observacao": "Preço de referência baseado em média histórica"
+    },
+    {
+      "cultura": "algodao",
+      "preco": 3200.00,
+      "unidade": "arroba_15kg",
+      "fonte": "fallback",
+      "fallback": true,
+      "observacao": "Preço de referência baseado em média histórica"
+    },
+    {
+      "cultura": "cafe",
+      "preco": 1250.00,
+      "unidade": "saca_60kg",
+      "fonte": "fallback",
+      "fallback": true,
+      "observacao": "Preço de referência baseado em média histórica"
+    },
+    {
+      "cultura": "cana",
+      "preco": 95.00,
+      "unidade": "tonelada",
+      "fonte": "fallback",
+      "fallback": true,
+      "observacao": "Preço de referência baseado em média histórica"
+    },
+    {
+      "cultura": "arroz",
+      "preco": 85.00,
+      "unidade": "saca_50kg",
+      "fonte": "fallback",
+      "fallback": true,
+      "observacao": "Preço de referência baseado em média histórica"
+    },
+    {
+      "cultura": "sorgo",
+      "preco": 55.00,
+      "unidade": "saca_60kg",
+      "fonte": "fallback",
+      "fallback": true,
+      "observacao": "Preço de referência baseado em média histórica"
+    },
+    {
+      "cultura": "mandioca",
+      "preco": 450.00,
+      "unidade": "tonelada",
+      "fonte": "fallback",
+      "fallback": true,
+      "observacao": "Preço de referência baseado em média histórica"
+    }
+  ]
+}

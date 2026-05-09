@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-05-09T19:30:00Z",
+  "source": "price-local-index",
+  "description": "Índice local de preços agrícolas - será substituído por dados reais futuramente",
+  "version": "1.0.0",
+  "records": {
+    "soja_SP": {
+      "cultura": "soja",
+      "uf": "SP",
+      "preco": 130.00,
+      "unidade": "saca_60kg",
+      "fonte": "price-local-index",
+      "fallback": false,
+      "data_referencia": "2026-05-01",
+      "observacao": "Preço de referência para SP"
+    },
+    "milho_SP": {
+      "cultura": "milho",
+      "uf": "SP",
+      "preco": 67.00,
+      "unidade": "saca_60kg",
+      "fonte": "price-local-index",
+      "fallback": false,
+      "data_referencia": "2026-05-01",
+      "observacao": "Preço de referência para SP"
+    },
+    "feijao_SP": {
+      "cultura": "feijao",
+      "uf": "SP",
+      "preco": 185.00,
+      "unidade": "saca_60kg",
+      "fonte": "price-local-index",
+      "fallback": false,
+      "data_referencia": "2026-05-01",
+      "observacao": "Preço de referência para SP"
+    },
+    "cafe_SP": {
+      "cultura": "cafe",
+      "uf": "SP",
+      "preco": 1280.00,
+      "unidade": "saca_60kg",
+      "fonte": "price-local-index",
+      "fallback": false,
+      "data_referencia": "2026-05-01",
+      "observacao": "Preço de referência para SP"
+    },
+    "cana_SP": {
+      "cultura": "cana",
+      "uf": "SP",
+      "preco": 98.00,
+      "unidade": "tonelada",
+      "fonte": "price-local-index",
+      "fallback": false,
+      "data_referencia": "2026-05-01",
+      "observacao": "Preço de referência para SP"
+    }
+  }
+}
