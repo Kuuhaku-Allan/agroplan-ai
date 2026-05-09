@@ -17,6 +17,7 @@ import { ResultadoOtimizacao } from "@/lib/types";
 import type { ClimateLocation, ClimateData } from "@/lib/types/climate";
 import { Sparkles } from "lucide-react";
 import { ZarcImpactBanner } from "@/components/zarc/zarc-impact-banner";
+import { PriceImpactBanner } from "@/components/prices/price-impact-banner";
 
 interface ResultadoOtimizacaoComClima extends ResultadoOtimizacao {
   clima_real?: ClimateData;
@@ -119,6 +120,11 @@ export default function GeneticoPage() {
             zarc={resultado.zarc}
             onChangeRegion={() => setShowClimateSelector(true)}
           />
+        )}
+
+        {/* Banner de Preços */}
+        {resultado?.precos && resultado.precos.ativo && (
+          <PriceImpactBanner precos={resultado.precos} />
         )}
 
         {/* Aviso se tem clima mas não tem UF/município */}

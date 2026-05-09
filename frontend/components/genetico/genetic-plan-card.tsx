@@ -2,7 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlanoItem } from "@/lib/types";
 import { formatCurrencyBRL, formatPercent, formatArea, normalizeCompatibility, clampPercent } from "@/lib/formatters";
-import { Sprout, TrendingUp, AlertTriangle, Calendar } from "lucide-react";
+import { Sprout, TrendingUp, AlertTriangle, Calendar, DollarSign } from "lucide-react";
+import { PriceInfoCard } from "@/components/prices/price-info-card";
 
 interface GeneticPlanCardProps {
   plano: PlanoItem[];
@@ -101,6 +102,13 @@ export function GeneticPlanCard({ plano }: GeneticPlanCardProps) {
                       </p>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Preço de Referência */}
+              {item.preco_real && item.preco_real.ativo && (
+                <div className="mt-3 pt-3 border-t border-slate-700/50">
+                  <PriceInfoCard preco={item.preco_real} cultura={item.cultura} compact />
                 </div>
               )}
             </div>

@@ -142,6 +142,30 @@ export default function RelatoriosPage() {
           </div>
         ) : null}
 
+        {/* Aviso de Preços */}
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-blue-500 mt-0.5">💰</div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-blue-500 mb-1">
+                Preços Agrícolas de Referência
+              </h3>
+              <p className="text-sm text-slate-300">
+                Este relatório incluirá preços agrícolas de referência.
+                {climateLocation?.uf && (
+                  <> Preços considerados para UF: <strong>{climateLocation.uf}</strong>.</>
+                )}
+                {!climateLocation?.uf && (
+                  <> Preços de referência gerais serão usados quando não houver UF selecionada.</>
+                )}
+              </p>
+              <p className="text-xs text-slate-400 mt-2">
+                ℹ️ Os preços são exibidos como referência e não alteram o cálculo de lucro nesta versão.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Configuração e Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Painel de Configuração */}

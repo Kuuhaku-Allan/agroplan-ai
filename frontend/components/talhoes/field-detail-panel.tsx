@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X, MapPin, Layers, Thermometer, Mountain, Droplets, Sprout, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { formatCurrencyBRL } from "@/lib/formatters";
 import { ZarcWindowCard } from "@/components/zarc/zarc-window-card";
+import { PriceInfoCard } from "@/components/prices/price-info-card";
 
 interface FieldDetailPanelProps {
   talhao: {
@@ -18,6 +19,7 @@ interface FieldDetailPanelProps {
     risco?: number;
     nota?: number;
     zarc?: any; // Dados ZARC
+    preco_real?: any; // Dados de preço
   };
   onClose: () => void;
 }
@@ -181,6 +183,29 @@ export function FieldDetailPanel({ talhao, onClose }: FieldDetailPanelProps) {
                   <div className="p-4 bg-slate-800/50 rounded-lg">
                     <p className="text-sm text-slate-400">
                       {talhao.zarc.message || "Sem janela ZARC encontrada para esta cultura, solo e região."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Preço de Referência */}
+              {talhao.preco_real && (
+                <div className="border-t border-slate-800 pt-6">
+                  <h3 className="text-lg font-semibold text-slate-50 mb-4">Preço de Referência</h3>
+                  <PriceInfoCard preco={talhao.preco_real} cultura={talhao.cultura} />
+                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <p className="text-xs text-blue-400">
+                      ℹ️ Preço apenas referencial; não altera o lucro estimado nesta versão.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {talhao.preco_real && !talhao.preco_real.ativo && (
+                <div className="border-t border-slate-800 pt-6">
+                  <div className="p-4 bg-slate-800/50 rounded-lg">
+                    <p className="text-sm text-slate-400">
+                      Preço de referência não disponível para {talhao.cultura}.
                     </p>
                   </div>
                 </div>

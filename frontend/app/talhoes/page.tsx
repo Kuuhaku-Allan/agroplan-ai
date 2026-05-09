@@ -27,6 +27,7 @@ interface Talhao {
   risco?: number;
   nota?: number;
   zarc?: any; // Dados ZARC da recomendação
+  preco_real?: any; // Dados de preço da recomendação
 }
 
 interface RecomendacoesResponse {
@@ -40,6 +41,16 @@ interface RecomendacoesResponse {
     fallback?: boolean;
     culturas_com_zarc?: number;
     total_culturas?: number;
+  };
+  precos?: {
+    ativo: boolean;
+    source?: string;
+    fallback_count?: number;
+    culturas_com_preco?: number;
+    culturas_sem_preco?: number;
+    total_culturas?: number;
+    aplicado_no_lucro?: boolean;
+    uf?: string;
   };
 }
 
@@ -93,7 +104,8 @@ export default function TalhoesPage() {
           lucro_estimado: recomendacao?.lucro_estimado,
           risco: recomendacao?.risco,
           nota: recomendacao?.nota,
-          zarc: recomendacao?.zarc // Incluir dados ZARC
+          zarc: recomendacao?.zarc, // Incluir dados ZARC
+          preco_real: recomendacao?.preco_real // Incluir dados de preço
         };
       });
 
