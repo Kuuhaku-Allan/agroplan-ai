@@ -49,6 +49,32 @@ Geração de relatórios profissionais:
 - Configuração por objetivo
 - Preview em tempo real
 
+## 🌐 Provedores de Dados Reais
+
+O AgroPlan AI integra múltiplos provedores de dados reais para enriquecer as recomendações:
+
+### ☁️ Open-Meteo (Clima Real)
+- Dados climáticos históricos e atuais
+- Temperatura, precipitação, umidade, radiação solar
+- Ajuste automático de risco baseado em condições reais
+- **Gratuito** e sem necessidade de chave de API
+
+### 🌾 ZARC (Janelas de Plantio)
+- Zoneamento Agrícola de Risco Climático oficial
+- Janelas de plantio recomendadas por cultura, solo e região
+- Índice compacto derivado dos dados oficiais do MAPA
+- Cobertura: principais culturas e regiões do Brasil
+
+### 💰 Preços Agrícolas (Referência de Mercado)
+- Preços de referência para as principais culturas
+- Índice local com fallback para cobertura completa
+- Fonte: dados de mercado e referências regionais
+- **Importante**: Os preços são exibidos como referência. O cálculo de lucro ainda utiliza a base interna do sistema até a normalização de unidades.
+
+📖 **Documentação completa**: [docs/API_PROVIDERS.md](docs/API_PROVIDERS.md)
+
+---
+
 ## 🚀 Modo Local Opcional
 
 O AgroPlan AI oferece um **modo local acelerado** para desenvolvimento e uso diário:

@@ -1,14 +1,17 @@
 {
-  "cli_version": "1.0.23",
-  "backend_template_version": "1.0.23",
+  "cli_version": "1.0.24",
+  "backend_template_version": "1.0.24",
   "zarc_index_version": "2025-2026-fast-index-v2",
+  "price_index_version": "2025-05-reference-v1",
   "features": [
     "zarc_fast_index",
     "zarc_fallback_sorgo_mandioca",
     "soil_normalization_misto_siltoso",
     "climate_real_data",
     "hybrid_mode",
-    "report_generator_zarc_support"
+    "report_generator_zarc_support",
+    "price_provider_index_fallback",
+    "price_display_only"
   ],
-  "generated_at": "2026-05-09T19:00:00Z"
+  "generated_at": "2026-05-09T20:00:00Z"
 }
