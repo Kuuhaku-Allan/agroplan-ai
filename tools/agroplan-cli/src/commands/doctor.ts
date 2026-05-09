@@ -46,21 +46,45 @@ export async function doctorCommand(): Promise<void> {
   const setupState = readSetupState();
   
   // Obter versão atual da CLI
-  let currentVersion = "1.0.20";
+  let currentVersion = "1.0.21";
   try {
     const packagePath = require.resolve('agroplan-ai-cli/package.json');
     const packageJson = require(packagePath);
-    currentVersion = packageJson.version || "1.0.20";
+    currentVersion = packageJson.version || "1.0.21";
   } catch {
-    currentVersion = "1.0.20";
+    currentVersion = "1.0.21";
   }
   
   if (setupComplete && setupState) {
     const installedVersion = setupState.version || "unknown";
     console.log("   ✅ Setup concluído");
     console.log(`   📅 Instalado em: ${new Date(setupState.installedAt).toLocaleString()}`);
-    console.log(`   📦 Versão: ${installedVersion}`);
+    console.log(`   📦 Versão CLI: ${installedVersion}`);
     console.log(`   🐍 Python: ${setupState.python}`);
+    
+    // Verificar VERSION.json do backend local
+    try {
+      const { getHomeAgroplanDir } = await import("../utils/paths");
+      const homeDir = getHomeAgroplanDir();
+      const versionPath = `${homeDir}/backend/VERSION.json`;
+      const { existsSync, readFileSync } = await import("fs");
+      
+      if (existsSync(versionPath)) {
+        const versionContent = readFileSync(versionPath, 'utf-8');
+        const versionInfo = JSON.parse(versionContent);
+        
+        console.log(`   📦 Backend template: ${versionInfo.backend_template_version || 'unknown'}`);
+        console.log(`   🗂️  ZARC index: ${versionInfo.zarc_index_version || 'unknown'}`);
+        
+        if (versionInfo.features && versionInfo.features.length > 0) {
+          console.log(`   ✨ Features: ${versionInfo.features.slice(0, 3).join(', ')}${versionInfo.features.length > 3 ? '...' : ''}`);
+        }
+      } else {
+        console.log("   ⚠️  VERSION.json não encontrado no backend local");
+      }
+    } catch (error) {
+      // Ignorar erro ao ler VERSION.json
+    }
     
     // Verificar se está desatualizado
     if (installedVersion !== currentVersion) {

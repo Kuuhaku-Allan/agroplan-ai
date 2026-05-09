@@ -29,13 +29,13 @@ export async function serveOnCommand(): Promise<void> {
   const setupState = readSetupState();
   
   if (setupState) {
-    let currentVersion = "1.0.20";
+    let currentVersion = "1.0.21";
     try {
       const packagePath = require.resolve('agroplan-ai-cli/package.json');
       const packageJson = require(packagePath);
-      currentVersion = packageJson.version || "1.0.20";
+      currentVersion = packageJson.version || "1.0.21";
     } catch {
-      currentVersion = "1.0.20";
+      currentVersion = "1.0.21";
     }
     
     const installedVersion = setupState.version || "unknown";

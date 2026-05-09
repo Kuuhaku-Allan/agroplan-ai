@@ -18,13 +18,13 @@ export async function setupCommand(force: boolean = false, pythonPath?: string):
   console.log(`📁 Diretório de instalação: ${homeDir}`);
   
   // Obter versão atual da CLI
-  let currentVersion = "1.0.20";
+  let currentVersion = "1.0.21";
   try {
     const packagePath = require.resolve('agroplan-ai-cli/package.json');
     const packageJson = require(packagePath);
-    currentVersion = packageJson.version || "1.0.20";
+    currentVersion = packageJson.version || "1.0.21";
   } catch {
-    currentVersion = "1.0.20";
+    currentVersion = "1.0.21";
   }
   
   // Verificar se já está configurado (a menos que seja --force)
@@ -211,15 +211,15 @@ export async function setupCommand(force: boolean = false, pythonPath?: string):
   console.log("   ✅ Servidor web configurado");
   
   // Salvar estado do setup
-  let version = "1.0.20";
+  let version = "1.0.21";
   try {
     // Tentar encontrar o package.json da CLI instalada
     const packagePath = require.resolve('agroplan-ai-cli/package.json');
     const packageJson = require(packagePath);
-    version = packageJson.version || "1.0.20";
+    version = packageJson.version || "1.0.21";
   } catch {
     // Fallback para versão hardcoded se não conseguir encontrar
-    version = "1.0.20";
+    version = "1.0.21";
   }
   
   saveSetupState({
