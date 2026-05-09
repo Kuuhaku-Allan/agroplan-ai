@@ -179,53 +179,74 @@ export async function testApiConnection(): Promise<{
 }
 
 /**
- * Fetch inteligente com failover automático
+ * Fetch inteligente com failover automático determinístico
  */
 async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
   const mode = getApiMode();
   
+  // Resolver qual API usar primeiro
+  const primary = await resolveApiUrl();
+  
   try {
-    const apiUrl = await getApiUrl();
-    const response = await fetch(`${apiUrl}${path}`, options);
+    const response = await fetch(`${primary.url}${path}`, options);
     
     if (response.ok) {
       return response;
     }
     
+    // Capturar detalhes do erro
+    const errorText = await response.text().catch(() => '');
+    const primaryError = new Error(
+      `API ${primary.origin} falhou em ${path}: ${response.status} ${errorText}`
+    );
+    
     // Se não for modo auto, não tentar fallback
     if (mode !== 'auto') {
-      throw new Error(`API ${mode} falhou: ${response.status}`);
+      throw primaryError;
     }
     
-    // Em modo auto, tentar fallback
-    throw new Error('Tentando fallback...');
+    // Em modo auto, tentar fallback com a OUTRA API
+    throw primaryError;
     
-  } catch (error) {
+  } catch (primaryError) {
     // Se não for modo auto, relançar erro
     if (mode !== 'auto') {
-      throw error;
+      throw primaryError;
     }
     
-    // Modo auto: tentar fallback
-    console.warn('API primária falhou, tentando fallback...', error);
+    // Modo auto: tentar fallback determinístico
+    // Se primary foi local, fallback é render; se foi render, fallback é local
+    const fallbackUrl = primary.origin === 'local' ? ONLINE_API_URL : LOCAL_API_URL;
+    const fallbackOrigin = primary.origin === 'local' ? 'render' : 'local';
     
-    clearApiCache();
+    console.warn(`API ${primary.origin} falhou, tentando ${fallbackOrigin}...`, primaryError);
     
     try {
-      const fallbackUrl = await getApiUrl();
       const fallbackResponse = await fetch(`${fallbackUrl}${path}`, options);
       
       if (fallbackResponse.ok) {
-        // Mostrar notificação discreta de fallback
+        // Atualizar cache para usar fallback
+        resolvedApiUrl = fallbackUrl;
+        lastResolveTime = Date.now();
+        
         if (typeof window !== 'undefined') {
-          console.info('Alternando para API de backup');
+          console.info(`Alternando de ${primary.origin} para ${fallbackOrigin}`);
         }
         return fallbackResponse;
       }
       
-      throw new Error(`Fallback também falhou: ${fallbackResponse.status}`);
+      // Fallback também falhou
+      const fallbackText = await fallbackResponse.text().catch(() => '');
+      throw new Error(
+        `Fallback ${fallbackOrigin} falhou em ${path}: ${fallbackResponse.status} ${fallbackText}`
+      );
     } catch (fallbackError) {
-      throw new Error('Nenhuma API disponível');
+      // Ambas as APIs falharam
+      throw new Error(
+        `Nenhuma API conseguiu responder ${path}.\n` +
+        `Primária (${primary.origin}): ${String(primaryError)}\n` +
+        `Fallback (${fallbackOrigin}): ${String(fallbackError)}`
+      );
     }
   }
 }
@@ -444,33 +465,43 @@ export async function rodadas(objetivo: string = 'equilibrado', numRodadas: numb
 }
 
 export async function gerarRelatorio(objetivo: string = 'equilibrado', formato: string = 'md', location?: ClimateLocation) {
-  const body: any = { objetivo, formato };
-  
-  // Adicionar parâmetros climáticos se localização fornecida
-  if (location) {
-    body.lat = location.lat;
-    body.lon = location.lon;
-    body.days = location.days || 30;
+  try {
+    const body: any = { objetivo, formato };
     
-    // Adicionar parâmetros ZARC se disponíveis
-    if (location.uf) {
-      body.uf = location.uf;
+    // Adicionar parâmetros climáticos se localização fornecida
+    if (location) {
+      body.lat = location.lat;
+      body.lon = location.lon;
+      body.days = location.days || 30;
+      
+      // Adicionar parâmetros ZARC se disponíveis
+      if (location.uf) {
+        body.uf = location.uf;
+      }
+      if (location.municipio) {
+        body.municipio = location.municipio;
+      }
+      if (location.safra) {
+        body.safra = location.safra;
+      }
     }
-    if (location.municipio) {
-      body.municipio = location.municipio;
+    
+    const response = await apiFetch('/relatorio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Erro desconhecido' }));
+      throw new Error(errorData.detail || `Falha ao gerar relatório: ${response.status}`);
     }
-    if (location.safra) {
-      body.safra = location.safra;
-    }
+    
+    return response.json();
+  } catch (error: any) {
+    console.error('Erro em gerarRelatorio:', error);
+    throw new Error(error.message || 'Falha ao gerar relatório');
   }
-  
-  const response = await apiFetch('/relatorio', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  if (!response.ok) throw new Error('Falha ao gerar relatório');
-  return response.json();
 }
 
 

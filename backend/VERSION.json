@@ -1,13 +1,14 @@
 {
-  "cli_version": "1.0.22",
-  "backend_template_version": "1.0.22",
+  "cli_version": "1.0.23",
+  "backend_template_version": "1.0.23",
   "zarc_index_version": "2025-2026-fast-index-v2",
   "features": [
     "zarc_fast_index",
     "zarc_fallback_sorgo_mandioca",
     "soil_normalization_misto_siltoso",
     "climate_real_data",
-    "hybrid_mode"
+    "hybrid_mode",
+    "report_generator_zarc_support"
   ],
-  "generated_at": "2026-05-09T18:30:00Z"
+  "generated_at": "2026-05-09T19:00:00Z"
 }
