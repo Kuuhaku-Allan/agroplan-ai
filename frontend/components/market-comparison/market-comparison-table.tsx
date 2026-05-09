@@ -18,17 +18,17 @@ interface MarketComparisonTableProps {
 
 export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-xl border border-slate-800/50 bg-slate-900/40 backdrop-blur-sm overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-[80px]">Talhão</TableHead>
-            <TableHead>Cultura</TableHead>
-            <TableHead className="text-right">Lucro Sistema</TableHead>
-            <TableHead className="text-right">Lucro Mercado</TableHead>
-            <TableHead className="text-right">Diferença</TableHead>
-            <TableHead className="text-center">Confiabilidade</TableHead>
-            <TableHead className="text-center">Status</TableHead>
+          <TableRow className="bg-white/[0.02] border-slate-800/50 hover:bg-white/[0.02]">
+            <TableHead className="w-[80px] text-slate-300 font-semibold">Talhão</TableHead>
+            <TableHead className="text-slate-300 font-semibold">Cultura</TableHead>
+            <TableHead className="text-right text-slate-300 font-semibold">Lucro Sistema</TableHead>
+            <TableHead className="text-right text-slate-300 font-semibold">Lucro Mercado</TableHead>
+            <TableHead className="text-right text-slate-300 font-semibold">Diferença</TableHead>
+            <TableHead className="text-center text-slate-300 font-semibold">Confiabilidade</TableHead>
+            <TableHead className="text-center text-slate-300 font-semibold">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -46,16 +46,34 @@ export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
 
             // Determinar badge de confiabilidade
             const confiabilidadeBadge = {
-              alta: { variant: "default" as const, className: "bg-green-600", label: "Alta" },
-              media: { variant: "secondary" as const, className: "", label: "Média" },
-              baixa: { variant: "outline" as const, className: "", label: "Baixa" }
+              alta: { 
+                className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", 
+                label: "Alta" 
+              },
+              media: { 
+                className: "bg-amber-500/10 text-amber-400 border-amber-500/20", 
+                label: "Média" 
+              },
+              baixa: { 
+                className: "bg-slate-500/10 text-slate-400 border-slate-500/20", 
+                label: "Baixa" 
+              }
             }[confiabilidade];
 
             return (
-              <TableRow key={index} className={critico ? "bg-red-50 dark:bg-red-950/20" : ""}>
-                <TableCell className="font-medium">{item.talhao}</TableCell>
-                <TableCell className="capitalize">{item.cultura}</TableCell>
-                <TableCell className="text-right font-mono">
+              <TableRow 
+                key={index} 
+                className={`border-slate-800/50 transition-colors ${
+                  critico 
+                    ? "bg-red-500/5 hover:bg-red-500/10" 
+                    : index % 2 === 0 
+                    ? "bg-white/[0.01] hover:bg-cyan-400/[0.04]" 
+                    : "hover:bg-cyan-400/[0.04]"
+                }`}
+              >
+                <TableCell className="font-medium text-slate-200">{item.talhao}</TableCell>
+                <TableCell className="capitalize text-slate-300">{item.cultura}</TableCell>
+                <TableCell className="text-right font-mono text-slate-200">
                   {lucroSistema.toLocaleString("pt-BR", {
                     style: "currency",
                     currency: "BRL",
@@ -63,7 +81,7 @@ export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
                     maximumFractionDigits: 0
                   })}
                 </TableCell>
-                <TableCell className="text-right font-mono">
+                <TableCell className="text-right font-mono text-slate-200">
                   {lucroMercado.toLocaleString("pt-BR", {
                     style: "currency",
                     currency: "BRL",
@@ -72,16 +90,16 @@ export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
                   })}
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1">
+                  <div className="flex items-center justify-end gap-1.5">
                     {diferenca > 0 ? (
-                      <TrendingUp className="h-3 w-3 text-green-600" />
+                      <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
                     ) : diferenca < 0 ? (
-                      <TrendingDown className="h-3 w-3 text-red-600" />
+                      <TrendingDown className="h-3.5 w-3.5 text-red-500" />
                     ) : (
-                      <Minus className="h-3 w-3 text-gray-400" />
+                      <Minus className="h-3.5 w-3.5 text-slate-500" />
                     )}
-                    <span className={`text-sm font-medium ${
-                      diferenca > 0 ? "text-green-600" : diferenca < 0 ? "text-red-600" : "text-gray-500"
+                    <span className={`text-sm font-semibold ${
+                      diferenca > 0 ? "text-emerald-500" : diferenca < 0 ? "text-red-500" : "text-slate-500"
                     }`}>
                       {diferencaPercentual >= 0 ? "+" : ""}
                       {diferencaPercentual.toFixed(1)}%
@@ -90,7 +108,7 @@ export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
                 </TableCell>
                 <TableCell className="text-center">
                   <Badge 
-                    variant={confiabilidadeBadge.variant}
+                    variant="outline"
                     className={confiabilidadeBadge.className}
                   >
                     {confiabilidadeBadge.label}
@@ -98,12 +116,12 @@ export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
                 </TableCell>
                 <TableCell className="text-center">
                   {critico ? (
-                    <Badge variant="destructive" className="gap-1">
+                    <Badge variant="outline" className="gap-1 bg-red-500/10 text-red-400 border-red-500/20">
                       <AlertTriangle className="h-3 w-3" />
                       Crítico
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="text-green-600 border-green-600">
+                    <Badge variant="outline" className="text-emerald-500 border-emerald-500/20 bg-emerald-500/5">
                       OK
                     </Badge>
                   )}
