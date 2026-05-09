@@ -253,13 +253,25 @@ export async function getDashboard(location?: ClimateLocation) {
   try {
     let url = '/dashboard';
     
-    // Adicionar parâmetros climáticos se localização fornecida
+    // Adicionar parâmetros climáticos e ZARC se localização fornecida
     if (location) {
       const params = new URLSearchParams({
         lat: location.lat.toString(),
         lon: location.lon.toString(),
         days: (location.days || 30).toString()
       });
+      
+      // Adicionar parâmetros ZARC se disponíveis
+      if (location.uf) {
+        params.append('uf', location.uf);
+      }
+      if (location.municipio) {
+        params.append('municipio', location.municipio);
+      }
+      if (location.safra) {
+        params.append('safra', location.safra);
+      }
+      
       url += `?${params.toString()}`;
     }
     
@@ -281,9 +293,24 @@ export async function getTalhoes() {
   return response.json();
 }
 
-export async function getRecomendacoes() {
+export async function getRecomendacoes(location?: ClimateLocation) {
   try {
-    const response = await apiFetch('/recomendacoes', {
+    let url = '/recomendacoes';
+    
+    // Adicionar parâmetros ZARC se localização fornecida
+    if (location?.uf) {
+      const params = new URLSearchParams();
+      params.append('uf', location.uf);
+      if (location.municipio) {
+        params.append('municipio', location.municipio);
+      }
+      if (location.safra) {
+        params.append('safra', location.safra);
+      }
+      url += `?${params.toString()}`;
+    }
+    
+    const response = await apiFetch(url, {
       cache: 'no-store',
     });
     return response.json();
@@ -302,13 +329,25 @@ export async function getCenarios(location?: ClimateLocation) {
   try {
     let url = '/cenarios';
     
-    // Adicionar parâmetros climáticos se localização fornecida
+    // Adicionar parâmetros climáticos e ZARC se localização fornecida
     if (location) {
       const params = new URLSearchParams({
         lat: location.lat.toString(),
         lon: location.lon.toString(),
         days: (location.days || 30).toString()
       });
+      
+      // Adicionar parâmetros ZARC se disponíveis
+      if (location.uf) {
+        params.append('uf', location.uf);
+      }
+      if (location.municipio) {
+        params.append('municipio', location.municipio);
+      }
+      if (location.safra) {
+        params.append('safra', location.safra);
+      }
+      
       url += `?${params.toString()}`;
     }
     
@@ -331,6 +370,17 @@ export async function otimizar(objetivo: string = 'equilibrado', seed: number = 
       body.lat = location.lat;
       body.lon = location.lon;
       body.days = location.days || 30;
+      
+      // Adicionar parâmetros ZARC se disponíveis
+      if (location.uf) {
+        body.uf = location.uf;
+      }
+      if (location.municipio) {
+        body.municipio = location.municipio;
+      }
+      if (location.safra) {
+        body.safra = location.safra;
+      }
     }
     
     const response = await apiFetch('/otimizar', {
@@ -401,6 +451,17 @@ export async function gerarRelatorio(objetivo: string = 'equilibrado', formato: 
     body.lat = location.lat;
     body.lon = location.lon;
     body.days = location.days || 30;
+    
+    // Adicionar parâmetros ZARC se disponíveis
+    if (location.uf) {
+      body.uf = location.uf;
+    }
+    if (location.municipio) {
+      body.municipio = location.municipio;
+    }
+    if (location.safra) {
+      body.safra = location.safra;
+    }
   }
   
   const response = await apiFetch('/relatorio', {

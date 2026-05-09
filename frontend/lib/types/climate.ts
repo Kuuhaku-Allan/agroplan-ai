@@ -7,6 +7,9 @@ export interface ClimateLocation {
   lon: number;
   label: string;
   days?: number;
+  uf?: string;
+  municipio?: string;
+  safra?: string;
 }
 
 export interface ClimateData {
@@ -31,34 +34,58 @@ export interface ClimateData {
 
 export const CLIMATE_PRESETS: ClimateLocation[] = [
   {
+    lat: -21.56,
+    lon: -50.45,
+    label: "Clementina - SP 🌾 Exemplo ZARC oficial",
+    days: 30,
+    uf: "SP",
+    municipio: "Clementina",
+    safra: "2025/2026"
+  },
+  {
     lat: -23.55,
     lon: -46.63,
     label: "São Paulo - SP",
-    days: 30
+    days: 30,
+    uf: "SP",
+    municipio: "São Paulo",
+    safra: "2025/2026"
   },
   {
     lat: -15.78,
     lon: -47.93,
     label: "Brasília - DF",
-    days: 30
+    days: 30,
+    uf: "DF",
+    municipio: "Brasília",
+    safra: "2025/2026"
   },
   {
     lat: -21.17,
     lon: -47.81,
     label: "Ribeirão Preto - SP",
-    days: 30
+    days: 30,
+    uf: "SP",
+    municipio: "Ribeirão Preto",
+    safra: "2025/2026"
   },
   {
     lat: -20.45,
     lon: -54.62,
     label: "Campo Grande - MS",
-    days: 30
+    days: 30,
+    uf: "MS",
+    municipio: "Campo Grande",
+    safra: "2025/2026"
   },
   {
     lat: -23.31,
     lon: -51.16,
     label: "Londrina - PR",
-    days: 30
+    days: 30,
+    uf: "PR",
+    municipio: "Londrina",
+    safra: "2025/2026"
   }
 ];
 
