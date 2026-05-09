@@ -209,3 +209,38 @@ export interface ResultadoValidacao {
   diferenca_lucro: number;
   analise: string;
 }
+
+export interface MarketComparisonItem {
+  talhao?: number;
+  cultura?: string;
+  lucro_sistema?: number;
+  lucro_mercado_estimado?: number;
+  preco_real?: PriceData;
+  preco_normalizado?: PriceNormalization;
+  validacao_lucro_mercado?: MarketProfitValidation;
+}
+
+export interface MarketComparisonSummary {
+  lucro_sistema_total: number;
+  lucro_mercado_total: number;
+  diferenca_absoluta: number;
+  diferenca_percentual: number;
+  itens_alta_confiabilidade: number;
+  itens_media_confiabilidade: number;
+  itens_baixa_confiabilidade: number;
+  itens_criticos: number;
+  percentual_alta_confiabilidade: number;
+  pode_usar_mercado: boolean;
+  motivo_bloqueio?: string;
+}
+
+export interface MarketComparisonResponse {
+  modo: "avaliacao_comparativa";
+  descricao: string;
+  plano_sistema: any;
+  avaliacao_mercado: {
+    lucro_mercado_total: number;
+    itens: MarketComparisonItem[];
+  };
+  comparacao: MarketComparisonSummary;
+}

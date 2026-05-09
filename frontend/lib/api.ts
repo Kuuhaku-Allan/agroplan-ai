@@ -588,3 +588,37 @@ export async function getComparacaoPrecos(uf?: string) {
   
   return response.json();
 }
+
+/**
+ * Avalia o plano do sistema usando lucro de mercado para comparação
+ */
+export async function compararLucroMercado(location?: ClimateLocation, options?: {
+  objetivo?: string;
+  seed?: number;
+  geracoes?: number;
+  populacao?: number;
+}) {
+  const params = new URLSearchParams();
+  
+  params.set("objetivo", options?.objetivo ?? "equilibrado");
+  params.set("seed", String(options?.seed ?? 42));
+  params.set("geracoes", String(options?.geracoes ?? 50));
+  params.set("populacao", String(options?.populacao ?? 50));
+  
+  if (location?.lat) params.set("lat", String(location.lat));
+  if (location?.lon) params.set("lon", String(location.lon));
+  if (location?.days) params.set("days", String(location.days));
+  if (location?.uf) params.set("uf", location.uf);
+  if (location?.municipio) params.set("municipio", location.municipio);
+  if (location?.safra) params.set("safra", location.safra);
+  
+  const response = await apiFetch(`/comparar/lucro-mercado?${params.toString()}`, {
+    cache: "no-store"
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Falha ao comparar lucro de mercado: ${response.status}`);
+  }
+  
+  return response.json();
+}

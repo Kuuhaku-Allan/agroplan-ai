@@ -8,7 +8,8 @@ import {
   Layers, 
   Dna, 
   CheckCircle2, 
-  FileText, 
+  FileText,
+  Scale,
   Info 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ const menuItems = [
   { href: "/cenarios", label: "Cenários", icon: Layers },
   { href: "/genetico", label: "Algoritmo Genético", icon: Dna },
   { href: "/validacao", label: "Validação", icon: CheckCircle2 },
+  { href: "/comparacao-mercado", label: "Comparação Mercado", icon: Scale },
   { href: "/relatorios", label: "Relatórios", icon: FileText },
   { href: "/sobre", label: "Sobre", icon: Info },
 ];

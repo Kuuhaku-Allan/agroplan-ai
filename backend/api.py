@@ -28,6 +28,7 @@ CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1
 DATA_MODE = os.getenv("DATA_MODE", "hybrid")  # simulated, real, hybrid
 WEATHER_PROVIDER = os.getenv("WEATHER_PROVIDER", "open-meteo")
 PROVIDER_CACHE_TTL = int(os.getenv("PROVIDER_CACHE_TTL", "3600"))
+DEBUG_ERRORS = os.getenv("DEBUG_ERRORS", "false").lower() == "true"
 
 # Cache em memória para resultados pesados
 _resultados_cache = {}
@@ -629,13 +630,19 @@ def comparar_lucro_mercado(
         
     except Exception as e:
         import traceback
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "error": str(e),
-                "traceback": traceback.format_exc()
-            }
-        )
+        if DEBUG_ERRORS:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": str(e),
+                    "traceback": traceback.format_exc()
+                }
+            )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Erro ao gerar avaliação comparativa de lucro de mercado."
+            )
 
 @app.get("/dashboard")
 def get_dashboard(

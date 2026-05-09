@@ -115,6 +115,49 @@ Diferenças altas entre lucro do sistema e lucro de mercado podem indicar:
 
 **Próxima etapa**: Após validação extensiva, o sistema poderá usar lucro de mercado na otimização com `PRICE_APPLY_TO_PROFIT=true`.
 
+### Avaliação Comparativa com Lucro de Mercado
+
+O sistema permite avaliar o plano principal usando lucro de mercado normalizado para comparação:
+
+#### O que é?
+
+- **Avalia** o plano principal gerado pelo AG usando lucro de mercado
+- **NÃO gera** um novo plano otimizado por mercado
+- **Compara** os dois valores de lucro (sistema vs mercado)
+- **Bloqueia** uso automático se houver itens críticos
+
+#### Endpoint
+
+```
+GET /comparar/lucro-mercado?uf=SP&municipio=Clementina&safra=2025/2026&seed=42&geracoes=50
+```
+
+**Parâmetros**:
+- `objetivo`: Objetivo de otimização (padrão: "equilibrado")
+- `seed`: Seed para reprodutibilidade (padrão: 42)
+- `geracoes`: Número de gerações do AG (padrão: 100)
+- `populacao`: Tamanho da população (padrão: 50)
+- `uf`: Unidade Federativa (opcional)
+- `municipio`: Município (opcional)
+- `safra`: Safra ZARC (padrão: "2025/2026")
+
+#### Regras de Bloqueio
+
+O sistema bloqueia o uso automático de lucro de mercado (`pode_usar_mercado = false`) se:
+- `itens_criticos > 0` (diferença >150%, lucro invertido, ou fallback com diferença >100%)
+- `itens_baixa_confiabilidade > 0` (diferença >150%)
+- `percentual_alta_confiabilidade < 70%`
+
+#### Interface
+
+- **Página dedicada**: `/comparacao-mercado` com resumo e tabela detalhada
+- **Badges de confiabilidade**: Verde (alta), Amarelo (média), Vermelho (baixa), Vermelho crítico
+- **Avisos claros**: "Esta avaliação é experimental e não substitui o plano principal"
+
+#### Importante
+
+**`PRICE_APPLY_TO_PROFIT=false` permanece padrão.** Esta é apenas uma avaliação comparativa para análise de sensibilidade, não uma otimização por lucro de mercado.
+
 📖 **Documentação completa**: [docs/API_PROVIDERS.md](docs/API_PROVIDERS.md)
 
 ---
