@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from typing import Optional
 import sys
 import os
+import uuid
 
 # Adiciona o diretório backend ao path para imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -1307,6 +1308,114 @@ def otimizar_lucro_mercado_experimental(
                 status_code=500,
                 detail="Erro ao gerar otimização experimental de lucro de mercado."
             )
+
+@app.post("/planejamento/calendario")
+def gerar_calendario(request: dict):
+    """
+    Gera calendário agrícola para uma cultura.
+    
+    Fase 10.1: Base local para soja, milho e feijão
+    Fase futura: Integração com clima real e replanejamento
+    """
+    try:
+        from core.crop_calendar_engine import gerar_calendario_cultura
+        from core.planning_models import Field, SoilType, Slope, WaterAvailability
+        from datetime import datetime
+        
+        # Validar campos obrigatórios
+        if "cultura" not in request:
+            raise HTTPException(status_code=400, detail="Campo 'cultura' é obrigatório")
+        if "planting_date" not in request:
+            raise HTTPException(status_code=400, detail="Campo 'planting_date' é obrigatório")
+        if "field" not in request:
+            raise HTTPException(status_code=400, detail="Campo 'field' é obrigatório")
+        
+        # Parsear data de plantio
+        try:
+            planting_date = datetime.fromisoformat(request["planting_date"]).date()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Formato de data inválido. Use ISO 8601 (YYYY-MM-DD)")
+        
+        # Criar objeto Field
+        field_data = request["field"]
+        field = Field(
+            id=field_data.get("id", str(uuid.uuid4())),
+            property_id=field_data.get("property_id", "temp"),
+            name=field_data.get("name", "Talhão Temporário"),
+            area_ha=float(field_data.get("area_ha", 10)),
+            soil_type=SoilType(field_data.get("soil_type", "argiloso")),
+            slope=Slope(field_data.get("slope", "plano")),
+            water_availability=WaterAvailability(field_data.get("water_availability", "media"))
+        )
+        
+        # Gerar calendário
+        resultado = gerar_calendario_cultura(
+            cultura=request["cultura"],
+            planting_date=planting_date,
+            field=field,
+            crop_plan_id=request.get("crop_plan_id"),
+            weather_context=request.get("weather_context"),
+            zarc_context=request.get("zarc_context")
+        )
+        
+        return converter_tipos_python(resultado)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        if DEBUG_ERRORS:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": str(e),
+                    "traceback": traceback.format_exc()
+                }
+            )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Erro ao gerar calendário agrícola."
+            )
+
+@app.get("/planejamento/culturas")
+def listar_culturas():
+    """Lista culturas disponíveis no sistema de planejamento"""
+    try:
+        from core.crop_calendar_engine import get_culturas_disponiveis, get_cultura_info
+        
+        culturas = get_culturas_disponiveis()
+        
+        return {
+            "total": len(culturas),
+            "culturas": culturas,
+            "detalhes": {
+                cultura: get_cultura_info(cultura)
+                for cultura in culturas
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/planejamento/culturas/{cultura}")
+def obter_cultura_info(cultura: str):
+    """Obtém informações detalhadas de uma cultura"""
+    try:
+        from core.crop_calendar_engine import get_cultura_info
+        
+        info = get_cultura_info(cultura)
+        
+        if not info:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Cultura '{cultura}' não encontrada"
+            )
+        
+        return info
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/cache/limpar")
 def limpar_cache(request: Request):

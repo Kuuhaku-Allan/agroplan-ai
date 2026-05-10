@@ -506,37 +506,132 @@ Café, Milho, Soja, Cana, Feijão, Algodão, Trigo, Arroz, Sorgo, Mandioca
 
 ---
 
-## 🔮 Próximas Funcionalidades
+## 🔮 Roadmap: Planejador de Safra Inteligente
 
-### Fase 7 - APIs Reais
-- [ ] Integração com API de clima real
-- [ ] Integração com API de preços de commodities
-- [ ] Integração com API de dados de solo
+O objetivo final do AgroPlan AI é evoluir de um **otimizador de culturas** para um **assistente completo de planejamento e acompanhamento agrícola**. Não apenas "qual cultura plantar?", mas **onde, quando, como cuidar, quando irrigar, adubar e colher**.
 
-### Fase 8 - Banco de Dados
-- [ ] PostgreSQL para persistência
-- [ ] Suporte a múltiplas propriedades
-- [ ] Histórico de planejamentos
+### Visão do Produto Final
 
-### Fase 9 - Autenticação
-- [ ] Login de usuários
-- [ ] Perfis de produtor
-- [ ] Permissões e roles
+**Planejador de Safra Inteligente** - Um assistente que acompanha o ciclo agrícola completo:
 
-### Fase 10 - Edição
-- [ ] CRUD de talhões
-- [ ] CRUD de culturas
-- [ ] Importação de dados via CSV
+- 🗺️ **Criar/selecionar terrenos** (manual, mapa ou busca)
+- 🌱 **Recomendar culturas** baseado em solo, clima, ZARC e preços
+- 📅 **Gerar calendário agrícola** com tarefas por fase da cultura
+- 🌦️ **Alertas climáticos** para irrigação, chuva, temperatura
+- 🔄 **Replanejamento inteligente** quando houver imprevistos
+- 📊 **Acompanhamento do ciclo** com observações e intervenções
+- 🎓 **Modo guiado** para iniciantes e **modo avançado** para especialistas
 
-### Fase 11 - Mapa
-- [ ] Visualização geográfica dos talhões
-- [ ] Desenho de polígonos
-- [ ] Integração com Google Maps/Mapbox
+### Estratégia de Dados Climáticos
 
-### Fase 12 - Landing Page
-- [ ] Página inicial institucional
-- [ ] Apresentação do produto
-- [ ] Call-to-action
+**Honestidade sobre limitações de previsão:**
+
+- **0-16 dias**: Previsão meteorológica real (Open-Meteo)
+- **17+ dias**: Climatologia histórica + ZARC (NASA POWER)
+
+Não fingimos ter "previsão exata de 120 dias". Usamos dados históricos, médias climatológicas e janelas de risco para o restante do ciclo.
+
+### Fases de Desenvolvimento
+
+#### ✅ Fase 1-9: Base Técnica (Concluída)
+- [x] Dashboard com métricas e visualizações
+- [x] Algoritmo Genético com 4 objetivos
+- [x] Validação (Força Bruta + Múltiplas Rodadas)
+- [x] Dados climáticos reais (Open-Meteo)
+- [x] ZARC oficial com índice rápido
+- [x] Preços agrícolas com normalização de unidades
+- [x] Lucro de mercado experimental
+- [x] Relatórios profissionais (MD/TXT)
+- [x] API Local acelerada (CLI)
+
+#### 🚧 Fase 10: Planejador de Safra Inteligente (Em Desenvolvimento)
+
+**10.1 - Modelo de Domínio e Arquitetura** ⏳
+- [ ] Atualizar roadmap (este documento)
+- [ ] Criar `docs/PLANEJADOR_SAFRA.md` com arquitetura
+- [ ] Definir modelos: Property, Field, CropPlan, CropCycle, CalendarTask
+- [ ] Engine inicial de calendário agrícola
+- [ ] Endpoint `POST /planejamento/calendario`
+- [ ] Base local para 3 culturas (soja, milho, feijão)
+
+**10.2 - Cadastro Manual de Terrenos**
+- [ ] Formulário para criar talhão manualmente
+- [ ] Campos: nome, área, solo, relevo, água, UF, município, coordenadas
+- [ ] Conectar com ZARC, clima e preços existentes
+- [ ] CRUD básico de propriedades e talhões
+
+**10.3 - Modo Guiado para Iniciantes**
+- [ ] Wizard passo a passo
+- [ ] Perguntas simples sobre terreno e objetivo
+- [ ] Recomendação automática de culturas
+- [ ] Geração de calendário simplificado
+
+**10.4 - Calendário Agrícola Local**
+- [ ] Base de conhecimento por cultura (10 culturas)
+- [ ] Fases: germinação, vegetativa, crítica hídrica, colheita
+- [ ] Tarefas básicas: preparar solo, plantar, irrigar, adubar, colher
+- [ ] Alertas básicos por fase
+
+**10.5 - Calendário com Clima Integrado**
+- [ ] Curto prazo (0-16 dias): Open-Meteo
+- [ ] Longo prazo (17+ dias): NASA POWER climatologia
+- [ ] Alertas de irrigação baseados em chuva prevista
+- [ ] Alertas de temperatura crítica
+- [ ] Ajuste de tarefas por condições climáticas
+
+**10.6 - Replanejamento por Imprevistos**
+- [ ] Usuário informa: "não consegui irrigar", "choveu demais", "solo seco"
+- [ ] Sistema recalcula: nova data, risco ajustado, ação alternativa
+- [ ] Histórico de intervenções
+- [ ] Validação manual para mudanças críticas
+
+**10.7 - Modo Avançado Modular**
+- [ ] Permitir ligar/desligar módulos
+- [ ] Clima: ligado/desligado
+- [ ] ZARC: ligado/desligado
+- [ ] Preços: ligados/desligados
+- [ ] Assistente: ligado/desligado
+- [ ] Recomendações: ligadas/desligadas
+
+**10.8 - Mapa e Desenho de Terreno**
+- [ ] Selecionar terreno no mapa
+- [ ] Desenhar polígono
+- [ ] Calcular área automaticamente
+- [ ] Detectar município e coordenadas
+- [ ] Puxar contexto de solo/clima/ZARC
+
+#### 📦 Fase 11: Persistência e Multiusuário
+- [ ] PostgreSQL para dados persistentes
+- [ ] Suporte a múltiplas propriedades por usuário
+- [ ] Histórico de planejamentos e safras
+- [ ] Autenticação e perfis de usuário
+
+#### 🌍 Fase 12: Fontes de Dados Avançadas
+- [ ] NASA POWER para climatologia de longo prazo
+- [ ] Embrapa Saúde do Solo (contexto municipal)
+- [ ] MapBiomas (uso e cobertura da terra)
+- [ ] IBGE Localidades (padronização de municípios)
+- [ ] Conab (séries históricas de preços)
+
+#### 🎓 Fase 13: Base de Conhecimento Agronômico
+- [ ] Recomendações de insumos por cultura
+- [ ] Categorias de ferramentas necessárias
+- [ ] Manejo fitossanitário (com cautela e fontes)
+- [ ] Boas práticas por região
+- [ ] Integração com Embrapa e fontes técnicas
+
+### Níveis de Seleção de Terreno
+
+**Nível 1 - Manual** (Fase 10.2) ✅ Viável agora
+- Usuário informa: nome, área, solo, relevo, água, UF, município, coordenadas
+
+**Nível 2 - Mapa com Desenho** (Fase 10.8)
+- Usuário desenha polígono no mapa
+- Sistema calcula: área, coordenadas, município, clima, ZARC
+
+**Nível 3 - Busca Automática** (Futuro distante)
+- Integração com cadastros oficiais (SNCR/INCRA)
+- Complexidade alta, não prioritário para projeto acadêmico
 
 ---
 
