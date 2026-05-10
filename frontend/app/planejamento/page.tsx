@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AppShell } from '@/components/layout/app-shell';
+import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -222,28 +222,26 @@ export default function PlanejamentoPage() {
 
   if (loading) {
     return (
-      <AppShell>
+      <div>
+        <Topbar
+          title="Planejamento"
+          subtitle="Cadastre seus talhões e gere calendários agrícolas por cultura"
+        />
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
         </div>
-      </AppShell>
+      </div>
     );
   }
 
   return (
-    <AppShell>
-      <div className="mx-auto w-full max-w-7xl space-y-6 px-8 py-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Sprout className="h-8 w-8 text-emerald-500" />
-            Planejador de Safra
-          </h1>
-          <p className="text-slate-400 mt-2">
-            Cadastre seus talhões e gere um calendário agrícola inicial com tarefas por cultura.
-          </p>
-        </div>
+    <div>
+      <Topbar
+        title="Planejamento"
+        subtitle="Cadastre seus talhões e gere calendários agrícolas por cultura"
+      />
 
+      <div className="p-8 space-y-8">
         {/* Alerts */}
         {error && (
           <Card className="rounded-2xl border border-red-500/20 bg-red-500/10 backdrop-blur-sm">
@@ -757,6 +755,6 @@ export default function PlanejamentoPage() {
           />
         )}
       </div>
-    </AppShell>
+    </div>
   );
 }
