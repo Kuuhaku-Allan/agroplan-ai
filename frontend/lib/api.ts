@@ -622,3 +622,36 @@ export async function compararLucroMercado(location?: ClimateLocation, options?:
   
   return response.json();
 }
+
+/**
+ * Otimização EXPERIMENTAL usando lucro de mercado como fitness
+ */
+export async function otimizarLucroMercadoExperimental(location?: ClimateLocation, options?: {
+  seed?: number;
+  geracoes?: number;
+  populacao?: number;
+}) {
+  const params = new URLSearchParams();
+  
+  params.set("objetivo", "mercado"); // Sempre mercado para este modo
+  params.set("seed", String(options?.seed ?? 42));
+  params.set("geracoes", String(options?.geracoes ?? 50));
+  params.set("populacao", String(options?.populacao ?? 50));
+  
+  if (location?.lat) params.set("lat", String(location.lat));
+  if (location?.lon) params.set("lon", String(location.lon));
+  if (location?.days) params.set("days", String(location.days));
+  if (location?.uf) params.set("uf", location.uf);
+  if (location?.municipio) params.set("municipio", location.municipio);
+  if (location?.safra) params.set("safra", location.safra);
+  
+  const response = await apiFetch(`/otimizar/lucro-mercado-experimental?${params.toString()}`, {
+    cache: "no-store"
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Falha ao otimizar lucro de mercado experimental: ${response.status}`);
+  }
+  
+  return response.json();
+}

@@ -1242,6 +1242,72 @@ def relatorio(request: RelatorioRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/otimizar/lucro-mercado-experimental")
+def otimizar_lucro_mercado_experimental(
+    objetivo: str = Query("mercado", description="Objetivo (sempre 'mercado' para este modo)"),
+    seed: int = Query(42, description="Seed para reprodutibilidade"),
+    geracoes: int = Query(50, description="Número de gerações do AG"),
+    populacao: int = Query(50, description="Tamanho da população"),
+    lat: Optional[float] = Query(None, description="Latitude"),
+    lon: Optional[float] = Query(None, description="Longitude"),
+    days: int = Query(30, description="Dias para análise climática"),
+    uf: Optional[str] = Query(None, description="Unidade Federativa (ex: SP, PR)"),
+    municipio: Optional[str] = Query(None, description="Município"),
+    safra: str = Query("2025/2026", description="Safra ZARC")
+):
+    """
+    Otimização EXPERIMENTAL usando lucro de mercado como fitness.
+    
+    ATENÇÃO: Este é um modo experimental que:
+    - Usa lucro_mercado_estimado como fitness principal
+    - Bloqueia uso automático se houver itens críticos
+    - NÃO substitui a recomendação principal do sistema
+    - Requer validação manual antes de usar
+    
+    Retorna:
+    - modo: "otimizacao_mercado_experimental"
+    - experimental: true
+    - plano: Plano otimizado por lucro de mercado
+    - bloqueado: true/false
+    - motivo_bloqueio: Razão do bloqueio (se aplicável)
+    - aviso: Texto de aviso sobre natureza experimental
+    """
+    try:
+        from core.market_profit_optimizer import gerar_plano_genetico_lucro_mercado_experimental
+        
+        culturas, talhoes, regras = get_dados()
+        
+        resultado = gerar_plano_genetico_lucro_mercado_experimental(
+            culturas=culturas,
+            talhoes=talhoes,
+            regras=regras,
+            uf=uf,
+            municipio=municipio,
+            safra=safra,
+            objetivo="mercado",  # Força objetivo mercado
+            seed=seed,
+            geracoes=geracoes,
+            populacao=populacao
+        )
+        
+        return converter_tipos_python(resultado)
+        
+    except Exception as e:
+        import traceback
+        if DEBUG_ERRORS:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": str(e),
+                    "traceback": traceback.format_exc()
+                }
+            )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Erro ao gerar otimização experimental de lucro de mercado."
+            )
+
 @app.post("/cache/limpar")
 def limpar_cache(request: Request):
     """Limpa o cache de resultados pesados (protegido por token)"""

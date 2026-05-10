@@ -3,17 +3,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Scale, AlertTriangle, MapPin, Calendar, Globe } from "lucide-react";
-import { compararLucroMercado, getClimateLocation } from "@/lib/api";
+import { Loader2, Scale, AlertTriangle, MapPin, Calendar, Globe, Zap } from "lucide-react";
+import { compararLucroMercado, otimizarLucroMercadoExperimental, getClimateLocation } from "@/lib/api";
 import { MarketComparisonSummaryCard } from "@/components/market-comparison/market-comparison-summary";
 import { MarketComparisonTable } from "@/components/market-comparison/market-comparison-table";
-import type { MarketComparisonResponse } from "@/lib/types";
+import type { MarketComparisonResponse, MarketOptimizationResponse } from "@/lib/types";
 import { Topbar } from "@/components/layout/topbar";
 
 export default function ComparacaoMercadoPage() {
   const [loading, setLoading] = useState(false);
+  const [loadingOptimization, setLoadingOptimization] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorOptimization, setErrorOptimization] = useState<string | null>(null);
   const [resultado, setResultado] = useState<MarketComparisonResponse | null>(null);
+  const [resultadoOtimizacao, setResultadoOtimizacao] = useState<MarketOptimizationResponse | null>(null);
 
   const handleExecutarAvaliacao = async () => {
     setLoading(true);
@@ -41,6 +44,31 @@ export default function ComparacaoMercadoPage() {
     }
   };
 
+  const handleExecutarOtimizacao = async () => {
+    setLoadingOptimization(true);
+    setErrorOptimization(null);
+    setResultadoOtimizacao(null);
+
+    try {
+      // Obter localização climática salva
+      const location = getClimateLocation();
+
+      // Executar otimização experimental
+      const data = await otimizarLucroMercadoExperimental(location || undefined, {
+        seed: 42,
+        geracoes: 50,
+        populacao: 50
+      });
+
+      setResultadoOtimizacao(data);
+    } catch (err: any) {
+      console.error("Erro ao executar otimização experimental:", err);
+      setErrorOptimization(err.message || "Erro ao executar otimização experimental");
+    } finally {
+      setLoadingOptimization(false);
+    }
+  };
+
   const location = getClimateLocation();
   const hasUF = location?.uf;
 
@@ -48,7 +76,7 @@ export default function ComparacaoMercadoPage() {
     <div>
       <Topbar
         title="Comparação Mercado"
-        subtitle="Avaliação comparativa com lucro de mercado"
+        subtitle="Avaliação comparativa e otimização experimental com lucro de mercado"
       />
 
       <div className="p-8 space-y-6">
@@ -133,7 +161,7 @@ export default function ComparacaoMercadoPage() {
           </Card>
         )}
 
-        {/* Botão de Execução */}
+        {/* Botão de Execução - Avaliação */}
         <div className="flex justify-center">
           <Button
             size="lg"
@@ -155,7 +183,7 @@ export default function ComparacaoMercadoPage() {
           </Button>
         </div>
 
-        {/* Erro */}
+        {/* Erro - Avaliação */}
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
             <div className="flex items-start gap-3">
@@ -168,7 +196,7 @@ export default function ComparacaoMercadoPage() {
           </div>
         )}
 
-        {/* Resultados */}
+        {/* Resultados - Avaliação */}
         {resultado && (
           <div className="space-y-6">
             {/* Resumo */}
@@ -200,6 +228,198 @@ export default function ComparacaoMercadoPage() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Divisor */}
+        {resultado && (
+          <div className="relative py-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-800/50"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-slate-950 px-4 text-sm text-slate-400">Otimização Experimental</span>
+            </div>
+          </div>
+        )}
+
+        {/* Seção de Otimização Experimental */}
+        {resultado && (
+          <div className="space-y-6">
+            {/* Header Experimental */}
+            <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-900/20 via-orange-900/20 to-amber-950/20 backdrop-blur-sm p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-amber-500/20">
+                  <Zap className="h-6 w-6 text-amber-400" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-amber-100 mb-2">
+                    Otimização Experimental por Lucro de Mercado
+                  </h2>
+                  <p className="text-sm text-amber-200/80 leading-relaxed mb-3">
+                    Gera um plano otimizado usando lucro de mercado como fitness principal.
+                    <strong className="text-amber-300"> Este modo é altamente experimental</strong> e não deve ser usado como recomendação principal.
+                  </p>
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                    <p className="text-xs text-amber-200/90 leading-relaxed">
+                      ⚠️ <strong>Atenção:</strong> O plano experimental pode ser bloqueado automaticamente se houver itens críticos, baixa confiabilidade nos preços ou cobertura insuficiente de dados de alta qualidade.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Botão de Execução - Otimização */}
+            <div className="flex justify-center">
+              <Button
+                size="lg"
+                onClick={handleExecutarOtimizacao}
+                disabled={loadingOptimization}
+                className="gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                {loadingOptimization ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Executando Otimização Experimental...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-4 w-4" />
+                    Executar Otimização Experimental
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Erro - Otimização */}
+            {errorOptimization && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-red-300 mb-1">Erro ao executar otimização experimental</p>
+                    <p className="text-sm text-red-200/80">{errorOptimization}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Resultados - Otimização */}
+            {resultadoOtimizacao && (
+              <div className="space-y-6">
+                {/* Status de Bloqueio */}
+                {resultadoOtimizacao.bloqueado ? (
+                  <div className="rounded-lg border p-4 bg-red-500/10 border-red-500/25">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0 text-red-400" />
+                      <div>
+                        <p className="text-sm font-semibold mb-1 text-red-300">
+                          Uso automático bloqueado
+                        </p>
+                        <p className="text-sm text-red-200/80">{resultadoOtimizacao.motivo_bloqueio}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border p-4 bg-emerald-500/10 border-emerald-500/25">
+                    <div className="flex items-start gap-3">
+                      <Zap className="h-5 w-5 mt-0.5 flex-shrink-0 text-emerald-400" />
+                      <div>
+                        <p className="text-sm font-semibold mb-1 text-emerald-300">
+                          Simulação sem bloqueios críticos
+                        </p>
+                        <p className="text-sm text-emerald-200/80">
+                          Este plano experimental não apresenta bloqueios automáticos, mas ainda requer validação manual antes de uso.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Resumo da Otimização */}
+                <Card className="bg-slate-900/50 border-slate-800/50">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Resumo da Otimização Experimental</CardTitle>
+                    <CardDescription className="text-xs">
+                      Plano otimizado usando lucro de mercado como fitness
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-xs text-slate-400">Lucro de Mercado Total</p>
+                        <p className="text-lg font-bold text-emerald-400">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(resultadoOtimizacao.lucro_mercado_total)}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-slate-400">Lucro Sistema (Ref.)</p>
+                        <p className="text-lg font-bold text-slate-300">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(resultadoOtimizacao.lucro_sistema_total_referencial)}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-slate-400">Risco Médio</p>
+                        <p className="text-lg font-bold text-amber-400">
+                          {resultadoOtimizacao.risco_medio.toFixed(1)}%
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-slate-400">Diversidade</p>
+                        <p className="text-lg font-bold text-blue-400">
+                          {resultadoOtimizacao.diversidade} culturas
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Validação */}
+                    {resultadoOtimizacao.validacao_lucro_mercado && (
+                      <div className="mt-6 pt-6 border-t border-slate-800/50">
+                        <p className="text-sm font-semibold text-slate-300 mb-3">Confiabilidade dos Dados</p>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                              <span className="text-xs font-medium text-emerald-400">Alta</span>
+                            </div>
+                            <p className="text-lg font-bold text-slate-200">{resultadoOtimizacao.validacao_lucro_mercado.itens_alta_confiabilidade}</p>
+                            <p className="text-xs text-slate-400">{resultadoOtimizacao.validacao_lucro_mercado.percentual_alta_confiabilidade?.toFixed(1)}%</p>
+                          </div>
+                          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                              <span className="text-xs font-medium text-amber-400">Média</span>
+                            </div>
+                            <p className="text-lg font-bold text-slate-200">{resultadoOtimizacao.validacao_lucro_mercado.itens_media_confiabilidade}</p>
+                          </div>
+                          <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                              <span className="text-xs font-medium text-red-400">Críticos</span>
+                            </div>
+                            <p className="text-lg font-bold text-slate-200">{resultadoOtimizacao.validacao_lucro_mercado.itens_criticos}</p>
+                            <p className="text-xs text-slate-400">{resultadoOtimizacao.validacao_lucro_mercado.percentual_critico?.toFixed(1)}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Aviso Final Experimental */}
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-amber-300 mb-1">Modo Experimental</p>
+                      <p className="text-sm text-amber-200/80">
+                        {resultadoOtimizacao.aviso}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

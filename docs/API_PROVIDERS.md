@@ -600,3 +600,171 @@ Atualmente, os preços agrícolas são exibidos como referência e não afetam o
 4. **Validação**: Testes extensivos para garantir consistência nos cálculos
 
 Isso garantirá que os preços de mercado sejam aplicados corretamente no cálculo de lucro, mantendo a precisão e confiabilidade do sistema.
+
+## Avaliação Comparativa com Lucro de Mercado
+
+### Endpoint de Avaliação
+
+**Endpoint**: `GET /comparar/lucro-mercado`
+
+**Descrição**: Avalia o plano principal do sistema usando lucro de mercado normalizado para comparação. **NÃO gera** um novo plano otimizado por mercado.
+
+**Parâmetros**:
+- `objetivo`: Objetivo de otimização (padrão: "equilibrado")
+- `seed`: Seed para reprodutibilidade (padrão: 42)
+- `geracoes`: Número de gerações do AG (padrão: 100)
+- `populacao`: Tamanho da população (padrão: 50)
+- `uf`: Unidade Federativa (opcional)
+- `municipio`: Município (opcional)
+- `safra`: Safra ZARC (padrão: "2025/2026")
+- `lat`, `lon`, `days`: Parâmetros climáticos (opcionais)
+
+**Exemplo**:
+```bash
+GET /comparar/lucro-mercado?uf=SP&municipio=Clementina&safra=2025/2026&seed=42&geracoes=50
+```
+
+**Resposta**:
+```json
+{
+  "modo": "avaliacao_comparativa",
+  "descricao": "Avaliação do plano principal usando lucro de mercado",
+  "plano_sistema": {
+    "lucro_total": 866770.0,
+    "risco_medio": 28.2,
+    "plano": [...]
+  },
+  "avaliacao_mercado": {
+    "lucro_mercado_total": 836058.68,
+    "itens": [...]
+  },
+  "comparacao": {
+    "lucro_sistema_total": 866770.0,
+    "lucro_mercado_total": 836058.68,
+    "diferenca_absoluta": -30711.32,
+    "diferenca_percentual": -3.54,
+    "itens_alta_confiabilidade": 2,
+    "itens_media_confiabilidade": 6,
+    "itens_baixa_confiabilidade": 2,
+    "itens_criticos": 2,
+    "percentual_alta_confiabilidade": 20.0,
+    "pode_usar_mercado": false,
+    "motivo_bloqueio": "2 item(ns) crítico(s); 2 item(ns) de baixa confiabilidade; apenas 20.0% dos itens têm alta confiabilidade"
+  }
+}
+```
+
+### Regras de Bloqueio
+
+O sistema bloqueia o uso automático de lucro de mercado (`pode_usar_mercado = false`) se:
+- `itens_criticos > 0` (diferença >150%, lucro invertido, ou fallback com diferença >100%)
+- `itens_baixa_confiabilidade > 0` (diferença >150%)
+- `percentual_alta_confiabilidade < 70%`
+
+## Otimização Experimental com Lucro de Mercado
+
+**⚠️ IMPORTANTE**: Este é um modo **altamente experimental** que não substitui a recomendação principal do sistema.
+
+### Endpoint de Otimização Experimental
+
+**Endpoint**: `GET /otimizar/lucro-mercado-experimental`
+
+**Descrição**: Gera um plano otimizado usando lucro de mercado normalizado como fitness principal. O plano pode ser bloqueado automaticamente se houver itens críticos ou baixa confiabilidade.
+
+**Parâmetros**:
+- `objetivo`: Sempre "mercado" (forçado)
+- `seed`: Seed para reprodutibilidade (padrão: 42)
+- `geracoes`: Número de gerações do AG (padrão: 50)
+- `populacao`: Tamanho da população (padrão: 50)
+- `uf`: Unidade Federativa (opcional)
+- `municipio`: Município (opcional)
+- `safra`: Safra ZARC (padrão: "2025/2026")
+- `lat`, `lon`, `days`: Parâmetros climáticos (opcionais)
+
+**Exemplo**:
+```bash
+GET /otimizar/lucro-mercado-experimental?uf=SP&municipio=Clementina&safra=2025/2026&seed=42&geracoes=50
+```
+
+**Resposta**:
+```json
+{
+  "modo": "otimizacao_mercado_experimental",
+  "experimental": true,
+  "aviso": "Este plano é experimental e não substitui a recomendação principal. Validar manualmente antes de usar.",
+  "plano": [...],
+  "lucro_mercado_total": 846565.31,
+  "lucro_sistema_total_referencial": 796150.0,
+  "fitness_mercado": 0.84656531,
+  "fitness_sistema_referencial": 76.820468,
+  "risco_medio": 29.77,
+  "diversidade": 7,
+  "area_total": 117.0,
+  "geracoes": 50,
+  "objetivo": "mercado",
+  "seed": 42,
+  "validacao_lucro_mercado": {
+    "ativo": true,
+    "total_itens": 10,
+    "itens_alta_confiabilidade": 2,
+    "itens_media_confiabilidade": 7,
+    "itens_baixa_confiabilidade": 1,
+    "itens_criticos": 1,
+    "percentual_alta_confiabilidade": 20.0,
+    "percentual_critico": 10.0,
+    "alertas": ["Talhão 4 (cafe): Diferença extrema (495.1%) entre lucro sistema e mercado"],
+    "total_alertas": 1
+  },
+  "bloqueado": true,
+  "pode_usar_como_recomendacao": false,
+  "motivo_bloqueio": "Este plano experimental não deve ser usado como recomendação principal: 1 item(ns) crítico(s); 1 item(ns) de baixa confiabilidade; apenas 20.0% dos itens têm alta confiabilidade",
+  "zarc": {...},
+  "precos": {...}
+}
+```
+
+### Regras de Bloqueio Automático
+
+O plano experimental é **bloqueado** (`bloqueado = true`) se:
+- `itens_criticos > 0` (diferença extrema >100% entre lucro sistema e mercado)
+- `itens_baixa_confiabilidade > 0`
+- `percentual_alta_confiabilidade < 70%`
+- `lucro_mercado_total <= 0`
+
+### Diferença entre Avaliação e Otimização
+
+| Modo | Endpoint | O que faz | Quando usar |
+|------|----------|-----------|-------------|
+| **Avaliação Comparativa** | `/comparar/lucro-mercado` | Avalia o plano atual com lucro de mercado | Análise de sensibilidade |
+| **Otimização Experimental** | `/otimizar/lucro-mercado-experimental` | Gera novo plano usando lucro de mercado | Simulação avançada |
+
+### Status de Bloqueio
+
+**Bloqueado** (`bloqueado = true`):
+- ❌ Não deve ser usado como recomendação principal
+- ⚠️ Motivo de bloqueio detalhado fornecido
+- 🔴 Interface mostra card vermelho
+
+**Liberado** (`bloqueado = false`):
+- ✅ Sem bloqueios automáticos críticos
+- ⚠️ Ainda requer validação manual antes de usar
+- 🟢 Interface mostra card verde com aviso
+
+### Importante
+
+- **O plano principal continua sendo o plano seguro do sistema**
+- **`PRICE_APPLY_TO_PROFIT=false` permanece padrão**
+- **Mesmo liberado, requer validação manual antes de usar**
+- **Itens críticos bloqueiam uso automático**
+- **Este modo é experimental e não substitui a recomendação oficial**
+
+### Interface
+
+A otimização experimental está disponível na página `/comparacao-mercado`:
+
+1. **Executar Avaliação**: Compara plano atual com lucro de mercado
+2. **Seção Experimental Aparece**: Após avaliação
+3. **Executar Otimização Experimental**: Gera plano otimizado por mercado
+4. **Status de Bloqueio**: Card vermelho (bloqueado) ou verde (liberado)
+5. **Confiabilidade**: Mini cards com Alta/Média/Críticos
+6. **Avisos**: Natureza experimental e validação manual

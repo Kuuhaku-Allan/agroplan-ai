@@ -158,6 +158,62 @@ O sistema bloqueia o uso automático de lucro de mercado (`pode_usar_mercado = f
 
 **`PRICE_APPLY_TO_PROFIT=false` permanece padrão.** Esta é apenas uma avaliação comparativa para análise de sensibilidade, não uma otimização por lucro de mercado.
 
+### Otimização Experimental com Lucro de Mercado
+
+**A otimização experimental com lucro de mercado é uma simulação avançada. Ela não substitui a recomendação principal e pode ser bloqueada automaticamente quando a confiabilidade dos dados for insuficiente.**
+
+#### O que é?
+
+- **Gera** um plano otimizado usando lucro de mercado normalizado como fitness
+- **NÃO substitui** a recomendação principal do sistema
+- **Bloqueia** uso automático se houver itens críticos ou baixa confiabilidade
+- **Experimental**: Requer validação manual antes de usar
+
+#### Diferença entre Avaliação e Otimização
+
+| Modo | O que faz | Quando usar |
+|------|-----------|-------------|
+| **Avaliação Comparativa** | Avalia o plano atual com lucro de mercado | Análise de sensibilidade |
+| **Otimização Experimental** | Gera novo plano usando lucro de mercado | Simulação avançada |
+
+#### Endpoint
+
+```
+GET /otimizar/lucro-mercado-experimental?uf=SP&municipio=Clementina&safra=2025/2026&seed=42&geracoes=50
+```
+
+**Parâmetros**:
+- `objetivo`: Sempre "mercado" (forçado)
+- `seed`: Seed para reprodutibilidade (padrão: 42)
+- `geracoes`: Número de gerações do AG (padrão: 50)
+- `populacao`: Tamanho da população (padrão: 50)
+- `uf`: Unidade Federativa (opcional)
+- `municipio`: Município (opcional)
+- `safra`: Safra ZARC (padrão: "2025/2026")
+
+#### Regras de Bloqueio Automático
+
+O plano experimental é **bloqueado** (`bloqueado = true`) se:
+- `itens_criticos > 0` (diferença extrema >100% entre lucro sistema e mercado)
+- `itens_baixa_confiabilidade > 0`
+- `percentual_alta_confiabilidade < 70%`
+- `lucro_mercado_total <= 0`
+
+#### Interface
+
+- **Página dedicada**: `/comparacao-mercado` com seção experimental
+- **Aparece após avaliação**: Seção experimental só aparece após executar avaliação
+- **Status de bloqueio**: Card vermelho (bloqueado) ou verde (liberado)
+- **Confiabilidade**: Mini cards com Alta/Média/Críticos
+- **Avisos claros**: "Este plano é experimental e não substitui a recomendação principal"
+
+#### Importante
+
+- **O plano principal continua sendo o plano seguro do sistema**
+- **`PRICE_APPLY_TO_PROFIT=false` permanece padrão**
+- **Mesmo liberado, requer validação manual antes de usar**
+- **Itens críticos bloqueiam uso automático**
+
 📖 **Documentação completa**: [docs/API_PROVIDERS.md](docs/API_PROVIDERS.md)
 
 ---

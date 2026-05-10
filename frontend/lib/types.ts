@@ -244,3 +244,26 @@ export interface MarketComparisonResponse {
   };
   comparacao: MarketComparisonSummary;
 }
+
+export interface MarketOptimizationResponse {
+  modo: "otimizacao_mercado_experimental";
+  experimental: boolean;
+  aviso: string;
+  plano: PlanoItem[];
+  lucro_mercado_total: number;
+  lucro_sistema_total_referencial: number;
+  fitness_mercado: number;
+  fitness_sistema_referencial: number;
+  risco_medio: number;
+  diversidade: number;
+  area_total: number;
+  geracoes: number;
+  objetivo: string;
+  seed: number;
+  validacao_lucro_mercado: MarketProfitValidationSummary;
+  bloqueado: boolean;
+  pode_usar_como_recomendacao: boolean;
+  motivo_bloqueio?: string;
+  zarc?: any;
+  precos?: PriceSummary;
+}
