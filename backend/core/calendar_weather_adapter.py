@@ -136,7 +136,7 @@ def enriquecer_calendario_com_clima(
                 "source": weather_data.get("source", "unknown"),
                 "forecast_type": forecast_type,
                 "summary": summary,
-                "precipitation_mm": weather_data.get("precipitation_sum") or weather_data.get("precipitation_mm_avg"),
+                "precipitation_mm": weather_data.get("precipitation_sum") or weather_data.get("precipitation_monthly_total") or weather_data.get("precipitation_daily_avg"),
                 "precipitation_probability": weather_data.get("precipitation_probability"),
                 "temperature_min": weather_data.get("temperature_min"),
                 "temperature_max": weather_data.get("temperature_max"),

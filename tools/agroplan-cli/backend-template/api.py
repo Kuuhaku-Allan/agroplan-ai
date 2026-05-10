@@ -415,6 +415,39 @@ def get_clima_nasa_power(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/dados/clima/nasa-power/debug")
+def get_clima_nasa_power_debug(
+    lat: Optional[float] = Query(None, description="Latitude"),
+    lon: Optional[float] = Query(None, description="Longitude"),
+    month: int = Query(None, description="Mês (1-12)")
+):
+    """Debug endpoint - mostra resposta bruta da NASA POWER para diagnóstico"""
+    try:
+        from providers.nasa_power_provider import buscar_climatologia_nasa_power_debug
+        
+        # Se lat ou lon não foram fornecidos, retornar informações
+        if lat is None or lon is None or month is None:
+            return {
+                "message": "Informe latitude, longitude e mês para debug NASA POWER.",
+                "exemplo": "/dados/clima/nasa-power/debug?lat=-21.56&lon=-50.45&month=5",
+                "parametros": {
+                    "lat": "Latitude da localização",
+                    "lon": "Longitude da localização",
+                    "month": "Mês (1-12)"
+                }
+            }
+        
+        if month < 1 or month > 12:
+            raise HTTPException(status_code=400, detail="Month deve estar entre 1 e 12")
+        
+        # Buscar debug info
+        debug_info = buscar_climatologia_nasa_power_debug(lat, lon, month)
+        
+        return debug_info
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/dados/zarc")
 def get_zarc(
     cultura: Optional[str] = Query(None, description="Nome da cultura"),

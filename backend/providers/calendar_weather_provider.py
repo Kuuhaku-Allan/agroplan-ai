@@ -139,7 +139,8 @@ def buscar_climatologia_longo_prazo(
                 "temperature_min": nasa_data["temperature_min"],
                 "temperature_avg": nasa_data["temperature_avg"],
                 "precipitation_expected": nasa_data["precipitation_expected"],
-                "precipitation_mm_avg": nasa_data["precipitation_mm_avg"],
+                "precipitation_daily_avg": nasa_data["precipitation_daily_avg"],
+                "precipitation_monthly_total": nasa_data["precipitation_monthly_total"],
                 "confidence": "media",
                 "note": "Climatologia NASA POWER, não previsão exata"
             })
@@ -153,7 +154,7 @@ def buscar_climatologia_longo_prazo(
                 "temperature_max": climatology["temp_max"],
                 "temperature_min": climatology["temp_min"],
                 "precipitation_expected": climatology["precip_desc"],
-                "precipitation_mm_avg": climatology["precip_mm"],
+                "precipitation_daily_avg": climatology["precip_mm"],
                 "confidence": "baixa",
                 "note": "Climatologia simplificada, NASA POWER indisponível"
             })
@@ -251,7 +252,7 @@ def gerar_recomendacao_climatica(
     """
     
     forecast_type = weather_data.get("forecast_type", "climatology")
-    precip = weather_data.get("precipitation_sum") or weather_data.get("precipitation_mm_avg", 0)
+    precip = weather_data.get("precipitation_sum") or weather_data.get("precipitation_monthly_total") or weather_data.get("precipitation_daily_avg", 0)
     precip_prob = weather_data.get("precipitation_probability", 0)
     temp_max = weather_data.get("temperature_max", 25)
     temp_min = weather_data.get("temperature_min", 15)

@@ -2,10 +2,14 @@
   "cultura": "soja",
   "planting_date": "2026-10-15",
   "field": {
-    "name": "Talhão Teste API",
-    "area_ha": 10.5,
+    "id": "test-1",
+    "name": "Talhão Teste",
+    "area_ha": 10,
     "soil_type": "argiloso",
     "slope": "plano",
-    "water_availability": "media"
-  }
+    "water_availability": "media",
+    "lat": -21.56,
+    "lon": -50.45
+  },
+  "usar_clima": true
 }

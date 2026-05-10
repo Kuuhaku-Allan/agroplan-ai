@@ -1,6 +1,6 @@
 {
-  "cli_version": "1.0.36",
-  "backend_template_version": "1.0.36",
+  "cli_version": "1.0.37",
+  "backend_template_version": "1.0.37",
   "zarc_index_version": "2025-2026-fast-index-v2",
   "price_index_version": "2025-05-reference-v1",
   "features": [
@@ -25,7 +25,8 @@
     "calendar_date_safety",
     "calendar_weather_integration",
     "calendar_weather_dependency_fix",
-    "nasa_power_climatology"
+    "nasa_power_climatology",
+    "nasa_power_parser_fix"
   ],
-  "generated_at": "2026-05-10T23:00:00Z"
+  "generated_at": "2026-05-10T23:30:00Z"
 }
