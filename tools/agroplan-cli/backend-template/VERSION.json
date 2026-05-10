@@ -1,6 +1,6 @@
 {
-  "cli_version": "1.0.34",
-  "backend_template_version": "1.0.34",
+  "cli_version": "1.0.35",
+  "backend_template_version": "1.0.35",
   "zarc_index_version": "2025-2026-fast-index-v2",
   "price_index_version": "2025-05-reference-v1",
   "features": [
@@ -23,7 +23,8 @@
     "crop_calendar_from_manual_field",
     "expanded_crop_calendar_10_cultures",
     "calendar_date_safety",
-    "calendar_weather_integration"
+    "calendar_weather_integration",
+    "calendar_weather_dependency_fix"
   ],
-  "generated_at": "2026-05-10T21:00:00Z"
+  "generated_at": "2026-05-10T22:00:00Z"
 }

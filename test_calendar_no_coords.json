@@ -1,0 +1,14 @@
+{
+  "cultura": "milho",
+  "planting_date": "2026-05-15",
+  "usar_clima": true,
+  "field": {
+    "id": "test-field-2",
+    "property_id": "test",
+    "name": "Talhão Sem Coordenadas",
+    "area_ha": 10,
+    "soil_type": "argiloso",
+    "slope": "plano",
+    "water_availability": "media"
+  }
+}
