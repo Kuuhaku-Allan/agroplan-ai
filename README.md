@@ -21,9 +21,10 @@ Sistema inteligente de planejamento agrícola:
 - **Modo Guiado**: Wizard passo a passo para iniciantes com recomendações
 - Geração de calendário agrícola por cultura
 - Tarefas organizadas por fase do ciclo da cultura
-- Base de conhecimento para soja, milho e feijão
+- **Base de conhecimento para 10 culturas**: soja, milho, feijão, café, cana, arroz, trigo, sorgo, mandioca, algodão
 - Recomendações de ações por prioridade
 - Seleção de região climática integrada
+- Aviso de cautela sobre ajustes necessários
 
 ### 🗺️ Talhões
 Visualização e análise dos talhões da propriedade:

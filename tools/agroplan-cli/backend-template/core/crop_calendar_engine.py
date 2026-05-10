@@ -207,6 +207,517 @@ CROP_CYCLES: Dict[str, Dict] = {
         "optimal_temp_max": 29,
         "critical_water_phases": ["germinacao", "florescimento", "enchimento_graos"],
         "harvest_window_days": 10
+    },
+    "cafe": {
+        "cycle_days": 730,
+        "phases": [
+            {
+                "name": "preparo",
+                "days": 30,
+                "description": "Preparo do solo e coveamento",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "prepare_soil", "title": "Preparar solo e covas", "priority": "high", "weather_sensitive": False},
+                    {"type": "fertilize", "title": "Aplicar calcário e adubação de base", "priority": "high", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "plantio",
+                "days": 60,
+                "description": "Plantio de mudas e estabelecimento",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "plant", "title": "Plantar mudas de café", "priority": "critical", "weather_sensitive": True},
+                    {"type": "irrigate", "title": "Irrigar mudas - fase crítica", "priority": "critical", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar pegamento das mudas", "priority": "high", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "conducao",
+                "days": 365,
+                "description": "Condução e formação da lavoura",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "fertilize", "title": "Aplicar adubação de crescimento", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar pragas e doenças", "priority": "high", "weather_sensitive": False},
+                    {"type": "monitor_growth", "title": "Avaliar desenvolvimento vegetativo", "priority": "medium", "weather_sensitive": False},
+                    {"type": "irrigate", "title": "Irrigar conforme necessidade", "priority": "medium", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "pre_producao",
+                "days": 180,
+                "description": "Preparação para primeira produção",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "fertilize", "title": "Aplicar adubação de produção", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_diseases", "title": "Monitorar sanidade da lavoura", "priority": "high", "weather_sensitive": False},
+                    {"type": "monitor_growth", "title": "Avaliar floração inicial", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "colheita",
+                "days": 95,
+                "description": "Primeira colheita",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "monitor_growth", "title": "Monitorar maturação dos frutos", "priority": "high", "weather_sensitive": False},
+                    {"type": "harvest", "title": "Preparar colheita", "priority": "high", "weather_sensitive": True}
+                ]
+            }
+        ],
+        "optimal_temp_min": 18,
+        "optimal_temp_max": 28,
+        "critical_water_phases": ["plantio"],
+        "harvest_window_days": 60,
+        "category": "perene",
+        "water_need": "media",
+        "risk_notes": "Sensível a geadas e déficit hídrico em fases críticas.",
+        "calendar_notes": "Calendário simplificado para implantação e primeiros manejos. Cultura perene com ciclo longo."
+    },
+    "cana": {
+        "cycle_days": 365,
+        "phases": [
+            {
+                "name": "preparo",
+                "days": 15,
+                "description": "Preparo do solo",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "prepare_soil", "title": "Preparar solo para plantio", "priority": "high", "weather_sensitive": False},
+                    {"type": "fertilize", "title": "Aplicar adubação de base", "priority": "high", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "plantio",
+                "days": 30,
+                "description": "Plantio de mudas e brotação",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "plant", "title": "Plantar mudas de cana", "priority": "critical", "weather_sensitive": True},
+                    {"type": "irrigate", "title": "Irrigar para brotação", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar brotação", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "perfilhamento",
+                "days": 60,
+                "description": "Perfilhamento e estabelecimento",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "fertilize", "title": "Aplicar adubação de cobertura", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar plantas daninhas", "priority": "high", "weather_sensitive": False},
+                    {"type": "irrigate", "title": "Irrigar moderadamente", "priority": "medium", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "crescimento",
+                "days": 180,
+                "description": "Crescimento vegetativo intenso",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "inspect_pests", "title": "Monitorar pragas (broca, cigarrinha)", "priority": "high", "weather_sensitive": False},
+                    {"type": "monitor_growth", "title": "Avaliar desenvolvimento", "priority": "medium", "weather_sensitive": False},
+                    {"type": "irrigate", "title": "Irrigar conforme necessidade", "priority": "medium", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "maturacao",
+                "days": 60,
+                "description": "Maturação e acúmulo de sacarose",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "monitor_growth", "title": "Monitorar maturação", "priority": "high", "weather_sensitive": False},
+                    {"type": "harvest", "title": "Preparar colheita", "priority": "high", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "colheita",
+                "days": 20,
+                "description": "Colheita",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "harvest", "title": "Colher cana", "priority": "critical", "weather_sensitive": True}
+                ]
+            }
+        ],
+        "optimal_temp_min": 20,
+        "optimal_temp_max": 35,
+        "critical_water_phases": ["plantio"],
+        "harvest_window_days": 30,
+        "category": "semi-perene",
+        "water_need": "alta",
+        "risk_notes": "Sensível a geadas. Requer manejo adequado de plantas daninhas.",
+        "calendar_notes": "Calendário para cana-planta (primeiro ciclo). Soqueiras têm ciclo diferente."
+    },
+    "arroz": {
+        "cycle_days": 120,
+        "phases": [
+            {
+                "name": "preparo",
+                "days": 10,
+                "description": "Preparo do solo e sistematização",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "prepare_soil", "title": "Preparar solo para plantio", "priority": "high", "weather_sensitive": False},
+                    {"type": "fertilize", "title": "Aplicar adubação de base", "priority": "high", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "germinacao",
+                "days": 15,
+                "description": "Germinação e emergência",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "plant", "title": "Semear arroz", "priority": "critical", "weather_sensitive": True},
+                    {"type": "irrigate", "title": "Manter lâmina d'água", "priority": "critical", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar emergência", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "vegetativa",
+                "days": 40,
+                "description": "Crescimento vegetativo e perfilhamento",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "fertilize", "title": "Aplicar adubação nitrogenada", "priority": "high", "weather_sensitive": True},
+                    {"type": "irrigate", "title": "Manter manejo hídrico", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar pragas e plantas daninhas", "priority": "high", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "reproducao",
+                "days": 30,
+                "description": "Floração e formação de grãos",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "irrigate", "title": "Manter lâmina d'água - fase crítica", "priority": "critical", "weather_sensitive": True},
+                    {"type": "inspect_diseases", "title": "Monitorar doenças (brusone)", "priority": "high", "weather_sensitive": False},
+                    {"type": "monitor_growth", "title": "Avaliar floração", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "maturacao",
+                "days": 25,
+                "description": "Maturação dos grãos",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "monitor_growth", "title": "Monitorar maturação", "priority": "high", "weather_sensitive": False},
+                    {"type": "harvest", "title": "Preparar colheita", "priority": "high", "weather_sensitive": True}
+                ]
+            }
+        ],
+        "optimal_temp_min": 20,
+        "optimal_temp_max": 35,
+        "critical_water_phases": ["germinacao", "vegetativa", "reproducao"],
+        "harvest_window_days": 15,
+        "category": "anual",
+        "water_need": "muito_alta",
+        "risk_notes": "Requer manejo hídrico intensivo. Sensível a déficit hídrico.",
+        "calendar_notes": "Calendário para arroz irrigado. Arroz de sequeiro tem manejo diferente."
+    },
+    "trigo": {
+        "cycle_days": 120,
+        "phases": [
+            {
+                "name": "preparo",
+                "days": 10,
+                "description": "Preparo do solo",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "prepare_soil", "title": "Preparar solo para plantio", "priority": "high", "weather_sensitive": False},
+                    {"type": "fertilize", "title": "Aplicar adubação de base", "priority": "high", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "germinacao",
+                "days": 12,
+                "description": "Germinação e emergência",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "plant", "title": "Semear trigo", "priority": "critical", "weather_sensitive": True},
+                    {"type": "irrigate", "title": "Irrigar se necessário", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar emergência", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "perfilhamento",
+                "days": 35,
+                "description": "Perfilhamento",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "fertilize", "title": "Aplicar adubação nitrogenada", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar pragas (pulgão)", "priority": "high", "weather_sensitive": False},
+                    {"type": "irrigate", "title": "Irrigar moderadamente", "priority": "medium", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "espigamento",
+                "days": 28,
+                "description": "Espigamento e floração",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "irrigate", "title": "Irrigar - fase crítica", "priority": "critical", "weather_sensitive": True},
+                    {"type": "inspect_diseases", "title": "Monitorar doenças foliares", "priority": "high", "weather_sensitive": False},
+                    {"type": "monitor_growth", "title": "Avaliar floração", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "enchimento_graos",
+                "days": 25,
+                "description": "Enchimento de grãos",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "irrigate", "title": "Irrigar - fase crítica", "priority": "critical", "weather_sensitive": True},
+                    {"type": "monitor_growth", "title": "Monitorar desenvolvimento dos grãos", "priority": "high", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "maturacao",
+                "days": 10,
+                "description": "Maturação",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "harvest", "title": "Preparar colheita", "priority": "high", "weather_sensitive": True},
+                    {"type": "monitor_growth", "title": "Monitorar umidade dos grãos", "priority": "medium", "weather_sensitive": False}
+                ]
+            }
+        ],
+        "optimal_temp_min": 10,
+        "optimal_temp_max": 24,
+        "critical_water_phases": ["germinacao", "espigamento", "enchimento_graos"],
+        "harvest_window_days": 12,
+        "category": "anual",
+        "water_need": "media",
+        "risk_notes": "Sensível a chuvas excessivas na colheita. Requer clima ameno.",
+        "calendar_notes": "Calendário para trigo de inverno. Adaptar conforme região e cultivar."
+    },
+    "sorgo": {
+        "cycle_days": 110,
+        "phases": [
+            {
+                "name": "preparo",
+                "days": 8,
+                "description": "Preparo do solo",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "prepare_soil", "title": "Preparar solo para plantio", "priority": "high", "weather_sensitive": False},
+                    {"type": "fertilize", "title": "Aplicar adubação de base", "priority": "high", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "germinacao",
+                "days": 10,
+                "description": "Germinação e emergência",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "plant", "title": "Semear sorgo", "priority": "critical", "weather_sensitive": True},
+                    {"type": "irrigate", "title": "Irrigar se necessário", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar emergência", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "vegetativa",
+                "days": 40,
+                "description": "Crescimento vegetativo",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "fertilize", "title": "Aplicar adubação nitrogenada", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar pragas (pulgão, lagarta)", "priority": "high", "weather_sensitive": False},
+                    {"type": "irrigate", "title": "Irrigar moderadamente", "priority": "medium", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "florescimento",
+                "days": 22,
+                "description": "Florescimento e polinização",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "irrigate", "title": "Irrigar - fase crítica", "priority": "critical", "weather_sensitive": True},
+                    {"type": "monitor_growth", "title": "Avaliar floração", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "enchimento_graos",
+                "days": 20,
+                "description": "Enchimento de grãos",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "irrigate", "title": "Irrigar - fase crítica", "priority": "critical", "weather_sensitive": True},
+                    {"type": "monitor_growth", "title": "Monitorar desenvolvimento dos grãos", "priority": "high", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "maturacao",
+                "days": 10,
+                "description": "Maturação",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "harvest", "title": "Preparar colheita", "priority": "high", "weather_sensitive": True},
+                    {"type": "monitor_growth", "title": "Monitorar umidade dos grãos", "priority": "medium", "weather_sensitive": False}
+                ]
+            }
+        ],
+        "optimal_temp_min": 21,
+        "optimal_temp_max": 35,
+        "critical_water_phases": ["germinacao", "florescimento", "enchimento_graos"],
+        "harvest_window_days": 15,
+        "category": "anual",
+        "water_need": "baixa",
+        "risk_notes": "Tolerante à seca. Boa opção para regiões com déficit hídrico.",
+        "calendar_notes": "Calendário para sorgo granífero. Sorgo forrageiro tem manejo diferente."
+    },
+    "mandioca": {
+        "cycle_days": 300,
+        "phases": [
+            {
+                "name": "preparo",
+                "days": 15,
+                "description": "Preparo do solo e seleção de manivas",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "prepare_soil", "title": "Preparar solo para plantio", "priority": "high", "weather_sensitive": False},
+                    {"type": "fertilize", "title": "Aplicar adubação de base", "priority": "high", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "plantio",
+                "days": 30,
+                "description": "Plantio de manivas e brotação",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "plant", "title": "Plantar manivas", "priority": "critical", "weather_sensitive": True},
+                    {"type": "irrigate", "title": "Irrigar para brotação", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar brotação", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "estabelecimento",
+                "days": 60,
+                "description": "Estabelecimento e crescimento inicial",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "inspect_pests", "title": "Controlar plantas daninhas", "priority": "high", "weather_sensitive": False},
+                    {"type": "fertilize", "title": "Aplicar adubação de cobertura", "priority": "medium", "weather_sensitive": True},
+                    {"type": "irrigate", "title": "Irrigar se necessário", "priority": "medium", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "desenvolvimento",
+                "days": 120,
+                "description": "Desenvolvimento vegetativo e formação de raízes",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "inspect_pests", "title": "Monitorar pragas (mandarová, ácaros)", "priority": "high", "weather_sensitive": False},
+                    {"type": "monitor_growth", "title": "Avaliar desenvolvimento", "priority": "medium", "weather_sensitive": False},
+                    {"type": "irrigate", "title": "Irrigar conforme necessidade", "priority": "low", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "engrossamento",
+                "days": 60,
+                "description": "Engrossamento das raízes",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "monitor_growth", "title": "Avaliar desenvolvimento das raízes", "priority": "high", "weather_sensitive": False},
+                    {"type": "inspect_pests", "title": "Monitorar sanidade", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "colheita",
+                "days": 15,
+                "description": "Colheita",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "harvest", "title": "Colher mandioca", "priority": "high", "weather_sensitive": True}
+                ]
+            }
+        ],
+        "optimal_temp_min": 20,
+        "optimal_temp_max": 35,
+        "critical_water_phases": ["plantio"],
+        "harvest_window_days": 60,
+        "category": "anual",
+        "water_need": "baixa",
+        "risk_notes": "Tolerante à seca após estabelecimento. Sensível a encharcamento.",
+        "calendar_notes": "Calendário para mandioca de mesa. Mandioca industrial pode ter ciclo mais longo."
+    },
+    "algodao": {
+        "cycle_days": 180,
+        "phases": [
+            {
+                "name": "preparo",
+                "days": 10,
+                "description": "Preparo do solo",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "prepare_soil", "title": "Preparar solo para plantio", "priority": "high", "weather_sensitive": False},
+                    {"type": "fertilize", "title": "Aplicar adubação de base", "priority": "high", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "germinacao",
+                "days": 12,
+                "description": "Germinação e emergência",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "plant", "title": "Semear algodão", "priority": "critical", "weather_sensitive": True},
+                    {"type": "irrigate", "title": "Irrigar para emergência", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar emergência", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "vegetativa",
+                "days": 50,
+                "description": "Crescimento vegetativo",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "fertilize", "title": "Aplicar adubação nitrogenada", "priority": "high", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar pragas (bicudo, lagarta)", "priority": "high", "weather_sensitive": False},
+                    {"type": "irrigate", "title": "Irrigar moderadamente", "priority": "medium", "weather_sensitive": True}
+                ]
+            },
+            {
+                "name": "florescimento",
+                "days": 40,
+                "description": "Florescimento",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "irrigate", "title": "Irrigar - fase crítica", "priority": "critical", "weather_sensitive": True},
+                    {"type": "inspect_diseases", "title": "Monitorar doenças (ramulária)", "priority": "high", "weather_sensitive": False},
+                    {"type": "monitor_growth", "title": "Avaliar floração", "priority": "medium", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "formacao_macas",
+                "days": 48,
+                "description": "Formação e abertura de maçãs",
+                "critical_water": True,
+                "tasks": [
+                    {"type": "irrigate", "title": "Irrigar - fase crítica", "priority": "critical", "weather_sensitive": True},
+                    {"type": "inspect_pests", "title": "Monitorar pragas nas maçãs", "priority": "high", "weather_sensitive": False},
+                    {"type": "monitor_growth", "title": "Avaliar desenvolvimento das maçãs", "priority": "high", "weather_sensitive": False}
+                ]
+            },
+            {
+                "name": "maturacao",
+                "days": 20,
+                "description": "Maturação e abertura dos capulhos",
+                "critical_water": False,
+                "tasks": [
+                    {"type": "monitor_growth", "title": "Monitorar abertura dos capulhos", "priority": "high", "weather_sensitive": False},
+                    {"type": "harvest", "title": "Preparar colheita", "priority": "high", "weather_sensitive": True}
+                ]
+            }
+        ],
+        "optimal_temp_min": 20,
+        "optimal_temp_max": 30,
+        "critical_water_phases": ["germinacao", "florescimento", "formacao_macas"],
+        "harvest_window_days": 30,
+        "category": "anual",
+        "water_need": "media",
+        "risk_notes": "Sensível a pragas. Requer manejo fitossanitário intensivo.",
+        "calendar_notes": "Calendário para algodão herbáceo. Requer monitoramento constante de pragas."
     }
 }
 
@@ -377,6 +888,10 @@ def gerar_calendario_cultura(
             "optimal_temp_max": cycle_data["optimal_temp_max"],
             "critical_water_phases": cycle_data["critical_water_phases"],
             "harvest_window_days": cycle_data["harvest_window_days"],
+            "category": cycle_data.get("category", "anual"),
+            "water_need": cycle_data.get("water_need", "media"),
+            "risk_notes": cycle_data.get("risk_notes", ""),
+            "calendar_notes": cycle_data.get("calendar_notes", ""),
             "phases": [
                 {
                     "name": phase["name"],
@@ -390,7 +905,8 @@ def gerar_calendario_cultura(
         "tasks": [task.to_dict() for task in tasks],
         "total_tasks": len(tasks),
         "weather_sensitive_tasks": sum(1 for task in tasks if task.weather_sensitive),
-        "critical_tasks": sum(1 for task in tasks if task.priority == TaskPriority.CRITICAL)
+        "critical_tasks": sum(1 for task in tasks if task.priority == TaskPriority.CRITICAL),
+        "cautela": "Este calendário é uma base inicial de planejamento. As datas e tarefas devem ser ajustadas conforme clima, solo, cultivar, manejo e orientação técnica."
     }
 
 

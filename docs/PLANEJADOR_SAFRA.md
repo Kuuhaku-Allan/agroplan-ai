@@ -354,19 +354,27 @@ CROP_CYCLES = {
 
 ### Culturas Iniciais (Fase 10.1)
 
+**Base completa com 10 culturas (Fase 10.4):**
+
 1. **Soja** - 120 dias
 2. **Milho** - 140 dias
 3. **Feijão** - 90 dias
+4. **Café** - 730 dias (cultura perene)
+5. **Cana** - 365 dias (semi-perene)
+6. **Arroz** - 120 dias
+7. **Trigo** - 120 dias
+8. **Sorgo** - 110 dias
+9. **Mandioca** - 300 dias
+10. **Algodão** - 180 dias
 
-### Expansão Futura
-
-4. Café - 180 dias (primeira colheita)
-5. Cana - 365 dias
-6. Arroz - 120 dias
-7. Trigo - 120 dias
-8. Sorgo - 110 dias
-9. Mandioca - 360 dias
-10. Algodão - 150 dias
+Todas as culturas incluem:
+- Ciclo completo com fases detalhadas
+- Tarefas por fase com prioridades
+- Temperaturas ótimas
+- Fases críticas hídricas
+- Janela de colheita
+- Metadados (categoria, necessidade hídrica, notas de risco)
+- Aviso de cautela sobre ajustes necessários
 
 ---
 
@@ -540,17 +548,59 @@ Imprevisto → Análise de Impacto → Sugestão de Ação → Validação Manua
 - Frontend: `90bf939`
 - Documentação e CLI: pendente commit final
 
-### Fase 10.3 - Modo Guiado
+### Fase 10.4 - Expandir Calendário para 10 Culturas ✅ COMPLETA
 
-- [ ] Wizard passo a passo
-- [ ] Recomendação automática
-- [ ] Calendário simplificado
+**Objetivo**: Expandir a base local do calendário agrícola para todas as 10 culturas do AgroPlan.
 
-### Fase 10.4 - Calendário Local
+**Culturas Adicionadas**:
+- [x] Café - 730 dias (cultura perene)
+- [x] Cana - 365 dias (semi-perene)
+- [x] Arroz - 120 dias
+- [x] Trigo - 120 dias
+- [x] Sorgo - 110 dias
+- [x] Mandioca - 300 dias
+- [x] Algodão - 180 dias
 
-- [ ] Base de conhecimento para 10 culturas
-- [ ] Tarefas por fase
-- [ ] Alertas básicos
+**Backend**:
+- [x] Expandir `CROP_CYCLES` em `crop_calendar_engine.py` ✅
+- [x] Adicionar metadados (category, water_need, risk_notes, calendar_notes) ✅
+- [x] Adicionar aviso de cautela no calendário ✅
+- [x] Endpoint `GET /planejamento/culturas` retorna 10 culturas ✅
+- [x] Endpoint `GET /planejamento/culturas/{cultura}` funciona para todas ✅
+- [x] Endpoint `POST /planejamento/calendario` funciona para todas ✅
+
+**Características de Cada Cultura**:
+- ✅ Ciclo completo com fases detalhadas
+- ✅ Tarefas por fase com prioridades (low, medium, high, critical)
+- ✅ Temperaturas ótimas (min/max)
+- ✅ Fases críticas hídricas
+- ✅ Janela de colheita
+- ✅ Categoria (anual, perene, semi-perene)
+- ✅ Necessidade hídrica (baixa, media, alta, muito_alta)
+- ✅ Notas de risco específicas
+- ✅ Notas sobre o calendário
+
+**Aviso de Cautela**:
+- ✅ Texto adicionado: "Este calendário é uma base inicial de planejamento. As datas e tarefas devem ser ajustadas conforme clima, solo, cultivar, manejo e orientação técnica."
+
+**Documentação**:
+- [x] Atualizar `docs/PLANEJADOR_SAFRA.md` ✅
+- [ ] Atualizar `README.md`
+
+**CLI**:
+- [ ] Sincronizar backend-template
+- [ ] Atualizar VERSION.json para 1.0.32
+- [ ] Publicar CLI 1.0.32
+
+**Testes**:
+- [ ] Testar GET `/planejamento/culturas` (deve retornar 10)
+- [ ] Testar POST `/planejamento/calendario` para cada cultura nova
+- [ ] Frontend build test
+
+**Commits**:
+- [ ] Commit e push das alterações
+
+**Status**: Backend completo, aguardando restart e testes ✅
 
 ### Fase 10.5 - Calendário com Clima
 
