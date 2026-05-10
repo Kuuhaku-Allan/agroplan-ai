@@ -11,12 +11,18 @@ Define as entidades principais do sistema de planejamento agrícola:
 - UserObservation: Observação do usuário
 - Intervention: Intervenção/replanejamento
 - PlanningSession: Sessão de planejamento
+
+Modelos Pydantic para API:
+- ManualFieldCreate: Criação de talhão manual
+- ManualFieldUpdate: Atualização de talhão manual
+- ManualFieldResponse: Resposta de talhão manual
 """
 
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Optional, List, Dict
 from enum import Enum
+from pydantic import BaseModel, Field as PydanticField, field_validator
 
 
 # Enums para tipos padronizados
@@ -364,3 +370,115 @@ class PlanningSession:
             "cultures_recommended": self.cultures_recommended,
             "created_at": self.created_at.isoformat()
         }
+
+
+# Modelos Pydantic para API
+
+class ManualFieldCreate(BaseModel):
+    """Modelo para criação de talhão manual"""
+    name: str = PydanticField(..., min_length=1, max_length=100, description="Nome do talhão")
+    area_ha: float = PydanticField(..., gt=0, description="Área em hectares")
+    soil_type: str = PydanticField(..., description="Tipo de solo")
+    slope: str = PydanticField(..., description="Tipo de relevo")
+    water_availability: str = PydanticField(..., description="Disponibilidade de água")
+    uf: Optional[str] = PydanticField(None, min_length=2, max_length=2, description="UF")
+    municipio: Optional[str] = PydanticField(None, max_length=100, description="Município")
+    lat: Optional[float] = PydanticField(None, ge=-90, le=90, description="Latitude")
+    lon: Optional[float] = PydanticField(None, ge=-180, le=180, description="Longitude")
+    
+    @field_validator('soil_type')
+    @classmethod
+    def validate_soil_type(cls, v: str) -> str:
+        allowed = ['argiloso', 'arenoso', 'misto', 'siltoso']
+        if v not in allowed:
+            raise ValueError(f'soil_type deve ser um de: {", ".join(allowed)}')
+        return v
+    
+    @field_validator('slope')
+    @classmethod
+    def validate_slope(cls, v: str) -> str:
+        allowed = ['plano', 'suave', 'moderado', 'ingreme']
+        if v not in allowed:
+            raise ValueError(f'slope deve ser um de: {", ".join(allowed)}')
+        return v
+    
+    @field_validator('water_availability')
+    @classmethod
+    def validate_water_availability(cls, v: str) -> str:
+        allowed = ['baixa', 'media', 'alta']
+        if v not in allowed:
+            raise ValueError(f'water_availability deve ser um de: {", ".join(allowed)}')
+        return v
+
+
+class ManualFieldUpdate(BaseModel):
+    """Modelo para atualização de talhão manual"""
+    name: Optional[str] = PydanticField(None, min_length=1, max_length=100)
+    area_ha: Optional[float] = PydanticField(None, gt=0)
+    soil_type: Optional[str] = None
+    slope: Optional[str] = None
+    water_availability: Optional[str] = None
+    uf: Optional[str] = PydanticField(None, min_length=2, max_length=2)
+    municipio: Optional[str] = PydanticField(None, max_length=100)
+    lat: Optional[float] = PydanticField(None, ge=-90, le=90)
+    lon: Optional[float] = PydanticField(None, ge=-180, le=180)
+    
+    @field_validator('soil_type')
+    @classmethod
+    def validate_soil_type(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            allowed = ['argiloso', 'arenoso', 'misto', 'siltoso']
+            if v not in allowed:
+                raise ValueError(f'soil_type deve ser um de: {", ".join(allowed)}')
+        return v
+    
+    @field_validator('slope')
+    @classmethod
+    def validate_slope(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            allowed = ['plano', 'suave', 'moderado', 'ingreme']
+            if v not in allowed:
+                raise ValueError(f'slope deve ser um de: {", ".join(allowed)}')
+        return v
+    
+    @field_validator('water_availability')
+    @classmethod
+    def validate_water_availability(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            allowed = ['baixa', 'media', 'alta']
+            if v not in allowed:
+                raise ValueError(f'water_availability deve ser um de: {", ".join(allowed)}')
+        return v
+
+
+class ManualFieldResponse(BaseModel):
+    """Modelo de resposta de talhão manual"""
+    id: str
+    name: str
+    area_ha: float
+    soil_type: str
+    slope: str
+    water_availability: str
+    uf: Optional[str] = None
+    municipio: Optional[str] = None
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    created_at: str
+    updated_at: str
+    
+    class Config:
+        from_attributes = True
+
+
+class GenerateCalendarRequest(BaseModel):
+    """Modelo para geração de calendário"""
+    cultura: str = PydanticField(..., description="Nome da cultura")
+    planting_date: str = PydanticField(..., description="Data de plantio (YYYY-MM-DD)")
+    
+    @field_validator('cultura')
+    @classmethod
+    def validate_cultura(cls, v: str) -> str:
+        allowed = ['soja', 'milho', 'feijao']
+        if v not in allowed:
+            raise ValueError(f'cultura deve ser uma de: {", ".join(allowed)}')
+        return v

@@ -1,6 +1,6 @@
 {
-  "cli_version": "1.0.30",
-  "backend_template_version": "1.0.30",
+  "cli_version": "1.0.31",
+  "backend_template_version": "1.0.31",
   "zarc_index_version": "2025-2026-fast-index-v2",
   "price_index_version": "2025-05-reference-v1",
   "features": [
@@ -18,7 +18,9 @@
     "market_profit_confidence_refinement",
     "market_profit_comparative_evaluation",
     "market_profit_experimental_optimizer",
-    "smart_crop_calendar_engine"
+    "smart_crop_calendar_engine",
+    "manual_field_registration",
+    "crop_calendar_from_manual_field"
   ],
-  "generated_at": "2026-05-10T15:30:00Z"
+  "generated_at": "2026-05-10T16:15:00Z"
 }

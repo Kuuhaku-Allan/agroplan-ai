@@ -1417,6 +1417,189 @@ def obter_cultura_info(cultura: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Endpoints de Talhões Manuais
+
+@app.get("/planejamento/talhoes")
+def listar_talhoes():
+    """Lista todos os talhões cadastrados pelo usuário"""
+    try:
+        from core.field_storage import listar_talhoes_usuario
+        
+        fields = listar_talhoes_usuario()
+        
+        return {
+            "total": len(fields),
+            "talhoes": fields
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/planejamento/talhoes")
+def criar_talhao(field_data: dict):
+    """Cria um novo talhão"""
+    try:
+        from core.field_storage import criar_talhao_usuario
+        from core.planning_models import ManualFieldCreate
+        
+        # Validar dados
+        validated = ManualFieldCreate(**field_data)
+        
+        # Criar talhão
+        new_field = criar_talhao_usuario(validated.model_dump())
+        
+        return new_field
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/planejamento/talhoes/{field_id}")
+def obter_talhao(field_id: str):
+    """Obtém um talhão pelo ID"""
+    try:
+        from core.field_storage import obter_talhao_usuario
+        
+        field = obter_talhao_usuario(field_id)
+        
+        if not field:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Talhão '{field_id}' não encontrado"
+            )
+        
+        return field
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/planejamento/talhoes/{field_id}")
+def atualizar_talhao(field_id: str, field_data: dict):
+    """Atualiza um talhão existente"""
+    try:
+        from core.field_storage import atualizar_talhao_usuario
+        from core.planning_models import ManualFieldUpdate
+        
+        # Validar dados
+        validated = ManualFieldUpdate(**field_data)
+        
+        # Atualizar apenas campos fornecidos
+        update_data = {k: v for k, v in validated.model_dump().items() if v is not None}
+        
+        # Atualizar talhão
+        updated_field = atualizar_talhao_usuario(field_id, update_data)
+        
+        if not updated_field:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Talhão '{field_id}' não encontrado"
+            )
+        
+        return updated_field
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/planejamento/talhoes/{field_id}")
+def remover_talhao(field_id: str):
+    """Remove um talhão"""
+    try:
+        from core.field_storage import remover_talhao_usuario
+        
+        removed = remover_talhao_usuario(field_id)
+        
+        if not removed:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Talhão '{field_id}' não encontrado"
+            )
+        
+        return {
+            "message": "Talhão removido com sucesso",
+            "id": field_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/planejamento/talhoes/{field_id}/calendario")
+def gerar_calendario_talhao(field_id: str, request: dict):
+    """Gera calendário agrícola para um talhão cadastrado"""
+    try:
+        from core.field_storage import obter_talhao_usuario
+        from core.crop_calendar_engine import gerar_calendario_cultura
+        from core.planning_models import Field, SoilType, Slope, WaterAvailability, GenerateCalendarRequest
+        from datetime import datetime
+        
+        # Validar request
+        validated = GenerateCalendarRequest(**request)
+        
+        # Buscar talhão
+        field_data = obter_talhao_usuario(field_id)
+        
+        if not field_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Talhão '{field_id}' não encontrado"
+            )
+        
+        # Parsear data de plantio
+        try:
+            planting_date = datetime.fromisoformat(validated.planting_date).date()
+        except Exception:
+            raise HTTPException(
+                status_code=400,
+                detail="Formato de data inválido. Use ISO 8601 (YYYY-MM-DD)"
+            )
+        
+        # Criar objeto Field
+        field = Field(
+            id=field_data["id"],
+            property_id="user",
+            name=field_data["name"],
+            area_ha=field_data["area_ha"],
+            soil_type=SoilType(field_data["soil_type"]),
+            slope=Slope(field_data["slope"]),
+            water_availability=WaterAvailability(field_data["water_availability"])
+        )
+        
+        # Gerar calendário
+        resultado = gerar_calendario_cultura(
+            cultura=validated.cultura,
+            planting_date=planting_date,
+            field=field,
+            crop_plan_id=None
+        )
+        
+        # Adicionar dados do talhão na resposta
+        resultado["field_data"] = field_data
+        
+        return converter_tipos_python(resultado)
+        
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        if DEBUG_ERRORS:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": str(e),
+                    "traceback": traceback.format_exc()
+                }
+            )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Erro ao gerar calendário para o talhão."
+            )
+
 @app.post("/cache/limpar")
 def limpar_cache(request: Request):
     """Limpa o cache de resultados pesados (protegido por token)"""

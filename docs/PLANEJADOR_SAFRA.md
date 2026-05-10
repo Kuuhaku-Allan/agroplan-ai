@@ -484,20 +484,61 @@ Imprevisto → Análise de Impacto → Sugestão de Ação → Validação Manua
 
 ## Fases de Implementação
 
-### Fase 10.1 - Modelo e Engine Inicial ⏳
+### Fase 10.1 - Modelo e Engine Inicial ✅
 
 - [x] Atualizar roadmap
 - [x] Criar `docs/PLANEJADOR_SAFRA.md`
-- [ ] Definir modelos em `backend/core/planning_models.py`
-- [ ] Criar engine em `backend/core/crop_calendar_engine.py`
-- [ ] Endpoint `POST /planejamento/calendario`
-- [ ] Base local para soja, milho, feijão
+- [x] Definir modelos em `backend/core/planning_models.py`
+- [x] Criar engine em `backend/core/crop_calendar_engine.py`
+- [x] Endpoint `POST /planejamento/calendario`
+- [x] Base local para soja, milho, feijão
+- [x] CLI 1.0.30 publicada
 
-### Fase 10.2 - Cadastro Manual
+### Fase 10.2 - Cadastro Manual ✅ COMPLETA
 
-- [ ] Formulário de criação de talhão
-- [ ] CRUD de propriedades e talhões
-- [ ] Conectar com ZARC, clima, preços
+**Backend**:
+- [x] Storage em JSON (`backend/core/field_storage.py`)
+- [x] CRUD completo de talhões
+- [x] Modelos Pydantic com validações
+- [x] Endpoints:
+  - `GET /planejamento/talhoes` - Listar talhões ✅
+  - `POST /planejamento/talhoes` - Criar talhão ✅
+  - `GET /planejamento/talhoes/{id}` - Obter talhão ✅
+  - `PUT /planejamento/talhoes/{id}` - Atualizar talhão ✅
+  - `DELETE /planejamento/talhoes/{id}` - Remover talhão ✅
+  - `POST /planejamento/talhoes/{id}/calendario` - Gerar calendário ✅
+
+**Frontend**:
+- [x] Página `/planejamento` criada ✅
+- [x] Formulário de criação de talhão ✅
+- [x] Lista de talhões com ações ✅
+- [x] Geração de calendário por talhão ✅
+- [x] Visualização de tarefas com prioridades ✅
+- [x] Sidebar com item "Planejamento" ✅
+
+**Persistência**:
+- [x] JSON local em `backend/data/user_fields/fields.json` ✅
+- [x] API Local: dados persistem no PC do usuário ✅
+- [x] API Render: dados temporários/voláteis (limitação atual) ✅
+- [ ] Banco de dados PostgreSQL (fase futura)
+
+**CLI**:
+- [x] CLI 1.0.31 publicada ✅
+- [x] Features: `manual_field_registration`, `crop_calendar_from_manual_field` ✅
+- [x] Testado: endpoints funcionando corretamente ✅
+
+**Testes Realizados**:
+- ✅ GET /planejamento/talhoes - Lista vazia retornada
+- ✅ POST /planejamento/talhoes - Talhão criado com sucesso
+- ✅ POST /planejamento/talhoes/{id}/calendario - Calendário gerado com 15 tarefas
+- ✅ GET /planejamento/culturas - 3 culturas disponíveis (soja, milho, feijão)
+- ✅ CLI 1.0.31 instalada e atualizada
+- ✅ API Local rodando em http://localhost:8000
+
+**Commits**:
+- Backend: `5465119`
+- Frontend: `90bf939`
+- Documentação e CLI: pendente commit final
 
 ### Fase 10.3 - Modo Guiado
 
@@ -538,15 +579,184 @@ Imprevisto → Análise de Impacto → Sugestão de Ação → Validação Manua
 
 ---
 
+## Cadastro Manual de Talhões (Fase 10.2)
+
+### Visão Geral
+
+O usuário pode cadastrar manualmente seus talhões através da página `/planejamento`. Os dados são armazenados em JSON local no backend.
+
+### Persistência
+
+**API Local** (`~/.agroplan/backend/data/user_fields/fields.json`):
+- ✅ Dados persistem no PC do usuário
+- ✅ Sobrevivem a reinicializações
+- ✅ Backup manual possível
+
+**API Render** (ambiente temporário):
+- ⚠️ Dados podem ser perdidos ao reiniciar
+- ⚠️ Ambiente efêmero (cold start)
+- ⚠️ Não recomendado para produção
+
+**Futuro** (Fase 11):
+- 🔄 Migração para PostgreSQL
+- 🔄 Persistência definitiva
+- 🔄 Multiusuário com autenticação
+
+### Endpoints
+
+#### GET /planejamento/talhoes
+
+Lista todos os talhões cadastrados.
+
+**Resposta**:
+```json
+{
+  "total": 2,
+  "talhoes": [
+    {
+      "id": "uuid",
+      "name": "Talhão Norte",
+      "area_ha": 10.5,
+      "soil_type": "argiloso",
+      "slope": "plano",
+      "water_availability": "media",
+      "uf": "SP",
+      "municipio": "Clementina",
+      "lat": -21.56,
+      "lon": -50.45,
+      "created_at": "2026-05-10T12:00:00",
+      "updated_at": "2026-05-10T12:00:00"
+    }
+  ]
+}
+```
+
+#### POST /planejamento/talhoes
+
+Cria um novo talhão.
+
+**Request**:
+```json
+{
+  "name": "Talhão Norte",
+  "area_ha": 10.5,
+  "soil_type": "argiloso",
+  "slope": "plano",
+  "water_availability": "media",
+  "uf": "SP",
+  "municipio": "Clementina",
+  "lat": -21.56,
+  "lon": -50.45
+}
+```
+
+**Validações**:
+- `area_ha` > 0
+- `soil_type`: argiloso, arenoso, misto, siltoso
+- `slope`: plano, suave, moderado, ingreme
+- `water_availability`: baixa, media, alta
+
+#### GET /planejamento/talhoes/{id}
+
+Obtém um talhão pelo ID.
+
+#### PUT /planejamento/talhoes/{id}
+
+Atualiza um talhão existente.
+
+#### DELETE /planejamento/talhoes/{id}
+
+Remove um talhão.
+
+#### POST /planejamento/talhoes/{id}/calendario
+
+Gera calendário agrícola para um talhão cadastrado.
+
+**Request**:
+```json
+{
+  "cultura": "soja",
+  "planting_date": "2026-10-15"
+}
+```
+
+**Resposta**:
+```json
+{
+  "cultura": "soja",
+  "planting_date": "2026-10-15",
+  "estimated_harvest_date": "2027-02-12",
+  "cycle_days": 120,
+  "field_data": { ... },
+  "tasks": [
+    {
+      "date": "2026-10-08",
+      "title": "Preparar solo para plantio",
+      "description": "...",
+      "priority": "high",
+      "weather_sensitive": false
+    }
+  ],
+  "total_tasks": 15,
+  "weather_sensitive_tasks": 8,
+  "critical_tasks": 4
+}
+```
+
+### Página /planejamento
+
+**Funcionalidades**:
+
+1. **Resumo Superior**:
+   - Talhões cadastrados
+   - Área total
+   - Culturas disponíveis
+   - Calendário gerado
+
+2. **Formulário de Criação**:
+   - Nome do talhão
+   - Área em hectares
+   - Solo (select)
+   - Relevo (select)
+   - Água (select)
+   - UF e município (opcional)
+   - Coordenadas (opcional)
+
+3. **Lista de Talhões**:
+   - Cards com informações do talhão
+   - Botão "Remover"
+   - Seletor de cultura
+   - Seletor de data de plantio
+   - Botão "Gerar Calendário"
+
+4. **Visualização de Calendário**:
+   - Tarefas ordenadas por data
+   - Badges de prioridade (crítica, alta, média, baixa)
+   - Badge "Sensível ao clima"
+   - Descrição de cada tarefa
+
+**Estados**:
+- Loading ao carregar dados
+- Loading ao criar talhão
+- Loading ao gerar calendário
+- Estado vazio: "Nenhum talhão cadastrado ainda"
+- Alertas de sucesso/erro
+
+---
+
 ## Próximos Passos
 
 1. ✅ Atualizar README roadmap
 2. ✅ Criar este documento
-3. ⏳ Criar `planning_models.py`
-4. ⏳ Criar `crop_calendar_engine.py`
-5. ⏳ Criar endpoint `/planejamento/calendario`
-6. ⏳ Testar com soja, milho, feijão
-7. ⏳ Commit: "feat: add smart crop planning roadmap and calendar models"
+3. ✅ Criar `planning_models.py`
+4. ✅ Criar `crop_calendar_engine.py`
+5. ✅ Criar endpoint `/planejamento/calendario`
+6. ✅ Testar com soja, milho, feijão
+7. ✅ Criar storage de talhões
+8. ✅ Criar endpoints CRUD
+9. ✅ Criar página `/planejamento`
+10. ✅ CLI 1.0.31 publicada
+11. ⏳ Próxima: Fase 10.3 - Modo Guiado
 
 ---
 

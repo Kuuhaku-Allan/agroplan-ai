@@ -15,6 +15,14 @@ Visão geral completa do planejamento com:
 - Gráficos comparativos de cenários
 - Plano recomendado detalhado por talhão
 
+### 📅 Planejamento de Safra
+Sistema inteligente de planejamento agrícola:
+- Cadastro manual de talhões com características detalhadas
+- Geração de calendário agrícola por cultura
+- Tarefas organizadas por fase do ciclo da cultura
+- Base de conhecimento para soja, milho e feijão
+- Recomendações de ações por prioridade
+
 ### 🗺️ Talhões
 Visualização e análise dos talhões da propriedade:
 - Características de cada talhão (solo, clima, relevo, água)
