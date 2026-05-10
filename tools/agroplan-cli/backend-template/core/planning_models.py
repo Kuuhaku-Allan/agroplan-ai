@@ -259,9 +259,11 @@ class CalendarTask:
     status: TaskStatus = TaskStatus.PENDING
     weather_sensitive: bool = False
     completed_at: Optional[datetime] = None
+    adjusted: bool = False  # Se a tarefa foi ajustada por estar no passado
+    original_date: Optional[date] = None  # Data original antes do ajuste
 
     def to_dict(self) -> Dict:
-        return {
+        result = {
             "id": self.id,
             "crop_plan_id": self.crop_plan_id,
             "date": self.date.isoformat(),
@@ -272,8 +274,14 @@ class CalendarTask:
             "source": self.source,
             "status": self.status.value,
             "weather_sensitive": self.weather_sensitive,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "adjusted": self.adjusted
         }
+        
+        if self.original_date:
+            result["original_date"] = self.original_date.isoformat()
+        
+        return result
 
 
 @dataclass

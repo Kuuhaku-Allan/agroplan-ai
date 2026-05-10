@@ -875,6 +875,48 @@ def gerar_calendario_cultura(
     # Ordenar tarefas por data
     tasks.sort(key=lambda t: t.date)
     
+    # Detectar e ajustar tarefas no passado
+    today = date.today()
+    adjusted_tasks_count = 0
+    calendar_warnings = []
+    
+    for task in tasks:
+        if task.date < today:
+            # Marcar tarefa como ajustada
+            task.original_date = task.date
+            task.date = today
+            task.adjusted = True
+            
+            # Aumentar prioridade se não for crítica
+            if task.priority != TaskPriority.CRITICAL:
+                task.priority = TaskPriority.HIGH
+            
+            # Adicionar observação à descrição
+            task.description += f" [AJUSTADA: Data original era {task.original_date.isoformat()}, mas já passou. Tarefa reagendada para hoje.]"
+            
+            adjusted_tasks_count += 1
+    
+    # Adicionar avisos se houver tarefas ajustadas
+    if adjusted_tasks_count > 0:
+        calendar_warnings.append(
+            f"{adjusted_tasks_count} tarefa(s) foram ajustadas porque a data original já havia passado. "
+            "Considere escolher uma data de plantio mais distante no futuro."
+        )
+    
+    # Verificar se data de plantio está muito próxima
+    days_until_planting = (planting_date - today).days
+    if days_until_planting <= 7 and days_until_planting >= 0:
+        calendar_warnings.append(
+            f"Sua data de plantio está em {days_until_planting} dia(s). "
+            "Tarefas preparatórias podem ter sido ajustadas. "
+            "Recomendamos planejar com pelo menos 2 semanas de antecedência."
+        )
+    elif days_until_planting < 0:
+        calendar_warnings.append(
+            "A data de plantio escolhida já passou. "
+            "O calendário foi ajustado, mas recomendamos escolher uma data futura."
+        )
+    
     # Montar resposta
     return {
         "cultura": cultura,
@@ -906,6 +948,9 @@ def gerar_calendario_cultura(
         "total_tasks": len(tasks),
         "weather_sensitive_tasks": sum(1 for task in tasks if task.weather_sensitive),
         "critical_tasks": sum(1 for task in tasks if task.priority == TaskPriority.CRITICAL),
+        "has_adjusted_tasks": adjusted_tasks_count > 0,
+        "adjusted_tasks_count": adjusted_tasks_count,
+        "calendar_warnings": calendar_warnings,
         "cautela": "Este calendário é uma base inicial de planejamento. As datas e tarefas devem ser ajustadas conforme clima, solo, cultivar, manejo e orientação técnica."
     }
 

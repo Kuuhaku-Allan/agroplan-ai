@@ -309,6 +309,8 @@ export interface CropCalendarTask {
   status?: string;
   weather_sensitive?: boolean;
   phase?: string;
+  adjusted?: boolean;
+  original_date?: string;
 }
 
 export interface CropCalendarResponse {
@@ -322,6 +324,10 @@ export interface CropCalendarResponse {
   total_tasks?: number;
   weather_sensitive_tasks?: number;
   critical_tasks?: number;
+  has_adjusted_tasks?: boolean;
+  adjusted_tasks_count?: number;
+  calendar_warnings?: string[];
+  cautela?: string;
   cycle_info?: {
     optimal_temp_min: number;
     optimal_temp_max: number;

@@ -30,6 +30,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
+import { formatDateBRWithYear } from "@/lib/date-utils";
 import type { ClimateLocation } from "@/lib/types/climate";
 import type { ManualField, ManualFieldCreate, CropCalendarResponse } from "@/lib/types";
 import { createPlanningField, generateFieldCalendar } from "@/lib/api";
@@ -697,7 +698,10 @@ export function GuidedPlanningWizard({
             </div>
 
             <div>
-              <Label htmlFor="planting-date">Data de Plantio</Label>
+              <Label htmlFor="planting-date">Data de Plantio Desejada</Label>
+              <p className="text-xs text-slate-400 mt-1 mb-2">
+                Algumas tarefas, como preparo do solo, podem ser planejadas antes da data de plantio.
+              </p>
               <Input
                 id="planting-date"
                 type="date"
@@ -774,16 +778,14 @@ export function GuidedPlanningWizard({
               <div className="rounded-lg border border-white/10 bg-slate-950/40 p-4">
                 <p className="text-sm text-slate-400 mb-1">Plantio</p>
                 <p className="font-semibold text-white">
-                  {new Date(wizardState.calendar.planting_date).toLocaleDateString("pt-BR")}
+                  {formatDateBRWithYear(wizardState.calendar.planting_date)}
                 </p>
               </div>
 
               <div className="rounded-lg border border-white/10 bg-slate-950/40 p-4">
                 <p className="text-sm text-slate-400 mb-1">Colheita Estimada</p>
                 <p className="font-semibold text-white">
-                  {new Date(wizardState.calendar.estimated_harvest_date).toLocaleDateString(
-                    "pt-BR"
-                  )}
+                  {formatDateBRWithYear(wizardState.calendar.estimated_harvest_date)}
                 </p>
               </div>
             </div>

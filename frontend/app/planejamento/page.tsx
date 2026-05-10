@@ -38,6 +38,7 @@ import {
   generateFieldCalendar,
   getPlanningCultures,
 } from '@/lib/api';
+import { formatDateBR, formatDateBRWithYear, isPastDate } from '@/lib/date-utils';
 import type {
   ManualField,
   ManualFieldCreate,
@@ -742,12 +743,39 @@ export default function PlanejamentoPage() {
                 Calendário Agrícola - {calendar.cultura.charAt(0).toUpperCase() + calendar.cultura.slice(1)}
               </CardTitle>
               <CardDescription>
-                Plantio: {new Date(calendar.planting_date).toLocaleDateString('pt-BR')} • Colheita
-                estimada: {new Date(calendar.estimated_harvest_date).toLocaleDateString('pt-BR')} •{' '}
+                Plantio: {formatDateBRWithYear(calendar.planting_date)} • Colheita
+                estimada: {formatDateBRWithYear(calendar.estimated_harvest_date)} •{' '}
                 {calendar.cycle_days} dias • {calendar.total_tasks} tarefas
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Warnings */}
+              {calendar.calendar_warnings && calendar.calendar_warnings.length > 0 && (
+                <div className="mb-4 p-4 rounded-lg border border-amber-500/30 bg-amber-500/10 backdrop-blur-sm">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-amber-500 mb-2">Atenção</h4>
+                      <ul className="space-y-1 text-sm text-amber-200/90">
+                        {calendar.calendar_warnings.map((warning, idx) => (
+                          <li key={idx}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Cautela */}
+              {calendar.cautela && (
+                <div className="mb-4 p-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 backdrop-blur-sm">
+                  <p className="text-xs text-cyan-200/80 flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-cyan-500 flex-shrink-0 mt-0.5" />
+                    <span>{calendar.cautela}</span>
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-3">
                 {calendar.tasks.map((task, index) => (
                   <div
@@ -755,10 +783,7 @@ export default function PlanejamentoPage() {
                     className="flex items-start gap-3 p-3 rounded-lg border border-white/10 bg-slate-950/40 backdrop-blur-sm hover:border-emerald-500/20 transition-colors"
                   >
                     <div className="text-sm text-slate-400 min-w-[80px]">
-                      {new Date(task.date).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                      })}
+                      {formatDateBR(task.date)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -794,6 +819,11 @@ export default function PlanejamentoPage() {
                         {task.weather_sensitive && (
                           <Badge variant="outline" className="text-xs text-cyan-400 border-cyan-400/30 bg-cyan-500/10">
                             Sensível ao clima
+                          </Badge>
+                        )}
+                        {task.adjusted && (
+                          <Badge variant="outline" className="text-xs text-amber-400 border-amber-400/30 bg-amber-500/10">
+                            Ajustada
                           </Badge>
                         )}
                       </div>
