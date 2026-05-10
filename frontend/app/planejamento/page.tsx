@@ -27,6 +27,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
+  Navigation,
 } from 'lucide-react';
 import {
   getPlanningFields,
@@ -41,6 +42,9 @@ import type {
   CropCalendarResponse,
   CropInfo,
 } from '@/lib/types';
+import { ClimateRegionSelector } from '@/components/climate/climate-region-selector';
+import type { ClimateLocation } from '@/lib/types/climate';
+import { CLIMATE_STORAGE_KEY } from '@/lib/types/climate';
 
 export default function PlanejamentoPage() {
   const [fields, setFields] = useState<ManualField[]>([]);
@@ -53,6 +57,8 @@ export default function PlanejamentoPage() {
   const [calendar, setCalendar] = useState<CropCalendarResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showRegionSelector, setShowRegionSelector] = useState(false);
+  const [currentRegion, setCurrentRegion] = useState<ClimateLocation | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<ManualFieldCreate>({
@@ -75,7 +81,55 @@ export default function PlanejamentoPage() {
 
   useEffect(() => {
     loadData();
+    loadCurrentRegion();
   }, []);
+
+  function loadCurrentRegion() {
+    try {
+      const stored = localStorage.getItem(CLIMATE_STORAGE_KEY);
+      if (stored) {
+        const location = JSON.parse(stored) as ClimateLocation;
+        setCurrentRegion(location);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar região:', err);
+    }
+  }
+
+  function handleUseCurrentRegion() {
+    if (!currentRegion) {
+      setError('Nenhuma região selecionada. Use "Selecionar Região" primeiro.');
+      return;
+    }
+
+    setFormData({
+      ...formData,
+      uf: currentRegion.uf || '',
+      municipio: currentRegion.municipio || '',
+      lat: currentRegion.lat,
+      lon: currentRegion.lon,
+    });
+    setSuccess(`Região ${currentRegion.label} aplicada ao formulário!`);
+  }
+
+  function handleRegionSelect(location: ClimateLocation | null) {
+    if (location) {
+      setCurrentRegion(location);
+      localStorage.setItem(CLIMATE_STORAGE_KEY, JSON.stringify(location));
+      
+      setFormData({
+        ...formData,
+        uf: location.uf || '',
+        municipio: location.municipio || '',
+        lat: location.lat,
+        lon: location.lon,
+      });
+      setSuccess(`Região ${location.label} selecionada e aplicada!`);
+    } else {
+      setCurrentRegion(null);
+      localStorage.removeItem(CLIMATE_STORAGE_KEY);
+    }
+  }
 
   async function loadData() {
     try {
@@ -178,7 +232,7 @@ export default function PlanejamentoPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="mx-auto w-full max-w-7xl space-y-6 px-8 py-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
@@ -192,7 +246,7 @@ export default function PlanejamentoPage() {
 
         {/* Alerts */}
         {error && (
-          <Card className="bg-red-500/10 border-red-500/20">
+          <Card className="rounded-2xl border border-red-500/20 bg-red-500/10 backdrop-blur-sm">
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 text-red-400">
                 <AlertCircle className="h-5 w-5" />
@@ -203,7 +257,7 @@ export default function PlanejamentoPage() {
         )}
 
         {success && (
-          <Card className="bg-emerald-500/10 border-emerald-500/20">
+          <Card className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 backdrop-blur-sm">
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 text-emerald-400">
                 <CheckCircle2 className="h-5 w-5" />
@@ -215,7 +269,7 @@ export default function PlanejamentoPage() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-slate-900/50 border-white/10 backdrop-blur-sm">
+          <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-slate-400">
                 Talhões Cadastrados
@@ -226,7 +280,7 @@ export default function PlanejamentoPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900/50 border-white/10 backdrop-blur-sm">
+          <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-slate-400">
                 Área Total
@@ -239,7 +293,7 @@ export default function PlanejamentoPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900/50 border-white/10 backdrop-blur-sm">
+          <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-slate-400">
                 Culturas Disponíveis
@@ -250,7 +304,7 @@ export default function PlanejamentoPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900/50 border-white/10 backdrop-blur-sm">
+          <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-slate-400">
                 Calendário Gerado
@@ -264,9 +318,9 @@ export default function PlanejamentoPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Create Field Form */}
-          <Card className="bg-slate-900/50 border-white/10 backdrop-blur-sm">
+          <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5 text-emerald-500" />
@@ -278,6 +332,49 @@ export default function PlanejamentoPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreateField} className="space-y-4">
+                {/* Região do Talhão */}
+                <div className="rounded-lg border border-white/10 bg-slate-950/40 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold text-slate-300">Região do Talhão</Label>
+                    {currentRegion && (
+                      <Badge variant="outline" className="text-xs border-emerald-500/30 text-emerald-400">
+                        {currentRegion.label}
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleUseCurrentRegion}
+                      disabled={!currentRegion}
+                      className="border-white/10 bg-slate-950/40 hover:bg-emerald-500/10 hover:border-emerald-500/30 text-slate-300"
+                    >
+                      <Navigation className="mr-2 h-3 w-3" />
+                      Usar Região Atual
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowRegionSelector(true)}
+                      className="border-white/10 bg-slate-950/40 hover:bg-cyan-500/10 hover:border-cyan-500/30 text-slate-300"
+                    >
+                      <MapPin className="mr-2 h-3 w-3" />
+                      Selecionar Região
+                    </Button>
+                  </div>
+
+                  {currentRegion && (
+                    <div className="text-xs text-slate-400 space-y-1">
+                      <p>📍 {currentRegion.municipio}/{currentRegion.uf}</p>
+                      <p>🌐 {currentRegion.lat.toFixed(2)}, {currentRegion.lon.toFixed(2)}</p>
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <Label htmlFor="name">Nome do Talhão</Label>
                   <Input
@@ -286,6 +383,7 @@ export default function PlanejamentoPage() {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Ex: Talhão Norte"
                     required
+                    className="border-white/10 bg-slate-950/40 text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                   />
                 </div>
 
@@ -302,6 +400,7 @@ export default function PlanejamentoPage() {
                     }
                     placeholder="Ex: 10.5"
                     required
+                    className="border-white/10 bg-slate-950/40 text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                   />
                 </div>
 
@@ -312,10 +411,10 @@ export default function PlanejamentoPage() {
                       value={formData.soil_type}
                       onValueChange={(value) => setFormData({ ...formData, soil_type: value })}
                     >
-                      <SelectTrigger id="soil">
+                      <SelectTrigger id="soil" className="border-white/10 bg-slate-950/40 text-slate-100 focus:border-emerald-400/50 focus:ring-emerald-400/20">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="border-white/10 bg-slate-900">
                         <SelectItem value="argiloso">Argiloso</SelectItem>
                         <SelectItem value="arenoso">Arenoso</SelectItem>
                         <SelectItem value="misto">Misto</SelectItem>
@@ -330,10 +429,10 @@ export default function PlanejamentoPage() {
                       value={formData.slope}
                       onValueChange={(value) => setFormData({ ...formData, slope: value })}
                     >
-                      <SelectTrigger id="slope">
+                      <SelectTrigger id="slope" className="border-white/10 bg-slate-950/40 text-slate-100 focus:border-emerald-400/50 focus:ring-emerald-400/20">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="border-white/10 bg-slate-900">
                         <SelectItem value="plano">Plano</SelectItem>
                         <SelectItem value="suave">Suave</SelectItem>
                         <SelectItem value="moderado">Moderado</SelectItem>
@@ -350,10 +449,10 @@ export default function PlanejamentoPage() {
                         setFormData({ ...formData, water_availability: value })
                       }
                     >
-                      <SelectTrigger id="water">
+                      <SelectTrigger id="water" className="border-white/10 bg-slate-950/40 text-slate-100 focus:border-emerald-400/50 focus:ring-emerald-400/20">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="border-white/10 bg-slate-900">
                         <SelectItem value="baixa">Baixa</SelectItem>
                         <SelectItem value="media">Média</SelectItem>
                         <SelectItem value="alta">Alta</SelectItem>
@@ -364,7 +463,7 @@ export default function PlanejamentoPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="uf">UF (opcional)</Label>
+                    <Label htmlFor="uf">UF</Label>
                     <Input
                       id="uf"
                       value={formData.uf}
@@ -373,23 +472,25 @@ export default function PlanejamentoPage() {
                       }
                       placeholder="Ex: SP"
                       maxLength={2}
+                      className="border-white/10 bg-slate-950/40 text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="municipio">Município (opcional)</Label>
+                    <Label htmlFor="municipio">Município</Label>
                     <Input
                       id="municipio"
                       value={formData.municipio}
                       onChange={(e) => setFormData({ ...formData, municipio: e.target.value })}
                       placeholder="Ex: Clementina"
+                      className="border-white/10 bg-slate-950/40 text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="lat">Latitude (opcional)</Label>
+                    <Label htmlFor="lat">Latitude</Label>
                     <Input
                       id="lat"
                       type="number"
@@ -402,11 +503,12 @@ export default function PlanejamentoPage() {
                         })
                       }
                       placeholder="Ex: -21.56"
+                      className="border-white/10 bg-slate-950/40 text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="lon">Longitude (opcional)</Label>
+                    <Label htmlFor="lon">Longitude</Label>
                     <Input
                       id="lon"
                       type="number"
@@ -419,6 +521,7 @@ export default function PlanejamentoPage() {
                         })
                       }
                       placeholder="Ex: -50.45"
+                      className="border-white/10 bg-slate-950/40 text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                     />
                   </div>
                 </div>
@@ -445,7 +548,7 @@ export default function PlanejamentoPage() {
           </Card>
 
           {/* Fields List */}
-          <Card className="bg-slate-900/50 border-white/10 backdrop-blur-sm">
+          <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-cyan-500" />
@@ -468,7 +571,7 @@ export default function PlanejamentoPage() {
                   {fields.map((field) => (
                     <Card
                       key={field.id}
-                      className="bg-slate-800/50 border-white/5 hover:border-emerald-500/30 transition-colors"
+                      className="rounded-xl border border-white/10 bg-slate-950/40 backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-200"
                     >
                       <CardContent className="pt-4">
                         <div className="flex items-start justify-between mb-3">
@@ -482,7 +585,7 @@ export default function PlanejamentoPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteField(field.id)}
-                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 -mt-1 -mr-1"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -520,10 +623,10 @@ export default function PlanejamentoPage() {
                                 setCalendarForm({ ...calendarForm, cultura: value })
                               }
                             >
-                              <SelectTrigger className="h-8 text-xs">
+                              <SelectTrigger className="h-8 text-xs border-white/10 bg-slate-900/50 text-slate-100 focus:border-cyan-400/50 focus:ring-cyan-400/20">
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="border-white/10 bg-slate-900">
                                 {cultures.map((c) => (
                                   <SelectItem key={c} value={c}>
                                     {c.charAt(0).toUpperCase() + c.slice(1)}
@@ -538,7 +641,7 @@ export default function PlanejamentoPage() {
                               onChange={(e) =>
                                 setCalendarForm({ ...calendarForm, planting_date: e.target.value })
                               }
-                              className="h-8 text-xs"
+                              className="h-8 text-xs border-white/10 bg-slate-900/50 text-slate-100 focus:border-cyan-400/50 focus:ring-cyan-400/20 [color-scheme:dark]"
                             />
                           </div>
 
@@ -572,7 +675,7 @@ export default function PlanejamentoPage() {
 
         {/* Calendar Display */}
         {calendar && (
-          <Card className="bg-slate-900/50 border-white/10 backdrop-blur-sm">
+          <Card className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/70 via-[#0b1733]/70 to-slate-950/60 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 text-emerald-500" />
@@ -589,7 +692,7 @@ export default function PlanejamentoPage() {
                 {calendar.tasks.map((task, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-white/5"
+                    className="flex items-start gap-3 p-3 rounded-lg border border-white/10 bg-slate-950/40 backdrop-blur-sm hover:border-emerald-500/20 transition-colors"
                   >
                     <div className="text-sm text-slate-400 min-w-[80px]">
                       {new Date(task.date).toLocaleDateString('pt-BR', {
@@ -598,7 +701,7 @@ export default function PlanejamentoPage() {
                       })}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h4 className="font-medium text-white">{task.title}</h4>
                         {task.priority && (
                           <Badge
@@ -609,7 +712,15 @@ export default function PlanejamentoPage() {
                                 ? 'default'
                                 : 'secondary'
                             }
-                            className="text-xs"
+                            className={`text-xs ${
+                              task.priority === 'critical'
+                                ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                                : task.priority === 'high'
+                                ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                                : task.priority === 'medium'
+                                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                                : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                            }`}
                           >
                             {task.priority === 'critical'
                               ? 'Crítica'
@@ -621,7 +732,7 @@ export default function PlanejamentoPage() {
                           </Badge>
                         )}
                         {task.weather_sensitive && (
-                          <Badge variant="outline" className="text-xs text-cyan-400 border-cyan-400/30">
+                          <Badge variant="outline" className="text-xs text-cyan-400 border-cyan-400/30 bg-cyan-500/10">
                             Sensível ao clima
                           </Badge>
                         )}
@@ -635,6 +746,15 @@ export default function PlanejamentoPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Region Selector Modal */}
+        {showRegionSelector && (
+          <ClimateRegionSelector
+            onSelect={handleRegionSelect}
+            onClose={() => setShowRegionSelector(false)}
+            currentLocation={currentRegion}
+          />
         )}
       </div>
     </AppShell>
