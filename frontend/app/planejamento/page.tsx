@@ -28,6 +28,8 @@ import {
   CheckCircle2,
   Loader2,
   Navigation,
+  Wand2,
+  Settings,
 } from 'lucide-react';
 import {
   getPlanningFields,
@@ -43,10 +45,14 @@ import type {
   CropInfo,
 } from '@/lib/types';
 import { ClimateRegionSelector } from '@/components/climate/climate-region-selector';
+import { GuidedPlanningWizard } from '@/components/planning/guided-planning-wizard';
 import type { ClimateLocation } from '@/lib/types/climate';
 import { CLIMATE_STORAGE_KEY } from '@/lib/types/climate';
 
+type PlanningMode = 'manual' | 'guided';
+
 export default function PlanejamentoPage() {
+  const [mode, setMode] = useState<PlanningMode>('manual');
   const [fields, setFields] = useState<ManualField[]>([]);
   const [cultures, setCultures] = useState<string[]>([]);
   const [culturesInfo, setCulturesInfo] = useState<Record<string, CropInfo>>({});
@@ -316,6 +322,62 @@ export default function PlanejamentoPage() {
           </Card>
         </div>
 
+        {/* Mode Selector */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => setMode('manual')}
+            className={`flex-1 p-4 rounded-xl border transition-all ${
+              mode === 'manual'
+                ? 'border-emerald-500/50 bg-emerald-500/10'
+                : 'border-white/10 bg-slate-950/40 hover:border-emerald-500/30'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Settings className="h-5 w-5 text-emerald-500" />
+              <h3 className="font-semibold text-white">Cadastro Manual</h3>
+            </div>
+            <p className="text-sm text-slate-400 text-center">
+              Para quem já sabe o que quer cadastrar
+            </p>
+          </button>
+
+          <button
+            onClick={() => setMode('guided')}
+            className={`flex-1 p-4 rounded-xl border transition-all ${
+              mode === 'guided'
+                ? 'border-cyan-500/50 bg-cyan-500/10'
+                : 'border-white/10 bg-slate-950/40 hover:border-cyan-500/30'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Wand2 className="h-5 w-5 text-cyan-500" />
+              <h3 className="font-semibold text-white">Planejamento Guiado</h3>
+            </div>
+            <p className="text-sm text-slate-400 text-center">
+              Passo a passo com recomendações personalizadas
+            </p>
+          </button>
+        </div>
+
+        {/* Guided Mode */}
+        {mode === 'guided' && (
+          <GuidedPlanningWizard
+            existingFields={fields}
+            cultures={cultures}
+            currentRegion={currentRegion}
+            onRegionChange={handleRegionSelect}
+            onComplete={(calendar) => {
+              setCalendar(calendar);
+              setSuccess('Calendário gerado com sucesso pelo modo guiado!');
+              setMode('manual'); // Volta para manual para mostrar o calendário
+            }}
+            onCancel={() => setMode('manual')}
+          />
+        )}
+
+        {/* Manual Mode */}
+        {mode === 'manual' && (
+          <>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Create Field Form */}
           <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
@@ -744,6 +806,8 @@ export default function PlanejamentoPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+        </>
         )}
 
         {/* Region Selector Modal */}
