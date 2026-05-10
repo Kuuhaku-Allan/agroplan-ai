@@ -4,6 +4,13 @@
  */
 
 import type { ClimateLocation } from './types/climate';
+import type {
+  ManualField,
+  ManualFieldCreate,
+  GenerateFieldCalendarPayload,
+  CropCalendarResponse,
+  CropInfo,
+} from './types';
 
 const ONLINE_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://agroplan-ai-api.onrender.com';
 const LOCAL_API_URL = 'http://localhost:8000';
@@ -653,5 +660,69 @@ export async function otimizarLucroMercadoExperimental(location?: ClimateLocatio
     throw new Error(`Falha ao otimizar lucro de mercado experimental: ${response.status}`);
   }
   
+  return response.json();
+}
+
+
+// Planning API Functions
+
+export async function getPlanningFields(): Promise<{ total: number; talhoes: ManualField[] }> {
+  const response = await apiFetch('/planejamento/talhoes');
+  return response.json();
+}
+
+export async function createPlanningField(data: ManualFieldCreate): Promise<ManualField> {
+  const response = await apiFetch('/planejamento/talhoes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function getPlanningField(id: string): Promise<ManualField> {
+  const response = await apiFetch(`/planejamento/talhoes/${id}`);
+  return response.json();
+}
+
+export async function updatePlanningField(id: string, data: Partial<ManualFieldCreate>): Promise<ManualField> {
+  const response = await apiFetch(`/planejamento/talhoes/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function deletePlanningField(id: string): Promise<{ message: string; id: string }> {
+  const response = await apiFetch(`/planejamento/talhoes/${id}`, {
+    method: 'DELETE',
+  });
+  return response.json();
+}
+
+export async function generateFieldCalendar(
+  id: string,
+  payload: GenerateFieldCalendarPayload
+): Promise<CropCalendarResponse> {
+  const response = await apiFetch(`/planejamento/talhoes/${id}/calendario`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return response.json();
+}
+
+export async function getPlanningCultures(): Promise<{
+  total: number;
+  culturas: string[];
+  detalhes: Record<string, CropInfo>;
+}> {
+  const response = await apiFetch('/planejamento/culturas');
+  return response.json();
+}
+
+export async function getPlanningCultureInfo(cultura: string): Promise<CropInfo> {
+  const response = await apiFetch(`/planejamento/culturas/${cultura}`);
   return response.json();
 }

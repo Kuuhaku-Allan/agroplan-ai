@@ -10,12 +10,14 @@ import {
   CheckCircle2, 
   FileText,
   Scale,
-  Info 
+  Info,
+  CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/planejamento", label: "Planejamento", icon: CalendarDays },
   { href: "/talhoes", label: "Talhões", icon: MapPin },
   { href: "/cenarios", label: "Cenários", icon: Layers },
   { href: "/genetico", label: "Algoritmo Genético", icon: Dna },

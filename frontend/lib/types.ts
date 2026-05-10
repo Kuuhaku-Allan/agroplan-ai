@@ -267,3 +267,87 @@ export interface MarketOptimizationResponse {
   zarc?: any;
   precos?: PriceSummary;
 }
+
+
+// Planning Types
+
+export interface ManualField {
+  id: string;
+  name: string;
+  area_ha: number;
+  soil_type: string;
+  slope: string;
+  water_availability: string;
+  uf?: string;
+  municipio?: string;
+  lat?: number;
+  lon?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ManualFieldCreate {
+  name: string;
+  area_ha: number;
+  soil_type: string;
+  slope: string;
+  water_availability: string;
+  uf?: string;
+  municipio?: string;
+  lat?: number;
+  lon?: number;
+}
+
+export interface CropCalendarTask {
+  id?: string;
+  date: string;
+  type?: string;
+  title: string;
+  description?: string;
+  priority?: "low" | "medium" | "high" | "critical";
+  source?: string;
+  status?: string;
+  weather_sensitive?: boolean;
+  phase?: string;
+}
+
+export interface CropCalendarResponse {
+  cultura: string;
+  planting_date: string;
+  estimated_harvest_date: string;
+  cycle_days: number;
+  field?: any;
+  field_data?: ManualField;
+  tasks: CropCalendarTask[];
+  total_tasks?: number;
+  weather_sensitive_tasks?: number;
+  critical_tasks?: number;
+  cycle_info?: {
+    optimal_temp_min: number;
+    optimal_temp_max: number;
+    critical_water_phases: string[];
+    harvest_window_days: number;
+    phases: Array<{
+      name: string;
+      days: number;
+      description: string;
+      critical_water: boolean;
+    }>;
+  };
+}
+
+export interface GenerateFieldCalendarPayload {
+  cultura: string;
+  planting_date: string;
+}
+
+export interface CropInfo {
+  cultura: string;
+  cycle_days: number;
+  optimal_temp_min: number;
+  optimal_temp_max: number;
+  critical_water_phases: string[];
+  harvest_window_days: number;
+  total_phases: number;
+  phases_names: string[];
+}
