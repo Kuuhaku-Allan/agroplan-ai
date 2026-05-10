@@ -121,8 +121,12 @@ def enriquecer_calendario_com_clima(
             
             # Gerar resumo
             forecast_type = weather_data.get("forecast_type", "climatology")
+            source = weather_data.get("source", "unknown")
+            
             if forecast_type == "forecast":
                 summary = f"Previsão: {weather_data.get('precipitation_sum', 0):.1f}mm de chuva, {weather_data.get('temperature_min', 0):.0f}°C a {weather_data.get('temperature_max', 0):.0f}°C"
+            elif source == "nasa-power":
+                summary = f"Climatologia NASA POWER: temperatura média {weather_data.get('temperature_avg', 0):.0f}°C, {weather_data.get('precipitation_expected', 'condições típicas')}"
             else:
                 summary = f"Climatologia: {weather_data.get('precipitation_expected', 'Condições típicas')}"
             

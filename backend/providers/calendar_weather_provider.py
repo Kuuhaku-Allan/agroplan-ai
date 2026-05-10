@@ -99,8 +99,7 @@ def buscar_climatologia_longo_prazo(
     """
     Busca climatologia/histórico para períodos longos (17+ dias).
     
-    Inicialmente usa fallback local mensal.
-    Futuramente pode integrar NASA POWER.
+    Tenta usar NASA POWER primeiro, fallback local se falhar.
     
     Args:
         lat: Latitude
@@ -112,28 +111,52 @@ def buscar_climatologia_longo_prazo(
         Lista de dicionários com climatologia por data/mês
     """
     
-    # Por enquanto, usar fallback local baseado em médias mensais
-    # Futuramente: integrar NASA POWER Climatology API
+    from .nasa_power_provider import buscar_climatologia_nasa_power
     
     result = []
     current = start_date
     
+    # Cache de dados NASA POWER por mês
+    nasa_cache = {}
+    
     while current <= end_date:
         month = current.month
         
-        # Climatologia simplificada por mês (Brasil)
-        climatology = _get_monthly_climatology(month, lat, lon)
+        # Tentar NASA POWER primeiro
+        if month not in nasa_cache:
+            nasa_data = buscar_climatologia_nasa_power(lat, lon, month)
+            nasa_cache[month] = nasa_data
         
-        result.append({
-            "date": current.isoformat(),
-            "source": "climate-fallback",
-            "forecast_type": "climatology",
-            "temperature_max": climatology["temp_max"],
-            "temperature_min": climatology["temp_min"],
-            "precipitation_expected": climatology["precip_desc"],
-            "precipitation_mm_avg": climatology["precip_mm"],
-            "confidence": "media"
-        })
+        nasa_data = nasa_cache[month]
+        
+        if nasa_data:
+            # Usar dados NASA POWER
+            result.append({
+                "date": current.isoformat(),
+                "source": "nasa-power",
+                "forecast_type": "climatology",
+                "temperature_max": nasa_data["temperature_max"],
+                "temperature_min": nasa_data["temperature_min"],
+                "temperature_avg": nasa_data["temperature_avg"],
+                "precipitation_expected": nasa_data["precipitation_expected"],
+                "precipitation_mm_avg": nasa_data["precipitation_mm_avg"],
+                "confidence": "media",
+                "note": "Climatologia NASA POWER, não previsão exata"
+            })
+        else:
+            # Fallback local se NASA POWER falhar
+            climatology = _get_monthly_climatology(month, lat, lon)
+            result.append({
+                "date": current.isoformat(),
+                "source": "climate-fallback",
+                "forecast_type": "climatology",
+                "temperature_max": climatology["temp_max"],
+                "temperature_min": climatology["temp_min"],
+                "precipitation_expected": climatology["precip_desc"],
+                "precipitation_mm_avg": climatology["precip_mm"],
+                "confidence": "baixa",
+                "note": "Climatologia simplificada, NASA POWER indisponível"
+            })
         
         current += timedelta(days=1)
     

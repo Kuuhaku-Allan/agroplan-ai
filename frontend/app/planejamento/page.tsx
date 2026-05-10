@@ -914,7 +914,7 @@ export default function PlanejamentoPage() {
                       >
                         <div className="flex items-start gap-2">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span
                                 className={`text-xs font-semibold ${
                                   task.weather_context.forecast_type === 'forecast'
@@ -924,6 +924,8 @@ export default function PlanejamentoPage() {
                               >
                                 {task.weather_context.forecast_type === 'forecast'
                                   ? '🌤️ Previsão Real'
+                                  : task.weather_context.source === 'nasa-power'
+                                  ? '🛰️ NASA POWER'
                                   : '📊 Climatologia'}
                               </span>
                               <Badge
@@ -931,7 +933,9 @@ export default function PlanejamentoPage() {
                                 className={`text-xs ${
                                   task.weather_context.confidence === 'alta'
                                     ? 'border-emerald-500/30 text-emerald-400'
-                                    : 'border-amber-500/30 text-amber-400'
+                                    : task.weather_context.confidence === 'media'
+                                    ? 'border-amber-500/30 text-amber-400'
+                                    : 'border-slate-500/30 text-slate-400'
                                 }`}
                               >
                                 {task.weather_context.confidence === 'alta'

@@ -372,6 +372,49 @@ def get_clima(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/dados/clima/nasa-power")
+def get_clima_nasa_power(
+    lat: Optional[float] = Query(None, description="Latitude"),
+    lon: Optional[float] = Query(None, description="Longitude"),
+    month: int = Query(None, description="Mês (1-12)")
+):
+    """Obtém climatologia NASA POWER para um mês específico"""
+    try:
+        from providers.nasa_power_provider import buscar_climatologia_nasa_power, get_nasa_power_status
+        
+        # Se lat ou lon não foram fornecidos, retornar informações
+        if lat is None or lon is None or month is None:
+            return {
+                "message": "Informe latitude, longitude e mês para consultar climatologia NASA POWER.",
+                "exemplo": "/dados/clima/nasa-power?lat=-21.56&lon=-50.45&month=5",
+                "parametros": {
+                    "lat": "Latitude da localização",
+                    "lon": "Longitude da localização",
+                    "month": "Mês (1-12)"
+                },
+                "provider_info": get_nasa_power_status()
+            }
+        
+        if month < 1 or month > 12:
+            raise HTTPException(status_code=400, detail="Month deve estar entre 1 e 12")
+        
+        # Buscar climatologia
+        climatology = buscar_climatologia_nasa_power(lat, lon, month)
+        
+        if climatology:
+            return climatology
+        else:
+            return {
+                "message": "Não foi possível obter dados NASA POWER para esta localização.",
+                "lat": lat,
+                "lon": lon,
+                "month": month,
+                "note": "NASA POWER pode estar temporariamente indisponível ou a localização pode estar fora da cobertura."
+            }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/dados/zarc")
 def get_zarc(
     cultura: Optional[str] = Query(None, description="Nome da cultura"),

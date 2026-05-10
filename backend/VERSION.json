@@ -1,6 +1,6 @@
 {
-  "cli_version": "1.0.35",
-  "backend_template_version": "1.0.35",
+  "cli_version": "1.0.36",
+  "backend_template_version": "1.0.36",
   "zarc_index_version": "2025-2026-fast-index-v2",
   "price_index_version": "2025-05-reference-v1",
   "features": [
@@ -24,7 +24,8 @@
     "expanded_crop_calendar_10_cultures",
     "calendar_date_safety",
     "calendar_weather_integration",
-    "calendar_weather_dependency_fix"
+    "calendar_weather_dependency_fix",
+    "nasa_power_climatology"
   ],
-  "generated_at": "2026-05-10T22:00:00Z"
+  "generated_at": "2026-05-10T23:00:00Z"
 }
