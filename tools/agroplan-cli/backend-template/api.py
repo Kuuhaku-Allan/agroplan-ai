@@ -1358,6 +1358,16 @@ def gerar_calendario(request: dict):
             zarc_context=request.get("zarc_context")
         )
         
+        # Enriquecer com clima se solicitado
+        usar_clima = request.get("usar_clima", False)
+        if usar_clima:
+            from core.calendar_weather_adapter import enriquecer_calendario_com_clima
+            lat = field_data.get("lat")
+            lon = field_data.get("lon")
+            resultado = enriquecer_calendario_com_clima(resultado, lat=lat, lon=lon)
+        else:
+            resultado["weather_enabled"] = False
+        
         return converter_tipos_python(resultado)
         
     except HTTPException:
@@ -1532,6 +1542,7 @@ def gerar_calendario_talhao(field_id: str, request: dict):
     try:
         from core.field_storage import obter_talhao_usuario
         from core.crop_calendar_engine import gerar_calendario_cultura
+        from core.calendar_weather_adapter import enriquecer_calendario_com_clima
         from core.planning_models import Field, SoilType, Slope, WaterAvailability, GenerateCalendarRequest
         from datetime import datetime
         
@@ -1574,6 +1585,15 @@ def gerar_calendario_talhao(field_id: str, request: dict):
             field=field,
             crop_plan_id=None
         )
+        
+        # Enriquecer com clima se solicitado
+        usar_clima = request.get("usar_clima", False)
+        if usar_clima:
+            lat = field_data.get("lat")
+            lon = field_data.get("lon")
+            resultado = enriquecer_calendario_com_clima(resultado, lat=lat, lon=lon)
+        else:
+            resultado["weather_enabled"] = False
         
         # Adicionar dados do talhão na resposta
         resultado["field_data"] = field_data

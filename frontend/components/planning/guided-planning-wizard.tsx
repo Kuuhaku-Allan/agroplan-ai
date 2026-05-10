@@ -133,9 +133,13 @@ export function GuidedPlanningWizard({
       setLoading(true);
       setError(null);
 
+      // Enable weather by default if field has lat/lon
+      const usar_clima = !!(wizardState.field.lat && wizardState.field.lon);
+
       const calendar = await generateFieldCalendar(wizardState.field.id, {
         cultura: wizardState.selectedCulture,
         planting_date: wizardState.plantingDate,
+        usar_clima,
       });
 
       setWizardState({ ...wizardState, calendar });
@@ -696,6 +700,26 @@ export function GuidedPlanningWizard({
                 </div>
               </div>
             </div>
+
+            {/* Weather Integration Info */}
+            {wizardState.field?.lat && wizardState.field?.lon && (
+              <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-cyan-400 mb-2">Clima Integrado Ativo</h4>
+                    <p className="text-xs text-cyan-200/90 mb-2">
+                      Para os próximos 16 dias usamos previsão meteorológica real. 
+                      Depois disso usamos climatologia/histórico, não previsão exata.
+                    </p>
+                    <p className="text-xs text-cyan-200/70">
+                      📍 {wizardState.field.municipio}/{wizardState.field.uf} • 
+                      {wizardState.field.lat.toFixed(2)}, {wizardState.field.lon.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="planting-date">Data de Plantio Desejada</Label>

@@ -311,6 +311,21 @@ export interface CropCalendarTask {
   phase?: string;
   adjusted?: boolean;
   original_date?: string;
+  weather_context?: CalendarWeatherContext;
+}
+
+export interface CalendarWeatherContext {
+  active: boolean;
+  source?: string;
+  forecast_type?: "forecast" | "climatology";
+  summary?: string;
+  precipitation_mm?: number;
+  precipitation_probability?: number;
+  temperature_min?: number;
+  temperature_max?: number;
+  recommendation?: string;
+  confidence?: "alta" | "media" | "baixa";
+  reason?: string;
 }
 
 export interface CropCalendarResponse {
@@ -327,6 +342,14 @@ export interface CropCalendarResponse {
   has_adjusted_tasks?: boolean;
   adjusted_tasks_count?: number;
   calendar_warnings?: string[];
+  weather_enabled?: boolean;
+  weather_summary?: {
+    forecast_tasks: number;
+    climatology_tasks: number;
+    no_weather_tasks: number;
+    sources: string[];
+  };
+  weather_warnings?: string[];
   cautela?: string;
   cycle_info?: {
     optimal_temp_min: number;
@@ -345,6 +368,7 @@ export interface CropCalendarResponse {
 export interface GenerateFieldCalendarPayload {
   cultura: string;
   planting_date: string;
+  usar_clima?: boolean;
 }
 
 export interface CropInfo {

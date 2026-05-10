@@ -84,6 +84,7 @@ export default function PlanejamentoPage() {
   const [calendarForm, setCalendarForm] = useState({
     cultura: 'soja',
     planting_date: '',
+    usar_clima: false,
   });
 
   useEffect(() => {
@@ -213,6 +214,16 @@ export default function PlanejamentoPage() {
       setGeneratingCalendar(true);
       setError(null);
       setSelectedField(fieldId);
+
+      // Find the field to check for lat/lon
+      const field = fields.find(f => f.id === fieldId);
+      
+      // If usar_clima is true but no lat/lon, show warning
+      if (calendarForm.usar_clima && field && (!field.lat || !field.lon)) {
+        setError('Para usar clima integrado, informe latitude e longitude do talhão.');
+        setGeneratingCalendar(false);
+        return;
+      }
 
       const result = await generateFieldCalendar(fieldId, calendarForm);
       setCalendar(result);
@@ -706,6 +717,21 @@ export default function PlanejamentoPage() {
                             />
                           </div>
 
+                          {/* Weather Toggle */}
+                          {field.lat && field.lon && (
+                            <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={calendarForm.usar_clima}
+                                onChange={(e) =>
+                                  setCalendarForm({ ...calendarForm, usar_clima: e.target.checked })
+                                }
+                                className="rounded border-white/10 bg-slate-900/50 text-cyan-600 focus:ring-cyan-400/20"
+                              />
+                              <span>Usar clima integrado</span>
+                            </label>
+                          )}
+
                           <Button
                             size="sm"
                             className="w-full bg-cyan-600 hover:bg-cyan-700 h-8 text-xs"
@@ -749,6 +775,49 @@ export default function PlanejamentoPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Weather Summary */}
+              {calendar.weather_enabled && calendar.weather_summary && (
+                <div className="mb-4 p-4 rounded-lg border border-cyan-500/30 bg-cyan-500/10 backdrop-blur-sm">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-cyan-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-cyan-400 mb-2">Clima Integrado Ativo</h4>
+                      <div className="grid grid-cols-3 gap-3 text-xs text-cyan-200/90">
+                        <div>
+                          <span className="font-medium">Previsão Real:</span>{' '}
+                          {calendar.weather_summary.forecast_tasks} tarefa(s)
+                        </div>
+                        <div>
+                          <span className="font-medium">Climatologia:</span>{' '}
+                          {calendar.weather_summary.climatology_tasks} tarefa(s)
+                        </div>
+                        <div>
+                          <span className="font-medium">Fontes:</span>{' '}
+                          {calendar.weather_summary.sources.join(', ')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Weather Warnings */}
+              {calendar.weather_warnings && calendar.weather_warnings.length > 0 && (
+                <div className="mb-4 p-4 rounded-lg border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-blue-400 mb-2">Informações Climáticas</h4>
+                      <ul className="space-y-1 text-xs text-blue-200/90">
+                        {calendar.weather_warnings.map((warning, idx) => (
+                          <li key={idx}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Warnings */}
               {calendar.calendar_warnings && calendar.calendar_warnings.length > 0 && (
                 <div className="mb-4 p-4 rounded-lg border border-amber-500/30 bg-amber-500/10 backdrop-blur-sm">
@@ -780,57 +849,122 @@ export default function PlanejamentoPage() {
                 {calendar.tasks.map((task, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-3 p-3 rounded-lg border border-white/10 bg-slate-950/40 backdrop-blur-sm hover:border-emerald-500/20 transition-colors"
+                    className="flex flex-col gap-3 p-3 rounded-lg border border-white/10 bg-slate-950/40 backdrop-blur-sm hover:border-emerald-500/20 transition-colors"
                   >
-                    <div className="text-sm text-slate-400 min-w-[80px]">
-                      {formatDateBR(task.date)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <h4 className="font-medium text-white">{task.title}</h4>
-                        {task.priority && (
-                          <Badge
-                            variant={
-                              task.priority === 'critical'
-                                ? 'destructive'
+                    <div className="flex items-start gap-3">
+                      <div className="text-sm text-slate-400 min-w-[80px]">
+                        {formatDateBR(task.date)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <h4 className="font-medium text-white">{task.title}</h4>
+                          {task.priority && (
+                            <Badge
+                              variant={
+                                task.priority === 'critical'
+                                  ? 'destructive'
+                                  : task.priority === 'high'
+                                  ? 'default'
+                                  : 'secondary'
+                              }
+                              className={`text-xs ${
+                                task.priority === 'critical'
+                                  ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                                  : task.priority === 'high'
+                                  ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                                  : task.priority === 'medium'
+                                  ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                                  : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                              }`}
+                            >
+                              {task.priority === 'critical'
+                                ? 'Crítica'
                                 : task.priority === 'high'
-                                ? 'default'
-                                : 'secondary'
-                            }
-                            className={`text-xs ${
-                              task.priority === 'critical'
-                                ? 'bg-red-500/20 text-red-400 border-red-500/30'
-                                : task.priority === 'high'
-                                ? 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                                ? 'Alta'
                                 : task.priority === 'medium'
-                                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                                : 'bg-slate-500/20 text-slate-400 border-slate-500/30'
-                            }`}
-                          >
-                            {task.priority === 'critical'
-                              ? 'Crítica'
-                              : task.priority === 'high'
-                              ? 'Alta'
-                              : task.priority === 'medium'
-                              ? 'Média'
-                              : 'Baixa'}
-                          </Badge>
-                        )}
-                        {task.weather_sensitive && (
-                          <Badge variant="outline" className="text-xs text-cyan-400 border-cyan-400/30 bg-cyan-500/10">
-                            Sensível ao clima
-                          </Badge>
-                        )}
-                        {task.adjusted && (
-                          <Badge variant="outline" className="text-xs text-amber-400 border-amber-400/30 bg-amber-500/10">
-                            Ajustada
-                          </Badge>
+                                ? 'Média'
+                                : 'Baixa'}
+                            </Badge>
+                          )}
+                          {task.weather_sensitive && (
+                            <Badge variant="outline" className="text-xs text-cyan-400 border-cyan-400/30 bg-cyan-500/10">
+                              Sensível ao clima
+                            </Badge>
+                          )}
+                          {task.adjusted && (
+                            <Badge variant="outline" className="text-xs text-amber-400 border-amber-400/30 bg-amber-500/10">
+                              Ajustada
+                            </Badge>
+                          )}
+                        </div>
+                        {task.description && (
+                          <p className="text-sm text-slate-400">{task.description}</p>
                         )}
                       </div>
-                      {task.description && (
-                        <p className="text-sm text-slate-400">{task.description}</p>
-                      )}
                     </div>
+
+                    {/* Weather Context */}
+                    {task.weather_context && task.weather_context.active && (
+                      <div
+                        className={`p-3 rounded-lg border ${
+                          task.weather_context.forecast_type === 'forecast'
+                            ? 'border-cyan-500/30 bg-cyan-500/10'
+                            : 'border-amber-500/30 bg-amber-500/10'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span
+                                className={`text-xs font-semibold ${
+                                  task.weather_context.forecast_type === 'forecast'
+                                    ? 'text-cyan-400'
+                                    : 'text-amber-400'
+                                }`}
+                              >
+                                {task.weather_context.forecast_type === 'forecast'
+                                  ? '🌤️ Previsão Real'
+                                  : '📊 Climatologia'}
+                              </span>
+                              <Badge
+                                variant="outline"
+                                className={`text-xs ${
+                                  task.weather_context.confidence === 'alta'
+                                    ? 'border-emerald-500/30 text-emerald-400'
+                                    : 'border-amber-500/30 text-amber-400'
+                                }`}
+                              >
+                                {task.weather_context.confidence === 'alta'
+                                  ? 'Alta confiança'
+                                  : task.weather_context.confidence === 'media'
+                                  ? 'Média confiança'
+                                  : 'Baixa confiança'}
+                              </Badge>
+                            </div>
+                            <p
+                              className={`text-xs mb-2 ${
+                                task.weather_context.forecast_type === 'forecast'
+                                  ? 'text-cyan-200/90'
+                                  : 'text-amber-200/90'
+                              }`}
+                            >
+                              {task.weather_context.summary}
+                            </p>
+                            {task.weather_context.recommendation && (
+                              <p
+                                className={`text-xs font-medium ${
+                                  task.weather_context.forecast_type === 'forecast'
+                                    ? 'text-cyan-300'
+                                    : 'text-amber-300'
+                                }`}
+                              >
+                                💡 {task.weather_context.recommendation}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
