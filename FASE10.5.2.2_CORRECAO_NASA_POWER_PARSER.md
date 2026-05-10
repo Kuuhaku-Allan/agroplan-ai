@@ -317,18 +317,143 @@ git push origin main
 - [x] CLI 1.0.37 publicada
 - [x] Frontend build passa
 - [x] Commit e push realizados
-- [ ] Render deploy verificado (próxima fase)
+- [x] Render deploy verificado
+
+## 🌐 Verificação em Produção
+
+### Render Version Check
+```bash
+GET https://agroplan-ai-api.onrender.com/debug/version
+```
+
+**Resultado**:
+```json
+{
+  "backend_template_version": "1.0.37",
+  "cli_version": "1.0.37",
+  "features": [..., "nasa_power_parser_fix"]
+}
+```
+✅ **Render atualizado para v1.0.37**
+
+### NASA POWER Endpoint
+```bash
+GET https://agroplan-ai-api.onrender.com/dados/clima/nasa-power?lat=-21.56&lon=-50.45&month=5
+```
+
+**Resultado**:
+```json
+{
+  "source": "nasa-power",
+  "forecast_type": "climatology",
+  "month": 5,
+  "month_key": "MAY",
+  "temperature_avg": 20.7,
+  "temperature_max": 33.1,
+  "temperature_min": 6.1,
+  "precipitation_expected": "Chuvas ocasionais",
+  "precipitation_daily_avg": 2.4,
+  "precipitation_monthly_total": 71.0,
+  "confidence": "media"
+}
+```
+✅ **NASA POWER funcionando em produção**
+
+### Debug Endpoint
+```bash
+GET https://agroplan-ai-api.onrender.com/dados/clima/nasa-power/debug?lat=-21.56&lon=-50.45&month=5
+```
+
+**Resultado**:
+```json
+{
+  "status": "success",
+  "month_key": "MAY",
+  "parameter_keys": {
+    "T2M": ["JAN", "FEB", "MAR", "APR", "MAY", ...],
+    "PRECTOTCORR_SUM": ["JAN", "FEB", "MAR", "APR", "MAY", ...]
+  },
+  "extracted_values": {
+    "T2M": 20.66,
+    "T2M_MAX": 33.13,
+    "T2M_MIN": 6.14,
+    "PRECTOTCORR": 2.29,
+    "PRECTOTCORR_SUM": 71.04
+  }
+}
+```
+✅ **Parser lendo chaves alfabéticas corretamente**
+
+### Calendário com Clima
+```bash
+POST https://agroplan-ai-api.onrender.com/planejamento/calendario
+{
+  "cultura": "milho",
+  "planting_date": "2026-05-10",
+  "usar_clima": true,
+  "field": {
+    "lat": -21.56,
+    "lon": -50.45,
+    ...
+  }
+}
+```
+
+**Resultado**:
+```json
+{
+  "weather_enabled": true,
+  "weather_summary": {
+    "forecast_tasks": 2,
+    "climatology_tasks": 6,
+    "no_weather_tasks": 7,
+    "sources": ["nasa-power", "open-meteo"]
+  },
+  "tasks": [
+    {
+      "date": "2026-05-10",
+      "title": "Plantar milho",
+      "weather_context": {
+        "source": "open-meteo",
+        "forecast_type": "forecast"
+      }
+    },
+    {
+      "date": "2026-09-27",
+      "title": "Colher milho",
+      "weather_context": {
+        "source": "nasa-power",
+        "forecast_type": "climatology"
+      }
+    }
+  ]
+}
+```
+✅ **Calendário usando Open-Meteo (0-16 dias) e NASA POWER (17+ dias)**
+
+### Hierarquia de Fontes Confirmada
+
+1. **0-16 dias**: Open-Meteo (previsão meteorológica real)
+2. **17+ dias**: NASA POWER (climatologia/histórico)
+3. **Fallback**: climate-fallback local (apenas se NASA POWER falhar)
 
 ## 🏆 Conclusão
 
 **Fase 10.5.2.2 concluída com sucesso!**
 
-O parser NASA POWER agora funciona corretamente:
+O parser NASA POWER agora funciona corretamente em **local e produção**:
 - ✅ Lê chaves alfabéticas (MAY, JUN, etc.)
 - ✅ Tem fallback robusto para formatos alternativos
 - ✅ Retorna precipitação diária e mensal
 - ✅ Integra com calendário agrícola
 - ✅ Endpoint debug para diagnóstico
 - ✅ CLI 1.0.37 publicada
+- ✅ Render v1.0.37 verificado
+- ✅ NASA POWER ativo em produção
 
-**Próximo passo**: Verificar deploy no Render e confirmar que NASA POWER está ativo em produção.
+**Sistema de clima completo e funcional**:
+- 0-16 dias: Previsão real (Open-Meteo)
+- 17+ dias: Climatologia (NASA POWER)
+- Fallback: Dados locais simplificados
+
+**Próximo passo**: Fase 10.6 — Replanejamento por Imprevistos (agora que a base climática está correta).
