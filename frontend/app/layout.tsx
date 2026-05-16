@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/layout/app-shell";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AdvancedModeProvider } from "@/context/AdvancedModeContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,7 +24,9 @@ export default function RootLayout({
     <html lang="pt-BR" className="dark">
       <body className={`${inter.variable} font-sans antialiased`}>
         <TooltipProvider>
-          <AppShell>{children}</AppShell>
+          <AdvancedModeProvider>
+            <AppShell>{children}</AppShell>
+          </AdvancedModeProvider>
         </TooltipProvider>
       </body>
     </html>

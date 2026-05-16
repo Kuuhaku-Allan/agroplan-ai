@@ -26,7 +26,6 @@ import {
   Navigation,
   Layers,
   Mountain,
-  Droplets,
   AlertCircle,
 } from "lucide-react";
 import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
@@ -34,11 +33,15 @@ import { formatDateBRWithYear } from "@/lib/date-utils";
 import type { ClimateLocation } from "@/lib/types/climate";
 import type { ManualField, ManualFieldCreate, CropCalendarResponse } from "@/lib/types";
 import { createPlanningField, generateFieldCalendar } from "@/lib/api";
+import type { AssistantLevel } from "@/lib/settings";
 
 interface GuidedPlanningWizardProps {
   existingFields: ManualField[];
   cultures: string[];
   currentRegion: ClimateLocation | null;
+  assistantLevel: AssistantLevel;
+  canUseClimate: boolean;
+  showGuidedExplanations: boolean;
   onRegionChange: (location: ClimateLocation | null) => void;
   onComplete: (calendar: CropCalendarResponse) => void;
   onCancel: () => void;
@@ -57,10 +60,17 @@ interface WizardState {
   calendar: CropCalendarResponse | null;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export function GuidedPlanningWizard({
   existingFields,
   cultures,
   currentRegion,
+  assistantLevel,
+  canUseClimate,
+  showGuidedExplanations,
   onRegionChange,
   onComplete,
   onCancel,
@@ -75,7 +85,7 @@ export function GuidedPlanningWizard({
     field: null,
     newFieldData: null,
     objective: "equilibrado",
-    experienceLevel: "iniciante",
+    experienceLevel: assistantLevel === "manual" ? "avancado" : assistantLevel,
     selectedCulture: "soja",
     plantingDate: "",
     calendar: null,
@@ -116,8 +126,8 @@ export function GuidedPlanningWizard({
       const createdField = await createPlanningField(wizardState.newFieldData);
       setWizardState({ ...wizardState, field: createdField });
       setCurrentStep("profile");
-    } catch (err: any) {
-      setError(err.message || "Erro ao criar talhão");
+    } catch (err) {
+      setError(getErrorMessage(err, "Erro ao criar talhão"));
     } finally {
       setLoading(false);
     }
@@ -133,8 +143,7 @@ export function GuidedPlanningWizard({
       setLoading(true);
       setError(null);
 
-      // Enable weather by default if field has lat/lon
-      const usar_clima = !!(wizardState.field.lat && wizardState.field.lon);
+      const usar_clima = canUseClimate && !!(wizardState.field.lat && wizardState.field.lon);
 
       const calendar = await generateFieldCalendar(wizardState.field.id, {
         cultura: wizardState.selectedCulture,
@@ -144,8 +153,8 @@ export function GuidedPlanningWizard({
 
       setWizardState({ ...wizardState, calendar });
       setCurrentStep("summary");
-    } catch (err: any) {
-      setError(err.message || "Erro ao gerar calendário");
+    } catch (err) {
+      setError(getErrorMessage(err, "Erro ao gerar calendário"));
     } finally {
       setLoading(false);
     }
@@ -170,7 +179,7 @@ export function GuidedPlanningWizard({
       field: null,
       newFieldData: null,
       objective: "equilibrado",
-      experienceLevel: "iniciante",
+      experienceLevel: assistantLevel === "manual" ? "avancado" : assistantLevel,
       selectedCulture: "soja",
       plantingDate: "",
       calendar: null,
@@ -247,9 +256,11 @@ export function GuidedPlanningWizard({
               <MapPin className="h-5 w-5 text-emerald-500" />
               Etapa 1: Selecione a Região
             </CardTitle>
-            <CardDescription>
-              Escolha a localização do seu talhão para obter recomendações precisas
-            </CardDescription>
+            {showGuidedExplanations && (
+              <CardDescription>
+                Escolha a localização do seu talhão para obter recomendações precisas
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {wizardState.region ? (
@@ -320,9 +331,11 @@ export function GuidedPlanningWizard({
               <Sprout className="h-5 w-5 text-emerald-500" />
               Etapa 2: Escolha ou Crie um Talhão
             </CardTitle>
-            <CardDescription>
-              Selecione um talhão existente ou cadastre um novo
-            </CardDescription>
+            {showGuidedExplanations && (
+              <CardDescription>
+                Selecione um talhão existente ou cadastre um novo
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {existingFields.length > 0 && (
@@ -543,9 +556,11 @@ export function GuidedPlanningWizard({
               <Target className="h-5 w-5 text-emerald-500" />
               Etapa 3: Defina seu Objetivo
             </CardTitle>
-            <CardDescription>
-              Conte-nos sobre suas prioridades e experiência
-            </CardDescription>
+            {showGuidedExplanations && (
+              <CardDescription>
+                Conte-nos sobre suas prioridades e experiência
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
@@ -624,17 +639,21 @@ export function GuidedPlanningWizard({
               <Sprout className="h-5 w-5 text-emerald-500" />
               Etapa 4: Culturas Recomendadas
             </CardTitle>
-            <CardDescription>
-              Baseado no seu perfil e região, recomendamos estas culturas
-            </CardDescription>
+            {showGuidedExplanations && (
+              <CardDescription>
+                Baseado no seu perfil e região, recomendamos estas culturas
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
-              <p className="text-sm text-amber-400">
-                💡 <strong>Dica:</strong> As recomendações consideram seu objetivo ({wizardState.objective}), 
-                características do talhão e dados climáticos da região.
-              </p>
-            </div>
+            {showGuidedExplanations && (
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
+                <p className="text-sm text-amber-400">
+                  💡 <strong>Dica:</strong> As recomendações consideram seu objetivo ({wizardState.objective}), 
+                  características do talhão e {canUseClimate ? 'dados climáticos da região' : 'os dados do talhão'}.
+                </p>
+              </div>
+            )}
 
             <div className="space-y-3">
               {cultures.slice(0, 3).map((culture) => (
@@ -683,9 +702,11 @@ export function GuidedPlanningWizard({
               <Calendar className="h-5 w-5 text-emerald-500" />
               Etapa 5: Defina a Data de Plantio
             </CardTitle>
-            <CardDescription>
-              Escolha quando deseja plantar {wizardState.selectedCulture}
-            </CardDescription>
+            {showGuidedExplanations && (
+              <CardDescription>
+                Escolha quando deseja plantar {wizardState.selectedCulture}
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-lg border border-white/10 bg-slate-950/40 p-4">
@@ -702,16 +723,18 @@ export function GuidedPlanningWizard({
             </div>
 
             {/* Weather Integration Info */}
-            {wizardState.field?.lat && wizardState.field?.lon && (
+            {wizardState.field?.lat && wizardState.field?.lon && canUseClimate && (
               <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-4">
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-cyan-500 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <h4 className="font-semibold text-cyan-400 mb-2">Clima Integrado Ativo</h4>
-                    <p className="text-xs text-cyan-200/90 mb-2">
-                      Para os próximos 16 dias usamos previsão meteorológica real. 
-                      Depois disso usamos climatologia/histórico, não previsão exata.
-                    </p>
+                    {showGuidedExplanations && (
+                      <p className="text-xs text-cyan-200/90 mb-2">
+                        Para os próximos 16 dias usamos previsão meteorológica real. 
+                        Depois disso usamos climatologia/histórico, não previsão exata.
+                      </p>
+                    )}
                     <p className="text-xs text-cyan-200/70">
                       📍 {wizardState.field.municipio}/{wizardState.field.uf} • 
                       {wizardState.field.lat.toFixed(2)}, {wizardState.field.lon.toFixed(2)}
@@ -721,11 +744,29 @@ export function GuidedPlanningWizard({
               </div>
             )}
 
+            {wizardState.field?.lat && wizardState.field?.lon && !canUseClimate && (
+              <div className="rounded-lg border border-slate-700/70 bg-slate-950/60 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-slate-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-slate-300 mb-1">
+                      Clima integrado desativado
+                    </h4>
+                    <p className="text-xs text-slate-500">
+                      O calendário guiado será gerado sem acionar dados climáticos.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
               <Label htmlFor="planting-date">Data de Plantio Desejada</Label>
-              <p className="text-xs text-slate-400 mt-1 mb-2">
-                Algumas tarefas, como preparo do solo, podem ser planejadas antes da data de plantio.
-              </p>
+              {showGuidedExplanations && (
+                <p className="text-xs text-slate-400 mt-1 mb-2">
+                  Algumas tarefas, como preparo do solo, podem ser planejadas antes da data de plantio.
+                </p>
+              )}
               <Input
                 id="planting-date"
                 type="date"
@@ -775,9 +816,11 @@ export function GuidedPlanningWizard({
               <CheckCircle2 className="h-5 w-5 text-emerald-500" />
               Etapa 6: Resumo do Planejamento
             </CardTitle>
-            <CardDescription>
-              Seu calendário agrícola foi gerado com sucesso!
-            </CardDescription>
+            {showGuidedExplanations && (
+              <CardDescription>
+                Seu calendário agrícola foi gerado com sucesso!
+              </CardDescription>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -837,13 +880,15 @@ export function GuidedPlanningWizard({
               </div>
             </div>
 
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
-              <p className="text-sm text-amber-400">
-                💡 <strong>Próximos Passos:</strong> Acompanhe as tarefas do calendário, 
-                monitore o clima e ajuste conforme necessário. Você pode voltar ao modo manual 
-                para editar ou criar novos planejamentos.
-              </p>
-            </div>
+            {showGuidedExplanations && (
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
+                <p className="text-sm text-amber-400">
+                  💡 <strong>Próximos Passos:</strong> Acompanhe as tarefas do calendário, 
+                  {canUseClimate ? ' monitore o clima e' : ''} ajuste conforme necessário.
+                  Você pode voltar ao modo manual para editar ou criar novos planejamentos.
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-between gap-3 pt-4">
               <Button variant="outline" onClick={handleRestart}>

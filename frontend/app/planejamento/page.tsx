@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,11 +32,7 @@ import {
   Wand2,
   Settings,
   AlertTriangle,
-  TriangleAlert,
-  Zap,
   ShieldAlert,
-  Bug,
-  Microscope,
   RefreshCw,
   ChevronDown,
   ChevronUp,
@@ -51,12 +48,11 @@ import {
   replanCalendar,
   applyReplanningSuggestion,
 } from '@/lib/api';
-import { formatDateBR, formatDateBRWithYear, isPastDate } from '@/lib/date-utils';
+import { formatDateBR, formatDateBRWithYear } from '@/lib/date-utils';
 import type {
   ManualField,
   ManualFieldCreate,
   CropCalendarResponse,
-  CropInfo,
   ReplanningEvent,
   ReplanningEventType,
   ReplanningResponse,
@@ -67,15 +63,47 @@ import { ClimateRegionSelector } from '@/components/climate/climate-region-selec
 import { GuidedPlanningWizard } from '@/components/planning/guided-planning-wizard';
 import type { ClimateLocation } from '@/lib/types/climate';
 import { CLIMATE_STORAGE_KEY } from '@/lib/types/climate';
+import { useAdvancedMode } from '@/hooks/useAdvancedMode';
+import {
+  ASSISTANT_LEVEL_LABELS,
+  buildCalendarPayloadWithSettings,
+} from '@/lib/settings';
 
 
 type PlanningMode = 'manual' | 'guided';
 
+type ReplanningChangeLogEntry = {
+  action: string;
+  old_date: string;
+  new_date: string;
+  [key: string]: unknown;
+};
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export default function PlanejamentoPage() {
+  const {
+    settings: advancedSettings,
+    canUseClimate,
+    canUseReplanning,
+    canShowGuidedExplanations,
+    canUseGuidedMode,
+  } = useAdvancedMode();
+
+  const climateEnabled = canUseClimate();
+  const replanningEnabled = canUseReplanning();
+  const guidedExplanationsEnabled = canShowGuidedExplanations();
+  const guidedModeEnabled = canUseGuidedMode();
+  const guidedModeSuggested =
+    advancedSettings.assistant_level === 'iniciante' ||
+    advancedSettings.assistant_level === 'intermediario';
+  const manualModePreferred = advancedSettings.assistant_level === 'manual';
+
   const [mode, setMode] = useState<PlanningMode>('manual');
   const [fields, setFields] = useState<ManualField[]>([]);
   const [cultures, setCultures] = useState<string[]>([]);
-  const [culturesInfo, setCulturesInfo] = useState<Record<string, CropInfo>>({});
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [generatingCalendar, setGeneratingCalendar] = useState(false);
@@ -102,7 +130,7 @@ export default function PlanejamentoPage() {
   const [originalCalendar, setOriginalCalendar] = useState<CropCalendarResponse | null>(null);
   const [calendarView, setCalendarView] = useState<'original' | 'adjusted'>('original');
   const [adjustedCalendar, setAdjustedCalendar] = useState<CropCalendarResponse | null>(null);
-  const [changeLog, setChangeLog] = useState<any[]>([]);
+  const [changeLog, setChangeLog] = useState<ReplanningChangeLogEntry[]>([]);
   const [applyLoading, setApplyLoading] = useState<string | null>(null);
 
 
@@ -191,7 +219,6 @@ export default function PlanejamentoPage() {
 
       setFields(fieldsData.talhoes || []);
       setCultures(culturesData.culturas || []);
-      setCulturesInfo(culturesData.detalhes || {});
     } catch (err) {
       setError('Erro ao carregar dados. Verifique se a API está rodando.');
       console.error(err);
@@ -224,8 +251,8 @@ export default function PlanejamentoPage() {
       });
       
       await loadData();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao criar talhão');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Erro ao criar talhão'));
     } finally {
       setCreating(false);
     }
@@ -247,8 +274,8 @@ export default function PlanejamentoPage() {
         setAdjustedCalendar(null);
         setChangeLog([]);
       }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao remover talhão');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Erro ao remover talhão'));
     }
   }
 
@@ -260,15 +287,24 @@ export default function PlanejamentoPage() {
 
       // Find the field to check for lat/lon
       const field = fields.find(f => f.id === fieldId);
+      const wantsClimate = climateEnabled && calendarForm.usar_clima;
       
       // If usar_clima is true but no lat/lon, show warning
-      if (calendarForm.usar_clima && field && (!field.lat || !field.lon)) {
+      if (wantsClimate && field && (!field.lat || !field.lon)) {
         setError('Para usar clima integrado, informe latitude e longitude do talhão.');
         setGeneratingCalendar(false);
         return;
       }
 
-      const result = await generateFieldCalendar(fieldId, calendarForm);
+      const payload = buildCalendarPayloadWithSettings(
+        {
+          ...calendarForm,
+          usar_clima: wantsClimate,
+        },
+        advancedSettings,
+      );
+
+      const result = await generateFieldCalendar(fieldId, payload);
       setCalendar(result);
       setOriginalCalendar(result);
       setAdjustedCalendar(null);
@@ -276,8 +312,8 @@ export default function PlanejamentoPage() {
       setChangeLog([]);
       setReplanResult(null); // limpar sugestões anteriores ao gerar novo calendário
       setSuccess('Calendário gerado com sucesso!');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao gerar calendário');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Erro ao gerar calendário'));
       setCalendar(null);
     } finally {
       setGeneratingCalendar(false);
@@ -285,6 +321,11 @@ export default function PlanejamentoPage() {
   }
 
   async function handleReplan() {
+    if (!replanningEnabled) {
+      setReplanError('Replanejamento por imprevistos está desativado nas Configurações.');
+      return;
+    }
+
     if (!calendar) return;
     if (!replanningEvent.description.trim()) {
       setReplanError('Descreva o imprevisto antes de continuar.');
@@ -297,19 +338,24 @@ export default function PlanejamentoPage() {
       setReplanResult(null);
 
       const result = await replanCalendar({
-        calendar: calendar as any,
+        calendar,
         event: replanningEvent,
       });
 
       setReplanResult(result);
-    } catch (err: any) {
-      setReplanError(err.message || 'Erro ao processar replanejamento.');
+    } catch (err) {
+      setReplanError(getErrorMessage(err, 'Erro ao processar replanejamento.'));
     } finally {
       setReplanLoading(false);
     }
   }
 
   async function handleApplySuggestion(suggestion: ReplanningSuggestion) {
+    if (!replanningEnabled) {
+      setReplanError('Replanejamento por imprevistos está desativado nas Configurações.');
+      return;
+    }
+
     if (!calendar) return;
 
     if (suggestion.requires_manual_validation) {
@@ -324,7 +370,7 @@ export default function PlanejamentoPage() {
       setReplanError(null);
 
       const result = await applyReplanningSuggestion({
-        calendar: calendar as any,
+        calendar,
         suggestion,
         event: replanningEvent,
       });
@@ -335,17 +381,24 @@ export default function PlanejamentoPage() {
         setOriginalCalendar(result.original_calendar);
       }
       setCalendarView('adjusted');
-      setChangeLog((prev) => [...result.change_log, ...prev]);
+      setChangeLog((prev) => [
+        ...(result.change_log as ReplanningChangeLogEntry[]),
+        ...prev,
+      ]);
       setSuccess('Calendário ajustado em modo de simulação. O calendário original foi preservado.');
       
-    } catch (err: any) {
-      setReplanError(err.message || 'Erro ao aplicar sugestão.');
+    } catch (err) {
+      setReplanError(getErrorMessage(err, 'Erro ao aplicar sugestão.'));
     } finally {
       setApplyLoading(null);
     }
   }
 
   const totalArea = fields.reduce((sum, f) => sum + f.area_ha, 0);
+  const statusBadgeClass = (enabled: boolean) =>
+    enabled
+      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+      : 'border-slate-600/40 bg-slate-800/50 text-slate-400';
 
 
   if (loading) {
@@ -392,6 +445,44 @@ export default function PlanejamentoPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Modular Status */}
+        <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
+          <CardContent className="flex flex-col gap-4 pt-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-slate-300">
+                  Modo atual: {ASSISTANT_LEVEL_LABELS[advancedSettings.assistant_level]}
+                </span>
+                <Badge variant="outline" className={statusBadgeClass(climateEnabled)}>
+                  Clima: {climateEnabled ? 'ligado' : 'desligado'}
+                </Badge>
+                <Badge variant="outline" className={statusBadgeClass(replanningEnabled)}>
+                  Replanejamento: {replanningEnabled ? 'ligado' : 'desligado'}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={statusBadgeClass(guidedExplanationsEnabled)}
+                >
+                  Explicações: {guidedExplanationsEnabled ? 'completas' : 'reduzidas'}
+                </Badge>
+              </div>
+              {guidedExplanationsEnabled && (
+                <p className="text-xs text-slate-500">
+                  As preferências abaixo são aplicadas antes de enviar dados para o backend.
+                </p>
+              )}
+            </div>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="border-white/10 bg-slate-950/40 text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-300"
+            >
+              <Link href="/configuracoes">Editar configurações</Link>
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -451,6 +542,8 @@ export default function PlanejamentoPage() {
             className={`flex-1 p-4 rounded-xl border transition-all ${
               mode === 'manual'
                 ? 'border-emerald-500/50 bg-emerald-500/10'
+                : manualModePreferred
+                ? 'border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/40'
                 : 'border-white/10 bg-slate-950/40 hover:border-emerald-500/30'
             }`}
           >
@@ -458,26 +551,33 @@ export default function PlanejamentoPage() {
               <Settings className="h-5 w-5 text-emerald-500" />
               <h3 className="font-semibold text-white">Cadastro Manual</h3>
             </div>
-            <p className="text-sm text-slate-400 text-center">
-              Para quem já sabe o que quer cadastrar
-            </p>
+            {guidedExplanationsEnabled && (
+              <p className="text-sm text-slate-400 text-center">
+                Para quem já sabe o que quer cadastrar
+              </p>
+            )}
           </button>
 
           <button
             onClick={() => setMode('guided')}
+            disabled={!guidedModeEnabled}
             className={`flex-1 p-4 rounded-xl border transition-all ${
               mode === 'guided'
                 ? 'border-cyan-500/50 bg-cyan-500/10'
+                : guidedModeSuggested
+                ? 'border-cyan-500/30 bg-cyan-500/5 hover:border-cyan-500/40'
                 : 'border-white/10 bg-slate-950/40 hover:border-cyan-500/30'
-            }`}
+            } disabled:cursor-not-allowed disabled:opacity-50`}
           >
             <div className="flex items-center justify-center gap-2 mb-2">
               <Wand2 className="h-5 w-5 text-cyan-500" />
               <h3 className="font-semibold text-white">Planejamento Guiado</h3>
             </div>
-            <p className="text-sm text-slate-400 text-center">
-              Passo a passo com recomendações personalizadas
-            </p>
+            {guidedExplanationsEnabled && (
+              <p className="text-sm text-slate-400 text-center">
+                Passo a passo com recomendações personalizadas
+              </p>
+            )}
           </button>
         </div>
 
@@ -487,6 +587,9 @@ export default function PlanejamentoPage() {
             existingFields={fields}
             cultures={cultures}
             currentRegion={currentRegion}
+            assistantLevel={advancedSettings.assistant_level}
+            canUseClimate={climateEnabled}
+            showGuidedExplanations={guidedExplanationsEnabled}
             onRegionChange={handleRegionSelect}
             onComplete={(calendar) => {
               setCalendar(calendar);
@@ -828,11 +931,11 @@ export default function PlanejamentoPage() {
                           </div>
 
                           {/* Weather Toggle */}
-                          {field.lat && field.lon && (
+                          {field.lat && field.lon && climateEnabled && (
                             <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
                               <input
                                 type="checkbox"
-                                checked={calendarForm.usar_clima}
+                                checked={calendarForm.usar_clima && climateEnabled}
                                 onChange={(e) =>
                                   setCalendarForm({ ...calendarForm, usar_clima: e.target.checked })
                                 }
@@ -840,6 +943,12 @@ export default function PlanejamentoPage() {
                               />
                               <span>Usar clima integrado</span>
                             </label>
+                          )}
+
+                          {field.lat && field.lon && !climateEnabled && (
+                            <div className="rounded-lg border border-slate-700/70 bg-slate-950/60 p-2 text-xs text-slate-400">
+                              Clima integrado está desativado nas Configurações.
+                            </div>
                           )}
 
                           <Button
@@ -937,7 +1046,7 @@ export default function PlanejamentoPage() {
             </CardHeader>
             <CardContent>
               {/* Weather Summary */}
-              {calendar.weather_enabled && calendar.weather_summary && (
+              {climateEnabled && calendar.weather_enabled && calendar.weather_summary && (
                 <div className="mb-4 p-4 rounded-lg border border-cyan-500/30 bg-cyan-500/10 backdrop-blur-sm">
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="h-5 w-5 text-cyan-500 flex-shrink-0 mt-0.5" />
@@ -963,7 +1072,7 @@ export default function PlanejamentoPage() {
               )}
 
               {/* Weather Warnings */}
-              {calendar.weather_warnings && calendar.weather_warnings.length > 0 && (
+              {climateEnabled && calendar.weather_warnings && calendar.weather_warnings.length > 0 && (
                 <div className="mb-4 p-4 rounded-lg border border-blue-500/30 bg-blue-500/10 backdrop-blur-sm">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
@@ -1047,7 +1156,7 @@ export default function PlanejamentoPage() {
                                 : 'Baixa'}
                             </Badge>
                           )}
-                          {task.weather_sensitive && (
+                          {climateEnabled && task.weather_sensitive && (
                             <Badge variant="outline" className="text-xs text-cyan-400 border-cyan-400/30 bg-cyan-500/10">
                               Sensível ao clima
                             </Badge>
@@ -1083,7 +1192,7 @@ export default function PlanejamentoPage() {
                     </div>
 
                     {/* Weather Context */}
-                    {task.weather_context && task.weather_context.active && (
+                    {climateEnabled && task.weather_context && task.weather_context.active && (
                       <div
                         className={`p-3 rounded-lg border ${
                           task.weather_context.forecast_type === 'forecast'
@@ -1156,7 +1265,7 @@ export default function PlanejamentoPage() {
         )}
 
         {/* ===== Seção Registrar Imprevisto (Fase 10.6) ===== */}
-        {calendar && (
+        {calendar && replanningEnabled && (
           <Card className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-slate-900/80 via-amber-950/10 to-slate-950/70 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.25)]">
             <CardHeader
               className="cursor-pointer select-none"
@@ -1421,8 +1530,24 @@ export default function PlanejamentoPage() {
           </Card>
         )}
 
+        {calendar && !replanningEnabled && (
+          <Card className="rounded-2xl border border-slate-700/60 bg-slate-900/40 backdrop-blur-sm">
+            <CardContent className="flex items-start gap-3 pt-6">
+              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-slate-500" />
+              <div>
+                <p className="text-sm font-medium text-slate-300">
+                  Replanejamento por imprevistos está desativado nas Configurações.
+                </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  O calendário continua disponível, mas a tela não permite registrar imprevistos.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Histórico de Replanejamento */}
-        {changeLog.length > 0 && (
+        {replanningEnabled && changeLog.length > 0 && (
           <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm mt-8">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">

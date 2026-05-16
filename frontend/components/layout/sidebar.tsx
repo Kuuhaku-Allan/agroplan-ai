@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  MapPin, 
-  Layers, 
-  Dna, 
-  CheckCircle2, 
+import {
+  LayoutDashboard,
+  MapPin,
+  Layers,
+  Dna,
+  CheckCircle2,
   FileText,
   Scale,
   Info,
-  CalendarDays
+  CalendarDays,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ const menuItems = [
   { href: "/comparacao-mercado", label: "Comparação Mercado", icon: Scale },
   { href: "/relatorios", label: "Relatórios", icon: FileText },
   { href: "/sobre", label: "Sobre", icon: Info },
+  { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 export function Sidebar() {
