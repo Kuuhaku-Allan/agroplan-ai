@@ -726,3 +726,26 @@ export async function getPlanningCultureInfo(cultura: string): Promise<CropInfo>
   const response = await apiFetch(`/planejamento/culturas/${cultura}`);
   return response.json();
 }
+
+/**
+ * Envia um imprevisto e o calendário atual para o motor de replanejamento.
+ * Retorna sugestões de ajuste sem aplicá-las automaticamente.
+ */
+export async function replanCalendar(payload: {
+  calendar: import('./types').CropCalendarResponse;
+  event: import('./types').ReplanningEvent;
+}): Promise<import('./types').ReplanningResponse> {
+  const response = await apiFetch('/planejamento/replanejar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Erro desconhecido' }));
+    throw new Error(errorData.detail || `Falha ao processar replanejamento: ${response.status}`);
+  }
+
+  return response.json();
+}
+

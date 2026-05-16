@@ -30,6 +30,17 @@ import {
   Navigation,
   Wand2,
   Settings,
+  AlertTriangle,
+  TriangleAlert,
+  Zap,
+  ShieldAlert,
+  Bug,
+  Microscope,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  ClipboardList,
+  Lock,
 } from 'lucide-react';
 import {
   getPlanningFields,
@@ -37,6 +48,7 @@ import {
   deletePlanningField,
   generateFieldCalendar,
   getPlanningCultures,
+  replanCalendar,
 } from '@/lib/api';
 import { formatDateBR, formatDateBRWithYear, isPastDate } from '@/lib/date-utils';
 import type {
@@ -44,11 +56,17 @@ import type {
   ManualFieldCreate,
   CropCalendarResponse,
   CropInfo,
+  ReplanningEvent,
+  ReplanningEventType,
+  ReplanningResponse,
+  ReplanningSuggestion,
 } from '@/lib/types';
+import { REPLANNING_EVENT_LABELS } from '@/lib/types';
 import { ClimateRegionSelector } from '@/components/climate/climate-region-selector';
 import { GuidedPlanningWizard } from '@/components/planning/guided-planning-wizard';
 import type { ClimateLocation } from '@/lib/types/climate';
 import { CLIMATE_STORAGE_KEY } from '@/lib/types/climate';
+
 
 type PlanningMode = 'manual' | 'guided';
 
@@ -66,6 +84,22 @@ export default function PlanejamentoPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showRegionSelector, setShowRegionSelector] = useState(false);
   const [currentRegion, setCurrentRegion] = useState<ClimateLocation | null>(null);
+
+  // Replanning state (Fase 10.6)
+  const [showReplanPanel, setShowReplanPanel] = useState(false);
+  const [replanningEvent, setReplanningEvent] = useState<ReplanningEvent>({
+    event_type: 'missed_irrigation',
+    date: new Date().toISOString().split('T')[0],
+    description: '',
+    affected_task_id: undefined,
+    severity: undefined,
+    notes: undefined,
+  });
+  const [replanLoading, setReplanLoading] = useState(false);
+  const [replanResult, setReplanResult] = useState<ReplanningResponse | null>(null);
+  const [replanError, setReplanError] = useState<string | null>(null);
+
+
 
   // Form state
   const [formData, setFormData] = useState<ManualFieldCreate>({
@@ -227,6 +261,7 @@ export default function PlanejamentoPage() {
 
       const result = await generateFieldCalendar(fieldId, calendarForm);
       setCalendar(result);
+      setReplanResult(null); // limpar sugestões anteriores ao gerar novo calendário
       setSuccess('Calendário gerado com sucesso!');
     } catch (err: any) {
       setError(err.message || 'Erro ao gerar calendário');
@@ -236,7 +271,33 @@ export default function PlanejamentoPage() {
     }
   }
 
+  async function handleReplan() {
+    if (!calendar) return;
+    if (!replanningEvent.description.trim()) {
+      setReplanError('Descreva o imprevisto antes de continuar.');
+      return;
+    }
+
+    try {
+      setReplanLoading(true);
+      setReplanError(null);
+      setReplanResult(null);
+
+      const result = await replanCalendar({
+        calendar: calendar as any,
+        event: replanningEvent,
+      });
+
+      setReplanResult(result);
+    } catch (err: any) {
+      setReplanError(err.message || 'Erro ao processar replanejamento.');
+    } finally {
+      setReplanLoading(false);
+    }
+  }
+
   const totalArea = fields.reduce((sum, f) => sum + f.area_ha, 0);
+
 
   if (loading) {
     return (
@@ -973,6 +1034,265 @@ export default function PlanejamentoPage() {
                 ))}
               </div>
             </CardContent>
+          </Card>
+        )}
+
+        {/* ===== Seção Registrar Imprevisto (Fase 10.6) ===== */}
+        {calendar && (
+          <Card className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-slate-900/80 via-amber-950/10 to-slate-950/70 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.25)]">
+            <CardHeader
+              className="cursor-pointer select-none"
+              onClick={() => setShowReplanPanel(!showReplanPanel)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 border border-amber-500/30">
+                    <AlertTriangle className="h-5 w-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      Registrar Imprevisto
+                      <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-400 bg-amber-500/10">
+                        Sugestão de ajuste
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription className="text-slate-400 text-xs mt-0.5">
+                      Informe o que aconteceu e receba sugestões de ajuste no calendário
+                    </CardDescription>
+                  </div>
+                </div>
+                <button className="text-slate-400 hover:text-white transition-colors p-1">
+                  {showReplanPanel ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </button>
+              </div>
+            </CardHeader>
+
+            {showReplanPanel && (
+              <CardContent className="space-y-5">
+                {/* Disclaimer */}
+                <div className="flex items-start gap-3 p-3 rounded-lg border border-slate-600/30 bg-slate-800/40">
+                  <ShieldAlert className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    <strong className="text-slate-300">Sugestão de ajuste:</strong> Avalie as condições reais do talhão antes de executar qualquer ação. 
+                    Nenhuma sugestão é aplicada automaticamente. 
+                    Consulte assistência técnica em caso de pragas ou doenças.
+                  </p>
+                </div>
+
+                {/* Form */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Tipo do Imprevisto */}
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">Tipo do Imprevisto</Label>
+                    <Select
+                      value={replanningEvent.event_type}
+                      onValueChange={(v) =>
+                        setReplanningEvent({ ...replanningEvent, event_type: v as ReplanningEventType })
+                      }
+                    >
+                      <SelectTrigger className="border-white/10 bg-slate-950/60 text-slate-100 focus:border-amber-400/50 focus:ring-amber-400/20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="border-white/10 bg-slate-900">
+                        {(Object.keys(REPLANNING_EVENT_LABELS) as ReplanningEventType[]).map((k) => (
+                          <SelectItem key={k} value={k}>
+                            {REPLANNING_EVENT_LABELS[k]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Data */}
+                  <div className="space-y-1.5">
+                    <Label className="text-sm text-slate-300">Data do Imprevisto</Label>
+                    <Input
+                      type="date"
+                      value={replanningEvent.date}
+                      onChange={(e) =>
+                        setReplanningEvent({ ...replanningEvent, date: e.target.value })
+                      }
+                      className="border-white/10 bg-slate-950/60 text-slate-100 focus:border-amber-400/50 focus:ring-amber-400/20 [color-scheme:dark]"
+                    />
+                  </div>
+
+                  {/* Descrição */}
+                  <div className="md:col-span-2 space-y-1.5">
+                    <Label className="text-sm text-slate-300">Descrição do Imprevisto</Label>
+                    <Input
+                      placeholder="Ex: Não consegui irrigar nesse dia por falta de combustível"
+                      value={replanningEvent.description}
+                      onChange={(e) =>
+                        setReplanningEvent({ ...replanningEvent, description: e.target.value })
+                      }
+                      className="border-white/10 bg-slate-950/60 text-slate-100 placeholder:text-slate-500 focus:border-amber-400/50 focus:ring-amber-400/20"
+                    />
+                  </div>
+
+                  {/* Tarefa afetada (opcional) */}
+                  {calendar.tasks.length > 0 && (
+                    <div className="md:col-span-2 space-y-1.5">
+                      <Label className="text-sm text-slate-300">
+                        Tarefa Afetada <span className="text-slate-500 font-normal">(opcional)</span>
+                      </Label>
+                      <Select
+                        value={replanningEvent.affected_task_id || '__none__'}
+                        onValueChange={(v) =>
+                          setReplanningEvent({
+                            ...replanningEvent,
+                            affected_task_id: v === '__none__' ? undefined : v,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="border-white/10 bg-slate-950/60 text-slate-100 focus:border-amber-400/50 focus:ring-amber-400/20">
+                          <SelectValue placeholder="Selecionar tarefa afetada (opcional)" />
+                        </SelectTrigger>
+                        <SelectContent className="border-white/10 bg-slate-900 max-h-52">
+                          <SelectItem value="__none__">Nenhuma tarefa específica</SelectItem>
+                          {calendar.tasks.slice(0, 50).map((task, i) => (
+                            <SelectItem key={task.id || i} value={task.id || String(i)}>
+                              {task.date} — {task.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
+                {/* Error */}
+                {replanError && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-sm">
+                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    {replanError}
+                  </div>
+                )}
+
+                {/* Submit */}
+                <Button
+                  onClick={handleReplan}
+                  disabled={replanLoading || !replanningEvent.description.trim()}
+                  className="w-full bg-amber-600 hover:bg-amber-700 disabled:opacity-50 font-semibold"
+                >
+                  {replanLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando sugestões...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Gerar Sugestões
+                    </>
+                  )}
+                </Button>
+
+                {/* Results */}
+                {replanResult && (
+                  <div className="space-y-4 pt-2">
+                    {/* Summary */}
+                    <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/8 backdrop-blur-sm">
+                      <div className="flex items-start gap-3">
+                        <ClipboardList className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-amber-300 mb-0.5">Resultado</p>
+                          <p className="text-xs text-amber-200/80">{replanResult.summary}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Warnings */}
+                    {replanResult.warnings.length > 0 && (
+                      <div className="p-3 rounded-lg border border-slate-600/30 bg-slate-800/40">
+                        <ul className="space-y-1">
+                          {replanResult.warnings.map((w, i) => (
+                            <li key={i} className="flex items-start gap-2 text-xs text-slate-400">
+                              <ShieldAlert className="h-3.5 w-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
+                              {w}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Suggestion Cards */}
+                    <div className="space-y-3">
+                      {replanResult.suggestions.map((sug, i) => {
+                        const riskColors: Record<string, string> = {
+                          baixo: 'border-emerald-500/30 bg-emerald-500/8',
+                          medio: 'border-amber-500/30 bg-amber-500/8',
+                          alto: 'border-red-500/30 bg-red-500/8',
+                        };
+                        const riskBadge: Record<string, string> = {
+                          baixo: 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10',
+                          medio: 'border-amber-500/40 text-amber-400 bg-amber-500/10',
+                          alto: 'border-red-500/40 text-red-400 bg-red-500/10',
+                        };
+                        const riskLabel: Record<string, string> = {
+                          baixo: '🟢 Risco Baixo',
+                          medio: '🟡 Risco Médio',
+                          alto: '🔴 Risco Alto',
+                        };
+
+                        return (
+                          <div
+                            key={i}
+                            className={`rounded-xl border p-4 backdrop-blur-sm space-y-3 transition-all ${riskColors[sug.risk_level] || 'border-white/10 bg-slate-900/40'}`}
+                          >
+                            {/* Header */}
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
+                              <p className="text-sm font-semibold text-white flex-1">{sug.action}</p>
+                              <div className="flex gap-2 flex-wrap">
+                                <Badge
+                                  variant="outline"
+                                  className={`text-xs ${riskBadge[sug.risk_level] || 'border-white/20 text-slate-400'}`}
+                                >
+                                  {riskLabel[sug.risk_level] || sug.risk_level}
+                                </Badge>
+                                {sug.requires_manual_validation && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs border-violet-500/40 text-violet-300 bg-violet-500/10"
+                                  >
+                                    <Lock className="h-3 w-3 mr-1" />
+                                    Validação manual
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Dates */}
+                            {(sug.original_date || sug.suggested_date) && (
+                              <div className="flex gap-4 text-xs text-slate-400">
+                                {sug.original_date && (
+                                  <span>📅 Original: <strong className="text-slate-300">{sug.original_date}</strong></span>
+                                )}
+                                {sug.suggested_date && (
+                                  <span>📅 Sugerida: <strong className="text-emerald-300">{sug.suggested_date}</strong></span>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Reason */}
+                            <p className="text-xs text-slate-400 leading-relaxed">{sug.reason}</p>
+
+                            {/* Disabled Apply Button */}
+                            <Button
+                              disabled
+                              size="sm"
+                              className="w-full text-xs opacity-40 cursor-not-allowed bg-slate-700 border-0"
+                            >
+                              <Lock className="mr-2 h-3 w-3" />
+                              Aplicar sugestão — em breve
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            )}
           </Card>
         )}
         </>

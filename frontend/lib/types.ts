@@ -381,3 +381,66 @@ export interface CropInfo {
   total_phases: number;
   phases_names: string[];
 }
+
+
+// ===== Tipos de Replanejamento por Imprevistos (Fase 10.6) =====
+
+export type ReplanningEventType =
+  | 'missed_irrigation'
+  | 'heavy_rain'
+  | 'no_rain'
+  | 'missed_fertilization'
+  | 'unavailable_day'
+  | 'soil_too_wet'
+  | 'soil_too_dry'
+  | 'pest_observation'
+  | 'disease_observation'
+  | 'other';
+
+export type RiskLevel = 'baixo' | 'medio' | 'alto';
+
+export interface ReplanningEvent {
+  event_type: ReplanningEventType;
+  date: string;
+  description: string;
+  affected_task_id?: string;
+  severity?: string;
+  notes?: string;
+}
+
+export interface ReplanningSuggestion {
+  action: string;
+  original_date?: string;
+  suggested_date?: string;
+  reason: string;
+  risk_level: RiskLevel;
+  requires_manual_validation: boolean;
+  affected_task_id?: string;
+}
+
+export interface ReplanningRequest {
+  calendar: CropCalendarResponse;
+  event: ReplanningEvent;
+}
+
+export interface ReplanningResponse {
+  event: ReplanningEvent;
+  suggestions: ReplanningSuggestion[];
+  updated_tasks: CropCalendarTask[];
+  warnings: string[];
+  summary: string;
+}
+
+export const REPLANNING_EVENT_LABELS: Record<ReplanningEventType, string> = {
+  missed_irrigation: 'Não consegui irrigar',
+  heavy_rain: 'Choveu demais',
+  no_rain: 'Não choveu',
+  missed_fertilization: 'Não consegui adubar',
+  unavailable_day: 'Não estarei disponível nesse dia',
+  soil_too_wet: 'Solo muito molhado',
+  soil_too_dry: 'Solo muito seco',
+  pest_observation: 'Observei praga',
+  disease_observation: 'Observei doença',
+  other: 'Outro',
+};
+

@@ -1696,6 +1696,67 @@ def gerar_calendario_talhao(field_id: str, request: dict):
                 detail="Erro ao gerar calendário para o talhão."
             )
 
+@app.post("/planejamento/replanejar")
+async def replanejar_calendario_endpoint(body: dict):
+    """
+    Recebe um imprevisto e retorna sugestões de ajuste no calendário.
+    
+    Payload:
+    {
+        "calendar": {...},  // Calendário agrícola atual
+        "event": {
+            "event_type": "missed_irrigation",
+            "date": "2026-05-15",
+            "description": "Não consegui irrigar nesse dia"
+        }
+    }
+    
+    Retorna sugestões de ajuste com motivo, nível de risco e se exige validação manual.
+    Nenhuma sugestão é aplicada automaticamente.
+    """
+    try:
+        from core.planning_models import ReplanningEvent, ReplanningRequest
+        from core.replanning_engine import replanejar_calendario
+
+        # Validar payload
+        calendar = body.get("calendar")
+        event_data = body.get("event")
+
+        if not calendar:
+            raise HTTPException(status_code=400, detail="Campo 'calendar' é obrigatório.")
+        if not event_data:
+            raise HTTPException(status_code=400, detail="Campo 'event' é obrigatório.")
+
+        # Construir e validar o evento
+        try:
+            event = ReplanningEvent(**event_data)
+        except Exception as ve:
+            raise HTTPException(status_code=422, detail=f"Dados do evento inválidos: {str(ve)}")
+
+        # Executar motor de replanejamento
+        resultado = replanejar_calendario(calendar=calendar, event=event)
+
+        return converter_tipos_python(resultado)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        if DEBUG_ERRORS:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": str(e),
+                    "traceback": traceback.format_exc()
+                }
+            )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Erro ao processar replanejamento."
+            )
+
+
 @app.post("/cache/limpar")
 def limpar_cache(request: Request):
     """Limpa o cache de resultados pesados (protegido por token)"""

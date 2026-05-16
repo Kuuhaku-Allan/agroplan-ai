@@ -806,9 +806,145 @@ Gera calendário agrícola para um talhão cadastrado.
 8. ✅ Criar endpoints CRUD
 9. ✅ Criar página `/planejamento`
 10. ✅ CLI 1.0.31 publicada
-11. ⏳ Próxima: Fase 10.3 - Modo Guiado
+11. ✅ Fase 10.5 - Clima integrado com Open-Meteo + NASA POWER
+12. ✅ Fase 10.6 - Replanejamento por imprevistos
 
 ---
 
-**Status**: Fase 10.1 em desenvolvimento  
-**Última atualização**: 2026-05-10
+## Replanejamento por Imprevistos (Fase 10.6)
+
+### Visão Geral
+
+O motor de replanejamento permite que o usuário registre um imprevisto e receba
+**sugestões de ajuste** no calendário agrícola, sem que nenhuma mudança seja aplicada
+automaticamente. O sistema usa linguagem cautelosa e sinaliza claramente quando
+a situação requer validação técnica profissional.
+
+### Princípios
+
+- **Não aplica mudanças automaticamente** — apenas sugere ajustes.
+- **Não substitui orientação técnica** — especialmente para pragas e doenças.
+- **Não recomenda defensivos específicos** — apenas sugere inspeção técnica.
+- **Usa linguagem cautelosa** — "avalie as condições reais do talhão", "sugestão de ajuste".
+- **Considera weather_context** quando disponível nas tarefas do calendário.
+
+### Endpoint
+
+```
+POST /planejamento/replanejar
+```
+
+**Payload:**
+```json
+{
+  "calendar": { "tasks": [...], "cultura": "soja", ... },
+  "event": {
+    "event_type": "missed_irrigation",
+    "date": "2026-05-15",
+    "description": "Não consegui irrigar nesse dia",
+    "affected_task_id": "task-123",
+    "severity": "moderada",
+    "notes": null
+  }
+}
+```
+
+**Resposta:**
+```json
+{
+  "summary": "Foram geradas 2 sugestão(ões) de ajuste para o imprevisto: Irrigação não realizada. Nenhuma sugestão é aplicada automaticamente.",
+  "suggestions": [
+    {
+      "action": "Sugestão de ajuste: reagendar irrigação perdida para o próximo dia viável.",
+      "original_date": "2026-05-15",
+      "suggested_date": "2026-05-16",
+      "reason": "A irrigação não foi realizada na data prevista...",
+      "risk_level": "medio",
+      "requires_manual_validation": false,
+      "affected_task_id": "task-123"
+    }
+  ],
+  "updated_tasks": [...],
+  "warnings": [
+    "Avalie as condições reais do talhão antes de executar qualquer ação..."
+  ]
+}
+```
+
+### Tipos de Imprevistos Suportados
+
+| event_type | Label na UI | Comportamento |
+|---|---|---|
+| `missed_irrigation` | Não consegui irrigar | Reagenda irrigação; verifica previsão de chuva |
+| `heavy_rain` | Choveu demais | Sugere adiar plantio/colheita/preparo/adubação |
+| `no_rain` | Não choveu | Sugere manter/antecipar irrigação |
+| `missed_fertilization` | Não consegui adubar | Reagenda adubação com urgência |
+| `unavailable_day` | Não estarei disponível | Move tarefas do dia para o próximo |
+| `soil_too_wet` | Solo muito molhado | Evita plantio/preparo/colheita; sugere aguardar drenagem |
+| `soil_too_dry` | Solo muito seco | Sugere verificar necessidade de irrigação |
+| `pest_observation` | Observei praga | Requer validação manual; sugere inspeção técnica |
+| `disease_observation` | Observei doença | Requer validação manual; sugere diagnóstico técnico |
+| `other` | Outro | Sugere revisar tarefas críticas próximas |
+
+### Níveis de Risco
+
+| Nível | Cor | Quando |
+|---|---|---|
+| `baixo` | 🟢 Verde | Operação não crítica, janela ampla |
+| `medio` | 🟡 Âmbar | Impacto moderado, pode aguardar avaliação |
+| `alto` | 🔴 Vermelho | Fase crítica, impacto imediato provável |
+
+### Validação Manual Obrigatória
+
+As seguintes situações sempre exigem `requires_manual_validation: true`:
+
+- Pragas (`pest_observation`)
+- Doenças (`disease_observation`)
+- Tarefas críticas (prioridade `critical` ou `high`) afetadas por chuva ou solo úmido
+- Adubação tardia em fase crítica
+- Dia indisponível com tarefas críticas
+
+### Linguagem Usada
+
+**Use:**
+- "Sugestão de ajuste"
+- "Avalie as condições reais do talhão"
+- "Requer validação manual"
+- "Consulte assistência técnica em caso de pragas ou doenças"
+
+**Evite:**
+- "Faça obrigatoriamente"
+- "Garantido"
+- "Aplique produto X"
+- Nomes de defensivos específicos
+
+### Limitações
+
+1. **Não aplica mudanças automaticamente** — todas as sugestões requerem ação manual do usuário.
+2. **Não substitui assistência técnica agronômica** — especialmente para pragas, doenças e manejo específico de cultivares.
+3. **Não recomenda defensivos ou agroquímicos** — isso requer orientação de agrônomo habilitado.
+4. **Sugestões de datas são estimativas** — dependem de condições reais do talhão, que o sistema não pode aferir remotamente.
+5. **Sem acesso ao histórico** — cada requisição é independente; o sistema não sabe o que foi executado ou não no talhão.
+
+### UI — Seção "Registrar Imprevisto"
+
+A seção aparece no card após o calendário gerado. O usuário pode:
+
+1. Selecionar o **tipo do imprevisto** (10 opções em português)
+2. Informar a **data** do ocorrido
+3. Descrever o imprevisto em texto livre
+4. Opcionalmente, selecionar a **tarefa afetada** da lista do calendário
+5. Clicar em **"Gerar Sugestões"**
+
+Os cards de sugestão exibem:
+- Ação sugerida
+- Data original e data sugerida (quando aplicável)
+- Motivo da sugestão
+- Nível de risco (🟢 🟡 🔴)
+- Badge de "Validação manual" quando necessário
+- Botão desabilitado **"Aplicar sugestão — em breve"**
+
+---
+
+**Status**: Fase 10.6 ✅ Concluída  
+**Última atualização**: 2026-05-16

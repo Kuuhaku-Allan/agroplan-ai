@@ -19,9 +19,13 @@ Visão geral completa do planejamento com:
 Sistema inteligente de planejamento agrícola:
 - **Modo Manual**: Cadastro direto de talhões com características detalhadas
 - **Modo Guiado**: Wizard passo a passo para iniciantes com recomendações
-- Geração de calendário agrícola por cultura
+- Geração de calendário agrícola por cultura com clima integrado
 - Tarefas organizadas por fase do ciclo da cultura
 - **Base de conhecimento para 10 culturas**: soja, milho, feijão, café, cana, arroz, trigo, sorgo, mandioca, algodão
+- Clima integrado: **Open-Meteo** (0–16 dias) + **NASA POWER** (17+ dias climatologia)
+- **Replanejamento por imprevistos**: registre o que aconteceu e receba sugestões de ajuste
+- Sugestões com nível de risco (🟢 baixo / 🟡 médio / 🔴 alto) e validação manual quando necessário
+- Linguagem cautelosa: não substitui assistência técnica agronômica
 - Recomendações de ações por prioridade
 - Seleção de região climática integrada
 - Aviso de cautela sobre ajustes necessários
@@ -590,11 +594,14 @@ Não fingimos ter "previsão exata de 120 dias". Usamos dados históricos, médi
 - [ ] Alertas de temperatura crítica
 - [ ] Ajuste de tarefas por condições climáticas
 
-**10.6 - Replanejamento por Imprevistos**
-- [ ] Usuário informa: "não consegui irrigar", "choveu demais", "solo seco"
-- [ ] Sistema recalcula: nova data, risco ajustado, ação alternativa
-- [ ] Histórico de intervenções
-- [ ] Validação manual para mudanças críticas
+**10.6 - Replanejamento por Imprevistos** ✅ CONCLUÍDA
+- [x] Usuário informa: "não consegui irrigar", "choveu demais", "solo seco", "observei praga", etc.
+- [x] Motor de replanejamento gera sugestões com nível de risco (baixo/médio/alto)
+- [x] Validação manual obrigatória para pragas, doenças e tarefas críticas
+- [x] Endpoint `POST /planejamento/replanejar`
+- [x] UI dark-glass com cards de sugestão e botão desabilitado "Aplicar — em breve"
+- [x] 10 tipos de imprevistos suportados
+- [x] CLI 1.0.38 publicada com feature `calendar_replanning_engine`
 
 **10.7 - Modo Avançado Modular**
 - [ ] Permitir ligar/desligar módulos
