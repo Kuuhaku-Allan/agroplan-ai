@@ -1106,7 +1106,7 @@ export default function PlanejamentoPage() {
               )}
 
               {/* Cautela */}
-              {calendar.cautela && (
+              {guidedExplanationsEnabled && calendar.cautela && (
                 <div className="mb-4 p-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 backdrop-blur-sm">
                   <p className="text-xs text-cyan-200/80 flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-cyan-500 flex-shrink-0 mt-0.5" />

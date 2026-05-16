@@ -3,6 +3,7 @@
 **Status:** 📋 Em planejamento  
 **Data:** 2026-05-16  
 **Branch:** main  
+**Última verificação:** Fase 10.8.2.1 validada com API local online em 2026-05-16. Detalhes em `FASE10.8.2.1_VERIFICACAO_PLANEJAMENTO_MODULAR.md`.  
 **Artifact:** Este arquivo (não implementar sem aprovação)
 
 ---
@@ -609,3 +610,35 @@ Sem mudanças:
 ---
 
 *Plano para aprovação. Não implementar sem sinal verde.*
+
+---
+
+## Fase 10.8.2.1 - Verificacao Real do Planejamento Modular
+
+Status: validada com API local online.
+
+Resumo:
+
+- API local ficou online via `agroplan serve on`.
+- `agroplan doctor` passou, com aviso conhecido de Python 3.13.
+- Talhao de verificacao criado com lat/lon em Clementina/SP.
+- Calendario com `usar_clima=true` retornou `weather_enabled=true` e resumo climatico.
+- Calendario com `usar_clima=false` retornou `weather_enabled=false` e sem resumo climatico.
+- `/planejamento` com clima desligado removeu o toggle de clima, mostrou aviso discreto e gerou calendario sem contexto climatico.
+- `/planejamento` com replanejamento desligado removeu a secao `Registrar Imprevisto` e mostrou card informativo.
+- Explicacoes reduzidas ocultaram textos didaticos longos sem esconder tarefas criticas.
+- Perfil Manual continuou funcionando com calendario e talhoes.
+- Modo guiado respeitou clima desligado e nao forcou payload climatico.
+
+Ajuste feito durante a verificacao:
+
+- `frontend/app/planejamento/page.tsx`: `calendar.cautela` agora aparece apenas quando `guided_explanations_enabled=true`.
+
+Documento detalhado:
+
+- `FASE10.8.2.1_VERIFICACAO_PLANEJAMENTO_MODULAR.md`
+
+Sem mudancas:
+
+- Nenhuma mudanca backend.
+- Nenhuma publicacao CLI.
