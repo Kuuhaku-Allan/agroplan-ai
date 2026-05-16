@@ -1,6 +1,6 @@
 {
-  "cli_version": "1.0.38",
-  "backend_template_version": "1.0.38",
+  "cli_version": "1.0.39",
+  "backend_template_version": "1.0.39",
   "zarc_index_version": "2025-2026-fast-index-v2",
   "price_index_version": "2025-05-reference-v1",
   "features": [

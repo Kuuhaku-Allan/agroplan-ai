@@ -490,3 +490,62 @@ class GenerateCalendarRequest(BaseModel):
         if v not in allowed:
             raise ValueError(f'cultura deve ser uma de: {", ".join(allowed)}')
         return v
+
+
+# ===== Modelos de Replanejamento por Imprevistos (Fase 10.6) =====
+
+class EventType(str, Enum):
+    """Tipos de imprevistos agrícolas"""
+    MISSED_IRRIGATION = "missed_irrigation"
+    HEAVY_RAIN = "heavy_rain"
+    NO_RAIN = "no_rain"
+    MISSED_FERTILIZATION = "missed_fertilization"
+    UNAVAILABLE_DAY = "unavailable_day"
+    SOIL_TOO_WET = "soil_too_wet"
+    SOIL_TOO_DRY = "soil_too_dry"
+    PEST_OBSERVATION = "pest_observation"
+    DISEASE_OBSERVATION = "disease_observation"
+    OTHER = "other"
+
+
+class RiskLevel(str, Enum):
+    """Nível de risco da sugestão"""
+    BAIXO = "baixo"
+    MEDIO = "medio"
+    ALTO = "alto"
+
+
+class ReplanningEvent(BaseModel):
+    """Imprevisto registrado pelo usuário"""
+    event_type: EventType = PydanticField(..., description="Tipo do imprevisto")
+    date: str = PydanticField(..., description="Data do imprevisto (YYYY-MM-DD)")
+    description: str = PydanticField(..., description="Descrição do imprevisto")
+    affected_task_id: Optional[str] = PydanticField(None, description="ID da tarefa afetada (opcional)")
+    severity: Optional[str] = PydanticField(None, description="Severidade (leve, moderada, grave)")
+    notes: Optional[str] = PydanticField(None, description="Notas adicionais")
+
+
+class ReplanningSuggestion(BaseModel):
+    """Sugestão de ajuste no calendário"""
+    action: str = PydanticField(..., description="Ação sugerida")
+    original_date: Optional[str] = PydanticField(None, description="Data original da tarefa")
+    suggested_date: Optional[str] = PydanticField(None, description="Data sugerida para reagendamento")
+    reason: str = PydanticField(..., description="Motivo da sugestão")
+    risk_level: RiskLevel = PydanticField(..., description="Nível de risco")
+    requires_manual_validation: bool = PydanticField(..., description="Se exige validação manual")
+    affected_task_id: Optional[str] = PydanticField(None, description="ID da tarefa afetada")
+
+
+class ReplanningRequest(BaseModel):
+    """Requisição de replanejamento"""
+    calendar: dict = PydanticField(..., description="Calendário agrícola atual")
+    event: ReplanningEvent = PydanticField(..., description="Imprevisto registrado")
+
+
+class ReplanningResponse(BaseModel):
+    """Resposta do motor de replanejamento"""
+    event: ReplanningEvent
+    suggestions: List[ReplanningSuggestion]
+    updated_tasks: List[dict]
+    warnings: List[str]
+    summary: str
