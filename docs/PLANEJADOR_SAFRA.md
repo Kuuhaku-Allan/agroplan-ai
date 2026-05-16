@@ -942,9 +942,32 @@ Os cards de sugestão exibem:
 - Motivo da sugestão
 - Nível de risco (🟢 🟡 🔴)
 - Badge de "Validação manual" quando necessário
-- Botão desabilitado **"Aplicar sugestão — em breve"**
+- Botão desabilitado **"Aplicar sugestão — em breve"** (Até Fase 10.6)
 
 ---
 
-**Status**: Fase 10.6 ✅ Concluída  
+## 10.7. Aplicação de Sugestões de Replanejamento (Modo Simulação)
+
+A Fase 10.7 introduz a capacidade de aplicar as sugestões geradas pelo motor de replanejamento diretamente ao calendário, criando um ambiente seguro (simulação).
+
+### Características
+- **Preservação**: O calendário original nunca é sobrescrito. O sistema cria uma versão ajustada, permitindo a comparação lado a lado.
+- **Validação Segura**: Se a sugestão possuir a tag `requires_manual_validation`, o sistema exige uma confirmação explícita do usuário (via modal/alert) antes de aplicar.
+- **Visualização**:
+  - O calendário ajustado ganha a tag **Ajustado**.
+  - A interface possui toggles **"Ver Original"** e **"Ver Ajustado"** para comparação imediata.
+  - Tarefas que sofreram alteração recebem o badge **"Replanejada"** e exibem a data original e o motivo da mudança.
+- **Histórico**: É gerado um quadro visual de log no final da página informando a ação, data original e data nova para cada sugestão aplicada.
+
+### Endpoint de Aplicação
+- `POST /planejamento/replanejar/aplicar`
+  - **Payload**: Recebe o `calendar` atual, o `event` original e a `suggestion` selecionada.
+  - **Processamento**: Atualiza a `date` da tarefa afetada, injeta metadados (`replanned=true`, `original_date`, `replanning_reason`).
+  - **Retorno**: Retorna `original_calendar`, `updated_calendar` e o `change_log`.
+
+**Limitação Atual**: Nesta fase, a aplicação é uma simulação em tela. As alterações não são persistidas no banco de dados, sendo perdidas se a página for recarregada.
+
+---
+
+**Status**: Fase 10.7 ✅ Concluída  
 **Última atualização**: 2026-05-16

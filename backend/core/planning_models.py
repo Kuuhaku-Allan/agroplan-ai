@@ -527,6 +527,7 @@ class ReplanningEvent(BaseModel):
 
 class ReplanningSuggestion(BaseModel):
     """Sugestão de ajuste no calendário"""
+    id: Optional[str] = PydanticField(None, description="Identificador único da sugestão")
     action: str = PydanticField(..., description="Ação sugerida")
     original_date: Optional[str] = PydanticField(None, description="Data original da tarefa")
     suggested_date: Optional[str] = PydanticField(None, description="Data sugerida para reagendamento")
@@ -549,3 +550,20 @@ class ReplanningResponse(BaseModel):
     updated_tasks: List[dict]
     warnings: List[str]
     summary: str
+
+
+class ApplyReplanningRequest(BaseModel):
+    """Requisição para aplicar uma sugestão de replanejamento"""
+    calendar: dict = PydanticField(..., description="Calendário agrícola atual")
+    suggestion: ReplanningSuggestion = PydanticField(..., description="A sugestão a ser aplicada")
+    event: Optional[ReplanningEvent] = PydanticField(None, description="O imprevisto que gerou a sugestão")
+
+
+class ApplyReplanningResponse(BaseModel):
+    """Resposta da aplicação de replanejamento"""
+    summary: str = PydanticField(..., description="Resumo da aplicação")
+    original_calendar: dict = PydanticField(..., description="O calendário original intacto")
+    updated_calendar: dict = PydanticField(..., description="O calendário com a sugestão aplicada")
+    applied_suggestion: ReplanningSuggestion = PydanticField(..., description="A sugestão que foi aplicada")
+    change_log: List[dict] = PydanticField(..., description="Log de alterações feitas")
+    warnings: List[str] = PydanticField(..., description="Avisos importantes sobre a aplicação")

@@ -603,7 +603,14 @@ Não fingimos ter "previsão exata de 120 dias". Usamos dados históricos, médi
 - [x] 10 tipos de imprevistos suportados
 - [x] CLI 1.0.38 publicada com feature `calendar_replanning_engine`
 
-**10.7 - Modo Avançado Modular**
+**10.7 - Aplicação de Sugestões de Replanejamento** ✅ CONCLUÍDA
+- [x] Endpoint `POST /planejamento/replanejar/aplicar` para gerar simulação de calendário
+- [x] Histórico de alterações e badges nas tarefas replanejadas
+- [x] Interface que preserva original e permite comparar (Ver Original vs Ver Ajustado)
+- [x] Validação segura para sugestões com alto risco
+- [x] CLI 1.0.40 publicada com feature `calendar_replanning_apply_suggestions`
+
+**10.8 - Modo Avançado Modular**
 - [ ] Permitir ligar/desligar módulos
 - [ ] Clima: ligado/desligado
 - [ ] ZARC: ligado/desligado

@@ -1,7 +1,7 @@
 {
   "name": "agroplan-ai-cli",
-  "version": "1.0.39",
-  "description": "CLI global para AgroPlan AI - modo local acelerado",
+  "version": "1.0.40",
+  "description": "AgroPlan AI CLI - Setup and Management",
   "type": "module",
   "bin": {
     "agroplan": "./dist/index.js"

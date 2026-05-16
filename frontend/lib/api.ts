@@ -749,3 +749,23 @@ export async function replanCalendar(payload: {
   return response.json();
 }
 
+/**
+ * Aplica uma sugestão de replanejamento em modo de simulação.
+ * Retorna o calendário ajustado.
+ */
+export async function applyReplanningSuggestion(
+  payload: import('./types').ApplyReplanningRequest
+): Promise<import('./types').ApplyReplanningResponse> {
+  const response = await apiFetch('/planejamento/replanejar/aplicar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Erro desconhecido' }));
+    throw new Error(errorData.detail || `Falha ao aplicar sugestão: ${response.status}`);
+  }
+
+  return response.json();
+}

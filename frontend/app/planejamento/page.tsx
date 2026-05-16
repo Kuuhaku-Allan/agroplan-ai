@@ -49,6 +49,7 @@ import {
   generateFieldCalendar,
   getPlanningCultures,
   replanCalendar,
+  applyReplanningSuggestion,
 } from '@/lib/api';
 import { formatDateBR, formatDateBRWithYear, isPastDate } from '@/lib/date-utils';
 import type {
@@ -98,6 +99,11 @@ export default function PlanejamentoPage() {
   const [replanLoading, setReplanLoading] = useState(false);
   const [replanResult, setReplanResult] = useState<ReplanningResponse | null>(null);
   const [replanError, setReplanError] = useState<string | null>(null);
+  const [originalCalendar, setOriginalCalendar] = useState<CropCalendarResponse | null>(null);
+  const [calendarView, setCalendarView] = useState<'original' | 'adjusted'>('original');
+  const [adjustedCalendar, setAdjustedCalendar] = useState<CropCalendarResponse | null>(null);
+  const [changeLog, setChangeLog] = useState<any[]>([]);
+  const [applyLoading, setApplyLoading] = useState<string | null>(null);
 
 
 
@@ -237,6 +243,9 @@ export default function PlanejamentoPage() {
       if (selectedField === id) {
         setSelectedField(null);
         setCalendar(null);
+        setOriginalCalendar(null);
+        setAdjustedCalendar(null);
+        setChangeLog([]);
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao remover talhão');
@@ -261,6 +270,10 @@ export default function PlanejamentoPage() {
 
       const result = await generateFieldCalendar(fieldId, calendarForm);
       setCalendar(result);
+      setOriginalCalendar(result);
+      setAdjustedCalendar(null);
+      setCalendarView('original');
+      setChangeLog([]);
       setReplanResult(null); // limpar sugestões anteriores ao gerar novo calendário
       setSuccess('Calendário gerado com sucesso!');
     } catch (err: any) {
@@ -293,6 +306,42 @@ export default function PlanejamentoPage() {
       setReplanError(err.message || 'Erro ao processar replanejamento.');
     } finally {
       setReplanLoading(false);
+    }
+  }
+
+  async function handleApplySuggestion(suggestion: ReplanningSuggestion) {
+    if (!calendar) return;
+
+    if (suggestion.requires_manual_validation) {
+      const confirm = window.confirm(
+        'Esta sugestão exige validação manual. Deseja aplicar apenas como simulação?'
+      );
+      if (!confirm) return;
+    }
+
+    try {
+      setApplyLoading(suggestion.id || 'loading');
+      setReplanError(null);
+
+      const result = await applyReplanningSuggestion({
+        calendar: calendar as any,
+        suggestion,
+        event: replanningEvent,
+      });
+
+      setCalendar(result.updated_calendar);
+      setAdjustedCalendar(result.updated_calendar);
+      if (!originalCalendar) {
+        setOriginalCalendar(result.original_calendar);
+      }
+      setCalendarView('adjusted');
+      setChangeLog((prev) => [...result.change_log, ...prev]);
+      setSuccess('Calendário ajustado em modo de simulação. O calendário original foi preservado.');
+      
+    } catch (err: any) {
+      setReplanError(err.message || 'Erro ao aplicar sugestão.');
+    } finally {
+      setApplyLoading(null);
     }
   }
 
@@ -824,16 +873,67 @@ export default function PlanejamentoPage() {
         {/* Calendar Display */}
         {calendar && (
           <Card className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/70 via-[#0b1733]/70 to-slate-950/60 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5 text-emerald-500" />
-                Calendário Agrícola - {calendar.cultura.charAt(0).toUpperCase() + calendar.cultura.slice(1)}
-              </CardTitle>
-              <CardDescription>
-                Plantio: {formatDateBRWithYear(calendar.planting_date)} • Colheita
-                estimada: {formatDateBRWithYear(calendar.estimated_harvest_date)} •{' '}
-                {calendar.cycle_days} dias • {calendar.total_tasks} tarefas
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5 text-emerald-500" />
+                  Calendário Agrícola - {calendar.cultura.charAt(0).toUpperCase() + calendar.cultura.slice(1)}
+                  {calendarView === 'adjusted' && (
+                    <Badge variant="outline" className="text-xs border-fuchsia-500/40 text-fuchsia-400 bg-fuchsia-500/10 ml-2">
+                      Ajustado
+                    </Badge>
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  Plantio: {formatDateBRWithYear(calendar.planting_date)} • Colheita
+                  estimada: {formatDateBRWithYear(calendar.estimated_harvest_date)} •{' '}
+                  {calendar.cycle_days} dias • {calendar.total_tasks} tarefas
+                </CardDescription>
+              </div>
+              
+              {originalCalendar && changeLog.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant={calendarView === 'original' ? 'default' : 'outline'}
+                    onClick={() => {
+                      setCalendarView('original');
+                      if (originalCalendar) setCalendar(originalCalendar);
+                    }}
+                    className={calendarView === 'original' ? 'bg-slate-700 hover:bg-slate-600' : 'border-slate-700 text-slate-300'}
+                  >
+                    Ver Original
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={calendarView === 'adjusted' ? 'default' : 'outline'}
+                    onClick={() => {
+                      setCalendarView('adjusted');
+                      if (adjustedCalendar) setCalendar(adjustedCalendar);
+                    }}
+                    className={calendarView === 'adjusted' ? 'bg-fuchsia-600 hover:bg-fuchsia-700' : 'border-fuchsia-500/30 text-fuchsia-400'}
+                  >
+                    Ver Ajustado
+                  </Button>
+                  {calendarView === 'adjusted' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if(confirm('Deseja reverter todas as sugestões e voltar ao calendário original?')) {
+                          setCalendar(originalCalendar);
+                          setAdjustedCalendar(null);
+                          setCalendarView('original');
+                          setChangeLog([]);
+                        }
+                      }}
+                      className="border-red-500/30 text-red-400 hover:bg-red-500/10 ml-2"
+                    >
+                      Reverter
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               {/* Weather Summary */}
@@ -957,9 +1057,27 @@ export default function PlanejamentoPage() {
                               Ajustada
                             </Badge>
                           )}
+                          {task.replanned && (
+                            <Badge variant="outline" className="text-xs text-fuchsia-400 border-fuchsia-400/30 bg-fuchsia-500/10">
+                              <RefreshCw className="h-3 w-3 mr-1" />
+                              Replanejada
+                            </Badge>
+                          )}
                         </div>
                         {task.description && (
                           <p className="text-sm text-slate-400">{task.description}</p>
+                        )}
+                        {task.replanned && task.replanning_reason && (
+                          <div className="mt-2 p-2 rounded-md border border-fuchsia-500/20 bg-fuchsia-500/5">
+                            <p className="text-xs text-fuchsia-300">
+                              <strong className="text-fuchsia-400">Data Original: </strong>
+                              {formatDateBR(task.original_date || '')}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              <strong className="text-slate-300">Motivo: </strong>
+                              {task.replanning_reason}
+                            </p>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1276,14 +1394,21 @@ export default function PlanejamentoPage() {
                             {/* Reason */}
                             <p className="text-xs text-slate-400 leading-relaxed">{sug.reason}</p>
 
-                            {/* Disabled Apply Button */}
+                            {/* Apply Button */}
                             <Button
-                              disabled
+                              onClick={() => handleApplySuggestion(sug)}
+                              disabled={applyLoading === (sug.id || 'loading')}
                               size="sm"
-                              className="w-full text-xs opacity-40 cursor-not-allowed bg-slate-700 border-0"
+                              className="w-full text-xs bg-slate-700 hover:bg-emerald-600 border-0 transition-colors"
                             >
-                              <Lock className="mr-2 h-3 w-3" />
-                              Aplicar sugestão — em breve
+                              {applyLoading === (sug.id || 'loading') ? (
+                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                              ) : sug.requires_manual_validation ? (
+                                <Lock className="mr-2 h-3 w-3 text-amber-300" />
+                              ) : (
+                                <CheckCircle2 className="mr-2 h-3 w-3" />
+                              )}
+                              Aplicar sugestão
                             </Button>
                           </div>
                         );
@@ -1293,6 +1418,33 @@ export default function PlanejamentoPage() {
                 )}
               </CardContent>
             )}
+          </Card>
+        )}
+
+        {/* Histórico de Replanejamento */}
+        {changeLog.length > 0 && (
+          <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm mt-8">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-emerald-500" />
+                Histórico de Replanejamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {changeLog.map((log, i) => (
+                  <div key={i} className="flex items-start justify-between p-3 rounded-lg border border-white/5 bg-slate-950/40">
+                    <div>
+                      <p className="text-sm font-medium text-white">{log.action}</p>
+                      <div className="flex gap-4 text-xs text-slate-400 mt-1">
+                        <span>Original: {formatDateBR(log.old_date)}</span>
+                        <span>Sugerida: <strong className="text-emerald-400">{formatDateBR(log.new_date)}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
           </Card>
         )}
         </>

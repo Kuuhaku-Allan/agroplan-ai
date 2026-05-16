@@ -1757,6 +1757,46 @@ async def replanejar_calendario_endpoint(body: dict):
             )
 
 
+@app.post("/planejamento/replanejar/aplicar")
+async def aplicar_replanejamento_endpoint(body: dict):
+    """
+    Aplica uma sugestão de replanejamento em modo de simulação,
+    retornando o calendário atualizado e mantendo o original.
+    """
+    try:
+        from core.planning_models import ApplyReplanningRequest
+        from core.replanning_engine import aplicar_sugestao_replanejamento
+
+        # Pydantic cuidará da validação
+        req = ApplyReplanningRequest(**body)
+
+        resultado = aplicar_sugestao_replanejamento(
+            calendar=req.calendar,
+            suggestion=req.suggestion,
+            event=req.event
+        )
+
+        return converter_tipos_python(resultado)
+
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=f"Payload inválido: {str(e)}")
+    except Exception as e:
+        import traceback
+        if DEBUG_ERRORS:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": str(e),
+                    "traceback": traceback.format_exc()
+                }
+            )
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Erro ao aplicar sugestão de replanejamento."
+            )
+
+
 @app.post("/cache/limpar")
 def limpar_cache(request: Request):
     """Limpa o cache de resultados pesados (protegido por token)"""

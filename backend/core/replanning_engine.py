@@ -14,6 +14,7 @@ Limitações:
 
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
+import copy
 
 from core.planning_models import (
     ReplanningEvent,
@@ -600,6 +601,10 @@ def replanejar_calendario(
     handler = HANDLERS.get(event.event_type, _handle_other)
     suggestions: List[ReplanningSuggestion] = handler(tasks, event)
 
+    # Injetar IDs nas sugestões
+    for i, s in enumerate(suggestions):
+        s.id = f"suggestion-{i+1}"
+
     # Montar updated_tasks: tarefas afetadas pelas sugestões (sem alterar o original)
     affected_ids = {s.affected_task_id for s in suggestions if s.affected_task_id}
     updated_tasks = [t for t in tasks if t.get("id") in affected_ids]
@@ -624,4 +629,62 @@ def replanejar_calendario(
         "updated_tasks": updated_tasks,
         "warnings": warnings,
         "summary": summary,
+    }
+
+
+def aplicar_sugestao_replanejamento(
+    calendar: dict,
+    suggestion: ReplanningSuggestion,
+    event: Optional[ReplanningEvent] = None
+) -> dict:
+    """
+    Aplica uma sugestão de replanejamento em um calendário,
+    retornando a versão ajustada e o original.
+    """
+    original_calendar = calendar
+    updated_calendar = copy.deepcopy(calendar)
+    change_log = []
+    warnings = []
+
+    if suggestion.requires_manual_validation:
+        warnings.append("Esta sugestão exige validação manual antes de ser seguida em campo.")
+
+    tasks = updated_calendar.get("tasks", [])
+    target_task = None
+
+    if suggestion.affected_task_id:
+        target_task = next((t for t in tasks if t.get("id") == suggestion.affected_task_id), None)
+    
+    if not target_task and suggestion.original_date:
+        # Tenta por data original
+        target_task = next((t for t in tasks if t.get("date") == suggestion.original_date), None)
+
+    if not target_task:
+        warnings.append("Não foi possível encontrar a tarefa original para aplicar o ajuste.")
+    else:
+        # Atualiza a tarefa
+        old_date = target_task.get("date")
+        if suggestion.suggested_date:
+            target_task["date"] = suggestion.suggested_date
+        
+        target_task["replanned"] = True
+        target_task["original_date"] = old_date
+        target_task["replanning_reason"] = suggestion.reason
+        target_task["replanning_event_type"] = event.event_type if event else "unknown"
+        target_task["replanning_applied_at"] = datetime.now().isoformat()
+        
+        change_log.append({
+            "task_id": target_task.get("id"),
+            "old_date": old_date,
+            "new_date": target_task.get("date"),
+            "action": suggestion.action
+        })
+
+    return {
+        "summary": "Sugestão aplicada em modo de simulação.",
+        "original_calendar": original_calendar,
+        "updated_calendar": updated_calendar,
+        "applied_suggestion": suggestion.model_dump(),
+        "change_log": change_log,
+        "warnings": warnings,
     }

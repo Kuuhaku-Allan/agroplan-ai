@@ -312,6 +312,10 @@ export interface CropCalendarTask {
   adjusted?: boolean;
   original_date?: string;
   weather_context?: CalendarWeatherContext;
+  replanned?: boolean;
+  replanning_reason?: string;
+  replanning_event_type?: string;
+  replanning_applied_at?: string;
 }
 
 export interface CalendarWeatherContext {
@@ -409,6 +413,7 @@ export interface ReplanningEvent {
 }
 
 export interface ReplanningSuggestion {
+  id?: string;
   action: string;
   original_date?: string;
   suggested_date?: string;
@@ -429,6 +434,21 @@ export interface ReplanningResponse {
   updated_tasks: CropCalendarTask[];
   warnings: string[];
   summary: string;
+}
+
+export interface ApplyReplanningRequest {
+  calendar: CropCalendarResponse;
+  suggestion: ReplanningSuggestion;
+  event?: ReplanningEvent;
+}
+
+export interface ApplyReplanningResponse {
+  summary: string;
+  original_calendar: CropCalendarResponse;
+  updated_calendar: CropCalendarResponse;
+  applied_suggestion: ReplanningSuggestion;
+  change_log: any[];
+  warnings: string[];
 }
 
 export const REPLANNING_EVENT_LABELS: Record<ReplanningEventType, string> = {
