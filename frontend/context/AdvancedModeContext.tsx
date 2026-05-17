@@ -28,7 +28,9 @@ import {
   canUseClimate as getCanUseClimate,
   canUseZarc as getCanUseZarc,
   canUsePrices as getCanUsePrices,
+  canUsePriceNormalization as getCanUsePriceNormalization,
   canUseMarketValidation as getCanUseMarketValidation,
+  canUseMarketComparison as getCanUseMarketComparison,
   canUseReplanning as getCanUseReplanning,
   canShowGuidedExplanations as getCanShowGuidedExplanations,
   canUseGuidedMode as getCanUseGuidedMode,
@@ -52,7 +54,9 @@ interface AdvancedModeContextValue {
   canUseClimate: () => boolean;
   canUseZarc: () => boolean;
   canUsePrices: () => boolean;
+  canUsePriceNormalization: () => boolean;
   canUseMarketValidation: () => boolean;
+  canUseMarketComparison: () => boolean;
   canUseReplanning: () => boolean;
   canShowGuidedExplanations: () => boolean;
   canUseGuidedMode: () => boolean;
@@ -136,7 +140,9 @@ export function AdvancedModeProvider({ children }: AdvancedModeProviderProps) {
   const canUseClimate = () => getCanUseClimate(settings);
   const canUseZarc = () => getCanUseZarc(settings);
   const canUsePrices = () => getCanUsePrices(settings);
+  const canUsePriceNormalization = () => getCanUsePriceNormalization(settings);
   const canUseMarketValidation = () => getCanUseMarketValidation(settings);
+  const canUseMarketComparison = () => getCanUseMarketComparison(settings);
   const canUseReplanning = () => getCanUseReplanning(settings);
   const canShowGuidedExplanations = () => getCanShowGuidedExplanations(settings);
   const canUseGuidedMode = () => getCanUseGuidedMode();
@@ -155,7 +161,9 @@ export function AdvancedModeProvider({ children }: AdvancedModeProviderProps) {
     canUseClimate,
     canUseZarc,
     canUsePrices,
+    canUsePriceNormalization,
     canUseMarketValidation,
+    canUseMarketComparison,
     canUseReplanning,
     canShowGuidedExplanations,
     canUseGuidedMode,

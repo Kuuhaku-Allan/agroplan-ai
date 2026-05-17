@@ -686,3 +686,51 @@ Sem mudancas:
 - Nenhuma mudanca backend.
 - Nenhuma publicacao CLI.
 - Comparacao Mercado segue fora do escopo desta fase.
+
+---
+
+## Fase 10.8.4 - Comparacao Mercado Modular
+
+Status: implementada e validada no frontend.
+
+Resumo:
+
+- `/comparacao-mercado` agora usa `useAdvancedMode()`.
+- Card de status modular adicionado ao topo da pagina.
+- `prices_enabled` bloqueia a pagina quando desligado e remove qualquer acao de comparacao de mercado.
+- `normalization_enabled` controla o aviso de normalizacao de precos sem impedir a analise basica.
+- `market_validation_enabled` controla badges, detalhes de confiabilidade e bloqueios automaticos derivados de validacao.
+- `market_comparison_enabled` bloqueia o botao de avaliacao e impede chamada para `/comparar/lucro-mercado`.
+- `experimental_optimizer_enabled` so libera a secao experimental quando precos e validacao de mercado tambem estao ativos.
+- `guided_explanations_enabled` reduz textos didaticos sem esconder avisos criticos.
+- Perfil Manual mantem a pagina acessivel com aviso claro de que analises de mercado dependem dos modulos ativos.
+
+Arquivos principais:
+
+- `frontend/app/comparacao-mercado/page.tsx`
+- `frontend/components/market-comparison/market-comparison-summary.tsx`
+- `frontend/components/market-comparison/market-comparison-table.tsx`
+- `frontend/lib/settings.ts`
+- `frontend/context/AdvancedModeContext.tsx`
+- `frontend/lib/api.ts`
+
+Payload seguro:
+
+- A pagina nao chama endpoints de mercado quando `prices_enabled=false`.
+- A pagina nao chama `/comparar/lucro-mercado` quando `market_comparison_enabled=false`.
+- A pagina nao chama `/otimizar/lucro-mercado-experimental` quando a otimizacao experimental, os precos ou a validacao estao desligados.
+- `compararLucroMercado()` e `otimizarLucroMercadoExperimental()` passaram a aceitar localizacao parcial.
+- `buildMarketLocationForEnabledModules()` remove dados climaticos quando clima esta desligado e preserva `uf` para precos quando aplicavel.
+
+Validacao:
+
+- `eslint` dos arquivos tocados passou.
+- `npm.cmd run build` passou apos reexecucao com rede para buscar a fonte Inter.
+- `agroplan serve status` confirmou API local online.
+- Verificacao visual no navegador cobriu Iniciante, Manual, Avancado com comparacao desligada e Avancado com validacao desligada.
+- Comparacao real executada com API local online no perfil Iniciante.
+
+Sem mudancas:
+
+- Nenhuma mudanca backend.
+- Nenhuma publicacao CLI.

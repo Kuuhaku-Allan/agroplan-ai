@@ -158,10 +158,6 @@ export function isMarketEnabled(settings: AdvancedModeSettings): boolean {
   );
 }
 
-export function canUseExperimentalOptimizer(settings: AdvancedModeSettings): boolean {
-  return isModuleEnabled(settings, "experimental_optimizer_enabled");
-}
-
 export function canUseClimate(settings: AdvancedModeSettings): boolean {
   return isModuleEnabled(settings, "climate_enabled");
 }
@@ -174,8 +170,23 @@ export function canUsePrices(settings: AdvancedModeSettings): boolean {
   return isModuleEnabled(settings, "prices_enabled");
 }
 
+export function canUsePriceNormalization(settings: AdvancedModeSettings): boolean {
+  return isModuleEnabled(settings, "normalization_enabled");
+}
+
 export function canUseMarketValidation(settings: AdvancedModeSettings): boolean {
   return isModuleEnabled(settings, "market_validation_enabled");
+}
+
+export function canUseMarketComparison(settings: AdvancedModeSettings): boolean {
+  return isModuleEnabled(settings, "market_comparison_enabled");
+}
+
+export function canUseExperimentalOptimizer(settings: AdvancedModeSettings): boolean {
+  return (
+    isModuleEnabled(settings, "experimental_optimizer_enabled") &&
+    canUseMarketValidation(settings)
+  );
 }
 
 export function canUseReplanning(settings: AdvancedModeSettings): boolean {
@@ -268,10 +279,23 @@ export function buildMarketLocationForEnabledModules<T extends LocationFields>(
   location: T,
   settings: AdvancedModeSettings,
 ): Partial<T> {
-  const next: Partial<T> & LocationFields = buildLocationForEnabledModules(location, settings);
+  const next: Partial<T> & LocationFields = { ...location };
+
+  if (!isClimateEnabled(settings)) {
+    delete next.lat;
+    delete next.lon;
+    delete next.latitude;
+    delete next.longitude;
+    delete next.days;
+  }
 
   if (!isPricesEnabled(settings)) {
     delete next.uf;
+    delete next.municipio;
+    delete next.safra;
+  } else if (!isZarcEnabled(settings)) {
+    delete next.municipio;
+    delete next.safra;
   }
 
   return next;

@@ -2,15 +2,20 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, CheckCircle2, XCircle, TrendingDown, TrendingUp, Scale } from "lucide-react";
 import type { MarketComparisonSummary } from "@/lib/types";
 
 interface MarketComparisonSummaryProps {
   comparacao: MarketComparisonSummary;
+  showValidation?: boolean;
+  showGuidedExplanations?: boolean;
 }
 
-export function MarketComparisonSummaryCard({ comparacao }: MarketComparisonSummaryProps) {
+export function MarketComparisonSummaryCard({
+  comparacao,
+  showValidation = true,
+  showGuidedExplanations = true,
+}: MarketComparisonSummaryProps) {
   const {
     lucro_sistema_total,
     lucro_mercado_total,
@@ -42,7 +47,7 @@ export function MarketComparisonSummaryCard({ comparacao }: MarketComparisonSumm
               </CardDescription>
             </div>
           </div>
-          {pode_usar_mercado ? (
+          {showValidation && (pode_usar_mercado ? (
             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1">
               <CheckCircle2 className="h-3 w-3" />
               Confiável
@@ -52,7 +57,7 @@ export function MarketComparisonSummaryCard({ comparacao }: MarketComparisonSumm
               <XCircle className="h-3 w-3" />
               Bloqueado
             </Badge>
-          )}
+          ))}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -62,7 +67,7 @@ export function MarketComparisonSummaryCard({ comparacao }: MarketComparisonSumm
             <AlertTriangle className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-300">
               <strong>Esta avaliação é experimental e não substitui o plano principal.</strong>
-              {" "}O lucro de mercado é usado apenas como simulação comparativa.
+              {showGuidedExplanations && " O lucro de mercado é usado apenas como simulação comparativa."}
             </div>
           </div>
         </div>
@@ -129,6 +134,7 @@ export function MarketComparisonSummaryCard({ comparacao }: MarketComparisonSumm
         </div>
 
         {/* Confiabilidade - Mini Cards */}
+        {showValidation && (
         <div className="space-y-2">
           <p className="text-sm font-medium text-slate-300">Confiabilidade dos Dados</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -183,9 +189,10 @@ export function MarketComparisonSummaryCard({ comparacao }: MarketComparisonSumm
             )}
           </div>
         </div>
+        )}
 
         {/* Motivo de Bloqueio */}
-        {!pode_usar_mercado && motivo_bloqueio && (
+        {showValidation && !pode_usar_mercado && motivo_bloqueio && (
           <div className={`rounded-lg border p-4 ${
             itens_criticos > 0 
               ? "bg-red-500/10 border-red-500/25" 

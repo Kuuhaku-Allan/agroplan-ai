@@ -599,7 +599,7 @@ export async function getComparacaoPrecos(uf?: string) {
 /**
  * Avalia o plano do sistema usando lucro de mercado para comparação
  */
-export async function compararLucroMercado(location?: ClimateLocation, options?: {
+export async function compararLucroMercado(location?: Partial<ClimateLocation>, options?: {
   objetivo?: string;
   seed?: number;
   geracoes?: number;
@@ -612,8 +612,8 @@ export async function compararLucroMercado(location?: ClimateLocation, options?:
   params.set("geracoes", String(options?.geracoes ?? 50));
   params.set("populacao", String(options?.populacao ?? 50));
   
-  if (location?.lat) params.set("lat", String(location.lat));
-  if (location?.lon) params.set("lon", String(location.lon));
+  if (location?.lat !== undefined) params.set("lat", String(location.lat));
+  if (location?.lon !== undefined) params.set("lon", String(location.lon));
   if (location?.days) params.set("days", String(location.days));
   if (location?.uf) params.set("uf", location.uf);
   if (location?.municipio) params.set("municipio", location.municipio);
@@ -633,7 +633,7 @@ export async function compararLucroMercado(location?: ClimateLocation, options?:
 /**
  * Otimização EXPERIMENTAL usando lucro de mercado como fitness
  */
-export async function otimizarLucroMercadoExperimental(location?: ClimateLocation, options?: {
+export async function otimizarLucroMercadoExperimental(location?: Partial<ClimateLocation>, options?: {
   seed?: number;
   geracoes?: number;
   populacao?: number;
@@ -645,8 +645,8 @@ export async function otimizarLucroMercadoExperimental(location?: ClimateLocatio
   params.set("geracoes", String(options?.geracoes ?? 50));
   params.set("populacao", String(options?.populacao ?? 50));
   
-  if (location?.lat) params.set("lat", String(location.lat));
-  if (location?.lon) params.set("lon", String(location.lon));
+  if (location?.lat !== undefined) params.set("lat", String(location.lat));
+  if (location?.lon !== undefined) params.set("lon", String(location.lon));
   if (location?.days) params.set("days", String(location.days));
   if (location?.uf) params.set("uf", location.uf);
   if (location?.municipio) params.set("municipio", location.municipio);

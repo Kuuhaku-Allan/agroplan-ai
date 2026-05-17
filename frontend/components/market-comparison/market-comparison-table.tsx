@@ -14,9 +14,10 @@ import type { MarketComparisonItem } from "@/lib/types";
 
 interface MarketComparisonTableProps {
   itens: MarketComparisonItem[];
+  showValidation?: boolean;
 }
 
-export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
+export function MarketComparisonTable({ itens, showValidation = true }: MarketComparisonTableProps) {
   return (
     <div className="rounded-xl border border-slate-800/50 bg-slate-900/40 backdrop-blur-sm overflow-hidden">
       <Table>
@@ -27,8 +28,12 @@ export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
             <TableHead className="text-right text-slate-300 font-semibold">Lucro Sistema</TableHead>
             <TableHead className="text-right text-slate-300 font-semibold">Lucro Mercado</TableHead>
             <TableHead className="text-right text-slate-300 font-semibold">Diferença</TableHead>
-            <TableHead className="text-center text-slate-300 font-semibold">Confiabilidade</TableHead>
-            <TableHead className="text-center text-slate-300 font-semibold">Status</TableHead>
+            {showValidation && (
+              <>
+                <TableHead className="text-center text-slate-300 font-semibold">Confiabilidade</TableHead>
+                <TableHead className="text-center text-slate-300 font-semibold">Status</TableHead>
+              </>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -42,7 +47,7 @@ export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
 
             const validacao = item.validacao_lucro_mercado;
             const confiabilidade = validacao?.confiabilidade ?? "media";
-            const critico = validacao?.critico ?? false;
+            const critico = showValidation && (validacao?.critico ?? false);
 
             // Determinar badge de confiabilidade
             const confiabilidadeBadge = {
@@ -106,6 +111,8 @@ export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
                     </span>
                   </div>
                 </TableCell>
+                {showValidation && (
+                  <>
                 <TableCell className="text-center">
                   <Badge 
                     variant="outline"
@@ -126,6 +133,8 @@ export function MarketComparisonTable({ itens }: MarketComparisonTableProps) {
                     </Badge>
                   )}
                 </TableCell>
+                  </>
+                )}
               </TableRow>
             );
           })}
