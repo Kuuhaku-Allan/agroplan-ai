@@ -14,9 +14,16 @@ import {
   Settings,
   Zap,
   Globe,
-  AlertTriangle
+  AlertTriangle,
+  ExternalLink
 } from "lucide-react";
-import { getApiMode, setApiMode, testApiConnection, clearApiCache } from "@/lib/api";
+import { getApiMode, setApiMode, testApiConnection, clearApiCache, API_ENDPOINTS, type ApiConnectionState } from "@/lib/api";
+import { RenderWakeNotice } from "@/components/api/render-wake-notice";
+import { 
+  isRenderKeepAliveEnabled, 
+  enableRenderKeepAlive, 
+  disableRenderKeepAlive 
+} from "@/hooks/useRenderKeepAlive";
 
 interface ApiModeSelectorProps {
   status: "connected" | "disconnected" | "loading";
@@ -29,9 +36,13 @@ export function ApiModeSelector({ status, origin, onRefresh }: ApiModeSelectorPr
   const [currentMode, setCurrentMode] = useState<'auto' | 'local' | 'online'>('auto');
   const [testing, setTesting] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
+  const [renderState, setRenderState] = useState<ApiConnectionState>('checking');
+  const [showRenderWake, setShowRenderWake] = useState(false);
+  const [keepAliveEnabled, setKeepAliveEnabled] = useState(false);
 
   useEffect(() => {
     setCurrentMode(getApiMode());
+    setKeepAliveEnabled(isRenderKeepAliveEnabled());
   }, []);
 
   const handleModeChange = async (mode: 'auto' | 'local' | 'online') => {
@@ -60,12 +71,32 @@ export function ApiModeSelector({ status, origin, onRefresh }: ApiModeSelectorPr
   const testConnection = async () => {
     setTesting(true);
     try {
-      await testApiConnection();
+      const result = await testApiConnection();
+      
+      // Atualizar estado da Render
+      setRenderState(result.render.state);
+      
+      // Mostrar aviso se Render estiver dormindo/lenta
+      if (
+        (currentMode === 'online' || currentMode === 'auto') &&
+        (result.render.state === 'waking' || result.render.state === 'slow_or_sleeping')
+      ) {
+        setShowRenderWake(true);
+      }
+      
       onRefresh();
     } catch (error) {
       console.error('Erro ao testar conexão:', error);
     }
     setTesting(false);
+  };
+
+  const handleToggleKeepAlive = () => {
+    if (keepAliveEnabled) {
+      disableRenderKeepAlive();
+    } else {
+      enableRenderKeepAlive();
+    }
   };
 
   const getBadgeContent = () => {
@@ -197,6 +228,50 @@ export function ApiModeSelector({ status, origin, onRefresh }: ApiModeSelectorPr
                   )}
                 </div>
               </div>
+
+              {/* Render Wake Notice */}
+              {showRenderWake && (currentMode === 'online' || currentMode === 'auto') && (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <div className="flex items-center gap-2 text-amber-400 text-sm font-medium mb-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    API Render pode estar dormindo
+                  </div>
+                  <p className="text-xs text-slate-400 mb-3">
+                    Pode levar ~1 minuto para acordar. Abra o link abaixo ou aguarde.
+                  </p>
+                  <a
+                    href={API_ENDPOINTS.renderHealth}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-mono"
+                  >
+                    {API_ENDPOINTS.renderHealth}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+
+              {/* Keep-Alive Toggle */}
+              {(currentMode === 'online' || currentMode === 'auto') && (
+                <div className="p-3 bg-slate-700/30 border border-slate-600/50 rounded-lg">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={keepAliveEnabled}
+                      onChange={handleToggleKeepAlive}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-500 bg-slate-700 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-800"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-slate-50">
+                        Manter API Render acordada
+                      </div>
+                      <div className="text-xs text-slate-400 mt-1">
+                        Faz ping a cada 10 minutos enquanto esta aba estiver aberta. Útil para apresentações.
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              )}
 
               {/* Botões de ação */}
               <div className="flex gap-2 pt-2 border-t border-slate-600">

@@ -16,6 +16,24 @@ const ONLINE_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://agroplan-ai-a
 const LOCAL_API_URL = 'http://localhost:8000';
 const CLIMATE_STORAGE_KEY = 'agroplan_climate_location';
 
+// Exportar endpoints centralizados
+export const API_ENDPOINTS = {
+  local: LOCAL_API_URL,
+  render: ONLINE_API_URL,
+  renderHealth: `${ONLINE_API_URL}/health`,
+  renderDebug: `${ONLINE_API_URL}/debug/version`,
+  localHealth: `${LOCAL_API_URL}/health`,
+  localDebug: `${LOCAL_API_URL}/debug/version`,
+} as const;
+
+// Estados de conexão da API
+export type ApiConnectionState =
+  | 'online'
+  | 'offline'
+  | 'checking'
+  | 'waking'
+  | 'slow_or_sleeping';
+
 // Cache da URL resolvida
 let resolvedApiUrl: string | null = null;
 let lastResolveTime = 0;
@@ -135,13 +153,23 @@ function isAbortError(error: unknown): boolean {
  * Testa conexão com as APIs
  */
 export async function testApiConnection(): Promise<{
-  local: { online: boolean; latency?: number; error?: string };
-  render: { online: boolean; latency?: number; error?: string };
+  local: { online: boolean; latency?: number; error?: string; state: ApiConnectionState };
+  render: { online: boolean; latency?: number; error?: string; state: ApiConnectionState };
   active: 'local' | 'render' | 'none';
 }> {
   const results = {
-    local: { online: false, latency: undefined as number | undefined, error: undefined as string | undefined },
-    render: { online: false, latency: undefined as number | undefined, error: undefined as string | undefined },
+    local: { 
+      online: false, 
+      latency: undefined as number | undefined, 
+      error: undefined as string | undefined,
+      state: 'checking' as ApiConnectionState
+    },
+    render: { 
+      online: false, 
+      latency: undefined as number | undefined, 
+      error: undefined as string | undefined,
+      state: 'checking' as ApiConnectionState
+    },
     active: 'none' as 'local' | 'render' | 'none'
   };
 
@@ -161,25 +189,52 @@ export async function testApiConnection(): Promise<{
     if (localResponse.ok) {
       results.local.online = true;
       results.local.latency = Date.now() - startLocal;
+      results.local.state = 'online';
+    } else {
+      results.local.state = 'offline';
     }
   } catch (error: unknown) {
     results.local.error = isAbortError(error) ? 'Timeout' : 'Conexão falhou';
+    results.local.state = 'offline';
   }
 
-  // Testar API Render
+  // Testar API Render com detecção de wake-up
   try {
     const startRender = Date.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos para Render
+    
     const renderResponse = await fetch(`${ONLINE_API_URL}/health`, {
-      signal: AbortSignal.timeout(5000),
+      signal: controller.signal,
       cache: 'no-store'
     });
     
+    clearTimeout(timeoutId);
+    const latency = Date.now() - startRender;
+    
     if (renderResponse.ok) {
       results.render.online = true;
-      results.render.latency = Date.now() - startRender;
+      results.render.latency = latency;
+      
+      // Detectar se está acordando (> 8 segundos) ou lenta (> 5 segundos)
+      if (latency > 8000) {
+        results.render.state = 'waking';
+      } else if (latency > 5000) {
+        results.render.state = 'slow_or_sleeping';
+      } else {
+        results.render.state = 'online';
+      }
+    } else {
+      results.render.state = 'offline';
     }
   } catch (error: unknown) {
-    results.render.error = isAbortError(error) ? 'Timeout' : 'Conexão falhou';
+    if (isAbortError(error)) {
+      results.render.error = 'Timeout (pode estar dormindo)';
+      results.render.state = 'slow_or_sleeping';
+    } else {
+      results.render.error = 'Conexão falhou';
+      results.render.state = 'offline';
+    }
   }
 
   // Determinar qual está ativa

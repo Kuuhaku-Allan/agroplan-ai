@@ -2,12 +2,16 @@
 
 import { Sidebar } from "./sidebar";
 import { ReactNode } from "react";
+import { useRenderKeepAlive } from "@/hooks/useRenderKeepAlive";
 
 interface AppShellProps {
   children: ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {
+  // Ativar keep-alive se configurado
+  useRenderKeepAlive();
+  
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Gradiente de fundo */}
