@@ -1,11 +1,11 @@
 # Fase 10.8 — Plano Técnico: Modo Avançado Modular
 
-**Status:** 📋 Em planejamento  
+**Status:** Concluída
 **Data:** 2026-05-16  
 **Branch:** main  
-**Última verificação:** Fase 10.8.2.1 validada com API local online em 2026-05-16. Detalhes em `FASE10.8.2.1_VERIFICACAO_PLANEJAMENTO_MODULAR.md`.  
-**Última fase implementada:** Fase 10.8.3 - Dashboard Modular. Detalhes em `FASE10.8.3_DASHBOARD_MODULAR.md`.
-**Artifact:** Este arquivo (não implementar sem aprovação)
+**Última verificação:** Fase 10.8.5 validada com lint, build e verificação visual em 2026-05-17.
+**Última fase implementada:** Fase 10.8.5 - Fechamento do Modo Avançado Modular. Detalhes em `FASE10.8_CONCLUSAO_MODO_AVANCADO_MODULAR.md`.
+**Artifact:** Histórico técnico da Fase 10.8.
 
 ---
 
@@ -644,8 +644,6 @@ Sem mudancas:
 - Nenhuma mudanca backend.
 - Nenhuma publicacao CLI.
 
----
-
 ## Fase 10.8.3 - Dashboard Modular
 
 Status: implementada e validada no frontend.
@@ -734,3 +732,35 @@ Sem mudancas:
 
 - Nenhuma mudanca backend.
 - Nenhuma publicacao CLI.
+
+---
+
+## Fase 10.8.5 - Fechamento do Modo Avancado Modular
+
+Status: implementada e validada no frontend.
+
+Resumo:
+
+- Presets revisados para alinhar Iniciante, Intermediario, Avancado e Manual.
+- Intermediario agora mantem comparacao de mercado ligada, com explicacoes reduzidas.
+- Dependencias de modulos foram centralizadas em `frontend/lib/settings.ts`.
+- `experimental_optimizer_enabled` depende de `prices_enabled` e `market_validation_enabled`.
+- `/configuracoes` foi reorganizada por categorias: Planejamento, Clima e ZARC, Mercado e Assistente.
+- `/configuracoes` ganhou resumo "Seu modo atual" com modulos ativos, nivel de assistencia e status de mercado experimental.
+- Textos de dependencias e bloqueios foram padronizados nos modulos principais.
+- README atualizado para registrar o Modo Avancado Modular como funcionalidade concluida.
+- Documento final criado em `FASE10.8_CONCLUSAO_MODO_AVANCADO_MODULAR.md`.
+
+Validacao:
+
+- `eslint` dos arquivos tocados passou.
+- `npm.cmd run build` passou.
+- Verificacao visual cobriu `/configuracoes`, `/planejamento`, `/dashboard` e `/comparacao-mercado`.
+- API Local e API Render verificadas na camada de backend/CLI: ambas em `1.0.40`.
+- NPM verificado: `agroplan-ai-cli@1.0.40` e a versao publicada atual.
+- Nao houve mudanca backend nesta fase, portanto nao foi necessario publicar nova versao NPM.
+
+Sem mudancas:
+
+- Nenhuma mudanca backend.
+- Nenhuma publicacao CLI nesta fase.

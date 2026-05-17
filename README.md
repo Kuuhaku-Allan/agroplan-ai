@@ -30,6 +30,15 @@ Sistema inteligente de planejamento agrícola:
 - Seleção de região climática integrada
 - Aviso de cautela sobre ajustes necessários
 
+### Configurações e Modo Avançado Modular
+Controle fino dos módulos inteligentes em `/configuracoes`:
+- Perfis prontos: Iniciante, Intermediário, Avançado e Manual
+- Módulos agrupados por Planejamento, Clima e ZARC, Mercado e Assistente
+- Clima, ZARC, preços, validação de mercado, comparação, otimização experimental, replanejamento e explicações podem ser ligados/desligados
+- Dependências tratadas automaticamente: recursos de mercado dependem de preços, e a otimização experimental depende também da validação de lucro de mercado
+- Páginas integradas: `/planejamento`, `/dashboard` e `/comparacao-mercado`
+- Preferências persistidas no navegador via `localStorage`
+
 ### 🗺️ Talhões
 Visualização e análise dos talhões da propriedade:
 - Características de cada talhão (solo, clima, relevo, água)
@@ -610,15 +619,18 @@ Não fingimos ter "previsão exata de 120 dias". Usamos dados históricos, médi
 - [x] Validação segura para sugestões com alto risco
 - [x] CLI 1.0.40 publicada com feature `calendar_replanning_apply_suggestions`
 
-**10.8 - Modo Avançado Modular**
-- [ ] Permitir ligar/desligar módulos
-- [ ] Clima: ligado/desligado
-- [ ] ZARC: ligado/desligado
-- [ ] Preços: ligados/desligados
-- [ ] Assistente: ligado/desligado
-- [ ] Recomendações: ligadas/desligadas
+**10.8 - Modo Avançado Modular** ✅ CONCLUÍDA
+- [x] Página `/configuracoes` com presets e módulos agrupados
+- [x] Clima: ligado/desligado com payload seguro
+- [x] ZARC: ligado/desligado com payload seguro
+- [x] Preços agrícolas e módulos dependentes
+- [x] Comparação de mercado e validação modular
+- [x] Otimização experimental bloqueada por dependências
+- [x] Replanejamento por imprevistos modular
+- [x] Explicações guiadas completas/reduzidas
+- [x] Integração em `/planejamento`, `/dashboard` e `/comparacao-mercado`
 
-**10.8 - Mapa e Desenho de Terreno**
+**Backlog pós-MVP - Mapa e Desenho de Terreno**
 - [ ] Selecionar terreno no mapa
 - [ ] Desenhar polígono
 - [ ] Calcular área automaticamente
@@ -650,7 +662,7 @@ Não fingimos ter "previsão exata de 120 dias". Usamos dados históricos, médi
 **Nível 1 - Manual** (Fase 10.2) ✅ Viável agora
 - Usuário informa: nome, área, solo, relevo, água, UF, município, coordenadas
 
-**Nível 2 - Mapa com Desenho** (Fase 10.8)
+**Nível 2 - Mapa com Desenho** (backlog pós-MVP)
 - Usuário desenha polígono no mapa
 - Sistema calcula: área, coordenadas, município, clima, ZARC
 

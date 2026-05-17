@@ -39,6 +39,13 @@ export const PRICE_DEPENDENT_MODULES = [
   "experimental_optimizer_enabled",
 ] as const satisfies readonly BooleanSettingKey[];
 
+export const MODULE_DEPENDENCIES: Partial<Record<BooleanSettingKey, readonly BooleanSettingKey[]>> = {
+  normalization_enabled: ["prices_enabled"],
+  market_validation_enabled: ["prices_enabled"],
+  market_comparison_enabled: ["prices_enabled"],
+  experimental_optimizer_enabled: ["prices_enabled", "market_validation_enabled"],
+};
+
 export const DEFAULTS: AdvancedModeSettings = {
   climate_enabled: true,
   zarc_enabled: true,
@@ -65,7 +72,7 @@ export const PRESETS: Record<AssistantLevel, AdvancedModeSettings> = {
     prices_enabled: true,
     normalization_enabled: true,
     market_validation_enabled: true,
-    market_comparison_enabled: false,
+    market_comparison_enabled: true,
     experimental_optimizer_enabled: false,
     replanning_enabled: true,
     guided_explanations_enabled: false,
@@ -129,13 +136,41 @@ export function isPriceDependentModule(module: BooleanSettingKey): boolean {
   );
 }
 
+export function getModuleDependencies(module: BooleanSettingKey): readonly BooleanSettingKey[] {
+  return MODULE_DEPENDENCIES[module] ?? [];
+}
+
+export function getMissingModuleDependencies(
+  settings: AdvancedModeSettings,
+  module: BooleanSettingKey,
+): BooleanSettingKey[] {
+  return getModuleDependencies(module).filter((dependency) => !isModuleEnabled(settings, dependency));
+}
+
+export function hasRequiredModuleDependencies(
+  settings: AdvancedModeSettings,
+  module: BooleanSettingKey,
+): boolean {
+  return getMissingModuleDependencies(settings, module).length === 0;
+}
+
+export function getModuleDependencyMessage(
+  settings: AdvancedModeSettings,
+  module: BooleanSettingKey,
+): string | null {
+  const missing = getMissingModuleDependencies(settings, module);
+  if (missing.length === 0) return null;
+
+  const labels = missing.map((dependency) => MODULE_LABELS[dependency]).join(" e ");
+  return `Ative ${labels} para usar este módulo.`;
+}
+
 export function isModuleEnabled(
   settings: AdvancedModeSettings,
   module: BooleanSettingKey,
 ): boolean {
   if (!settings[module]) return false;
-  if (isPriceDependentModule(module) && !settings.prices_enabled) return false;
-  return true;
+  return hasRequiredModuleDependencies(settings, module);
 }
 
 export function isClimateEnabled(settings: AdvancedModeSettings): boolean {
@@ -227,7 +262,7 @@ export function applyDependencyRules(
   key: BooleanSettingKey,
   value: boolean,
 ): AdvancedModeSettings {
-  if (isPriceDependentModule(key) && value && !settings.prices_enabled) {
+  if (value && !hasRequiredModuleDependencies(settings, key)) {
     return settings;
   }
 
@@ -241,15 +276,26 @@ export function applyDependencyRules(
 }
 
 export function sanitizeSettings(settings: AdvancedModeSettings): AdvancedModeSettings {
-  if (settings.prices_enabled) return settings;
+  let next = { ...settings };
 
-  return {
-    ...settings,
-    normalization_enabled: false,
-    market_validation_enabled: false,
-    market_comparison_enabled: false,
-    experimental_optimizer_enabled: false,
-  };
+  if (!next.prices_enabled) {
+    next = {
+      ...next,
+      normalization_enabled: false,
+      market_validation_enabled: false,
+      market_comparison_enabled: false,
+      experimental_optimizer_enabled: false,
+    };
+  }
+
+  if (!next.market_validation_enabled) {
+    next = {
+      ...next,
+      experimental_optimizer_enabled: false,
+    };
+  }
+
+  return next;
 }
 
 export function buildLocationForEnabledModules<T extends LocationFields>(

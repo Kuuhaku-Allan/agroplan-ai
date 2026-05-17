@@ -1,7 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle, CheckCircle2, RotateCcw, Settings2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  BadgeDollarSign,
+  CheckCircle2,
+  CloudSun,
+  LayoutGrid,
+  RotateCcw,
+  Settings2,
+  Sparkles,
+  type LucideIcon,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,7 +28,7 @@ import {
   MODULE_LABELS,
   PRESETS,
   countEnabledModules,
-  isPriceDependentModule,
+  getModuleDependencyMessage,
 } from '@/lib/settings';
 import type { AssistantLevel, BooleanSettingKey } from '@/lib/settings';
 
@@ -26,53 +37,94 @@ type ModuleDefinition = {
   description: string;
 };
 
-const MODULES: ModuleDefinition[] = [
+type ModuleGroup = {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  modules: ModuleDefinition[];
+};
+
+const MODULE_GROUPS: ModuleGroup[] = [
   {
-    key: 'climate_enabled',
-    description:
-      'Incorpora dados reais de temperatura e precipitação ao calendário e às previsões.',
+    title: 'Planejamento',
+    description: 'Calendário e talhões ficam sempre ativos; aqui você controla assistências de ajuste.',
+    icon: LayoutGrid,
+    modules: [
+      {
+        key: 'replanning_enabled',
+        description:
+          'Permite registrar imprevistos e receber sugestões de ajuste no planejamento.',
+      },
+    ],
   },
   {
-    key: 'zarc_enabled',
-    description:
-      'Consulta janelas oficiais de plantio e ajusta recomendações por UF, município e safra.',
+    title: 'Clima e ZARC',
+    description: 'Dados ambientais e janelas oficiais usadas nas análises.',
+    icon: CloudSun,
+    modules: [
+      {
+        key: 'climate_enabled',
+        description:
+          'Incorpora dados reais de temperatura e precipitação ao calendário e às previsões.',
+      },
+      {
+        key: 'zarc_enabled',
+        description:
+          'Consulta janelas oficiais de plantio e ajusta recomendações por UF, município e safra.',
+      },
+    ],
   },
   {
-    key: 'prices_enabled',
-    description:
-      'Adiciona preços de mercado ao planejamento e habilita os recursos econômicos.',
+    title: 'Mercado',
+    description: 'Preços, normalização, validação e análises experimentais de lucro.',
+    icon: BadgeDollarSign,
+    modules: [
+      {
+        key: 'prices_enabled',
+        description:
+          'Adiciona preços de mercado ao planejamento e habilita os recursos econômicos.',
+      },
+      {
+        key: 'normalization_enabled',
+        description:
+          'Converte preços por saca, quilo ou tonelada para comparar culturas com a mesma base.',
+      },
+      {
+        key: 'market_validation_enabled',
+        description:
+          'Compara o lucro otimizado com preços de mercado e classifica a confiabilidade.',
+      },
+      {
+        key: 'market_comparison_enabled',
+        description:
+          'Permite comparar lucro do sistema e lucro de mercado nos comparativos.',
+      },
+      {
+        key: 'experimental_optimizer_enabled',
+        description:
+          'Libera o otimizador experimental com objetivo de lucro de mercado para explorar cenários.',
+      },
+    ],
   },
   {
-    key: 'normalization_enabled',
-    description:
-      'Converte preços por saca, quilo ou tonelada para comparar culturas com a mesma base.',
-  },
-  {
-    key: 'market_validation_enabled',
-    description:
-      'Compara o lucro otimizado com preços de mercado e classifica a confiabilidade.',
-  },
-  {
-    key: 'market_comparison_enabled',
-    description:
-      'Permite alternar entre lucro do sistema e lucro de mercado nos comparativos.',
-  },
-  {
-    key: 'experimental_optimizer_enabled',
-    description:
-      'Usa o otimizador experimental com objetivo de lucro de mercado para explorar cenários.',
-  },
-  {
-    key: 'replanning_enabled',
-    description:
-      'Permite registrar imprevistos e receber sugestões de ajuste no planejamento.',
-  },
-  {
-    key: 'guided_explanations_enabled',
-    description:
-      'Mostra explicações mais detalhadas nas telas para orientar a tomada de decisão.',
+    title: 'Assistente',
+    description: 'Nível de orientação textual exibido nas telas integradas.',
+    icon: Sparkles,
+    modules: [
+      {
+        key: 'guided_explanations_enabled',
+        description:
+          'Mostra explicações mais detalhadas nas telas para orientar a tomada de decisão.',
+      },
+    ],
   },
 ];
+
+function statusBadgeClass(enabled: boolean) {
+  return enabled
+    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+    : 'border-slate-600/50 bg-slate-800/50 text-slate-400';
+}
 
 function ModuleSwitch({
   label,
@@ -90,7 +142,7 @@ function ModuleSwitch({
   return (
     <div
       className={`flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors ${
-        enabled ? 'border-slate-700 bg-slate-900' : 'border-slate-800 bg-slate-950'
+        enabled ? 'border-emerald-500/25 bg-emerald-500/10' : 'border-white/10 bg-slate-950/50'
       } ${disabled ? 'opacity-55' : ''}`}
     >
       <div className="min-w-0 flex-1">
@@ -125,7 +177,7 @@ function PresetSection() {
   const moduleTotal = Object.keys(MODULE_LABELS).length;
 
   return (
-    <Card className="border-slate-700 bg-slate-900">
+    <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-slate-100">
           <CheckCircle2 className="h-5 w-5 text-emerald-500" />
@@ -148,8 +200,8 @@ function PresetSection() {
                 onClick={() => applyPreset(level)}
                 className={`flex min-h-32 flex-col items-start justify-between rounded-lg border p-3 text-left transition-colors ${
                   active
-                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
-                    : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
+                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300'
+                    : 'border-white/10 bg-slate-950/50 text-slate-300 hover:border-slate-500 hover:bg-slate-800/70'
                 }`}
               >
                 <span>
@@ -172,41 +224,92 @@ function PresetSection() {
   );
 }
 
-function ModulesSection() {
-  const { updateSetting, isEnabled, isPricesEnabled } = useAdvancedMode();
-  const pricesOn = isPricesEnabled();
+function CurrentModeSummary() {
+  const {
+    settings,
+    canShowGuidedExplanations,
+    canUseExperimentalOptimizer,
+  } = useAdvancedMode();
+  const enabledCount = countEnabledModules(settings);
+  const moduleTotal = Object.keys(MODULE_LABELS).length;
+  const guidedExplanationsEnabled = canShowGuidedExplanations();
+  const experimentalEnabled = canUseExperimentalOptimizer();
 
   return (
-    <Card className="border-slate-700 bg-slate-900">
+    <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
+      <CardContent className="space-y-3 pt-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-slate-300">Seu modo atual</span>
+          <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
+            {ASSISTANT_LEVEL_LABELS[settings.assistant_level]}
+          </Badge>
+          <Badge variant="outline" className={statusBadgeClass(enabledCount > 0)}>
+            Módulos ativos: {enabledCount}/{moduleTotal}
+          </Badge>
+          <Badge variant="outline" className={statusBadgeClass(guidedExplanationsEnabled)}>
+            Assistência: {guidedExplanationsEnabled ? 'completa' : 'reduzida'}
+          </Badge>
+          <Badge variant="outline" className={statusBadgeClass(experimentalEnabled)}>
+            Mercado experimental: {experimentalEnabled ? 'ativo' : 'desativado'}
+          </Badge>
+        </div>
+        <p className="text-xs text-slate-500">
+          As páginas integradas consultam estas preferências antes de mostrar seções avançadas ou acionar chamadas de clima, ZARC e mercado.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ModulesSection() {
+  const { settings, updateSetting, isEnabled } = useAdvancedMode();
+
+  return (
+    <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-slate-100">
           <Settings2 className="h-5 w-5 text-blue-500" />
           Módulos individuais
         </CardTitle>
         <CardDescription className="text-slate-400">
-          Ajuste quais funcionalidades estão ativas. Recursos de mercado dependem de preços.
+          Ajuste quais funcionalidades estão ativas. Recursos dependentes ficam bloqueados até o módulo base ser ligado.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {MODULES.map(({ key, description }) => {
-          const priceDependent = isPriceDependentModule(key);
-          const disabled = priceDependent && !pricesOn;
+      <CardContent className="space-y-6">
+        {MODULE_GROUPS.map(({ title, description, icon: Icon, modules }) => (
+          <section key={title} className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg border border-white/10 bg-slate-950/60 p-2">
+                <Icon className="h-4 w-4 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
+                <p className="mt-0.5 text-xs text-slate-500">{description}</p>
+              </div>
+            </div>
+            <div className="grid gap-3">
+              {modules.map(({ key, description: moduleDescription }) => {
+                const dependencyMessage = getModuleDependencyMessage(settings, key);
+                const disabled = Boolean(dependencyMessage);
 
-          return (
-            <ModuleSwitch
-              key={key}
-              label={MODULE_LABELS[key]}
-              description={
-                disabled
-                  ? `${description} Ative "Preços agrícolas" para usar este módulo.`
-                  : description
-              }
-              enabled={isEnabled(key)}
-              disabled={disabled}
-              onChange={(value) => updateSetting(key, value)}
-            />
-          );
-        })}
+                return (
+                  <ModuleSwitch
+                    key={key}
+                    label={MODULE_LABELS[key]}
+                    description={
+                      dependencyMessage
+                        ? `${moduleDescription} ${dependencyMessage}`
+                        : moduleDescription
+                    }
+                    enabled={isEnabled(key)}
+                    disabled={disabled}
+                    onChange={(value) => updateSetting(key, value)}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </CardContent>
     </Card>
   );
@@ -222,10 +325,10 @@ function ResetButton() {
         variant="outline"
         size="sm"
         onClick={() => setShowConfirm(true)}
-        className="border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+        className="border-white/10 bg-slate-950/40 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
       >
         <RotateCcw className="mr-2 h-4 w-4" />
-        Resetar
+        Restaurar padrão
       </Button>
     );
   }
@@ -255,11 +358,8 @@ function ResetButton() {
 }
 
 export function AdvancedModePanel() {
-  const { settings } = useAdvancedMode();
-  const enabledCount = countEnabledModules(settings);
-
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6">
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex items-center gap-3">
         <div className="rounded-lg bg-emerald-500/10 p-2.5">
           <Settings2 className="h-7 w-7 text-emerald-500" />
@@ -273,28 +373,20 @@ export function AdvancedModePanel() {
       </div>
 
       <PresetSection />
+      <CurrentModeSummary />
       <ModulesSection />
 
-      <div className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-900/50 p-4">
-        <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" />
-        <div className="text-sm leading-relaxed text-slate-400">
-          <p className="mb-1 font-medium text-slate-300">Desligado significa desligado</p>
+      <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
+        <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-400" />
+        <div className="text-sm leading-relaxed text-amber-100/80">
+          <p className="mb-1 font-medium text-amber-200">Desligado significa desligado</p>
           <p>
-            Nas próximas etapas, módulos desativados também deixarão de enviar parâmetros que
-            acionam clima, ZARC ou mercado quando isso for possível. Calendário e talhões seguem
-            sempre ativos.
+            Módulos desativados deixam de exibir suas seções e, quando possível, deixam de enviar parâmetros que acionam clima, ZARC, preços ou mercado. Calendário e talhões seguem sempre ativos.
           </p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 pt-2 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-        <span>
-          Perfil atual:{' '}
-          <span className="font-medium text-slate-300">
-            {ASSISTANT_LEVEL_LABELS[settings.assistant_level]}
-          </span>{' '}
-          - {enabledCount}/{Object.keys(MODULE_LABELS).length} módulos ativos
-        </span>
+      <div className="flex justify-end pt-2">
         <ResetButton />
       </div>
     </div>
