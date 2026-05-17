@@ -86,13 +86,24 @@ def criar_talhao_usuario(data: Dict) -> Dict:
     Returns:
         Talhão criado com id e timestamps
     """
+    from core.planning_models import normalize_slope, normalize_soil_type, normalize_water_availability
+    
     fields = _load_fields()
+    
+    # Normalizar valores antes de salvar
+    normalized_data = data.copy()
+    if "slope" in normalized_data:
+        normalized_data["slope"] = normalize_slope(normalized_data["slope"])
+    if "soil_type" in normalized_data:
+        normalized_data["soil_type"] = normalize_soil_type(normalized_data["soil_type"])
+    if "water_availability" in normalized_data:
+        normalized_data["water_availability"] = normalize_water_availability(normalized_data["water_availability"])
     
     # Gerar novo talhão
     now = datetime.now().isoformat()
     new_field = {
         "id": str(uuid.uuid4()),
-        **data,
+        **normalized_data,
         "created_at": now,
         "updated_at": now
     }
@@ -133,14 +144,25 @@ def atualizar_talhao_usuario(field_id: str, data: Dict) -> Optional[Dict]:
     Returns:
         Talhão atualizado ou None se não encontrado
     """
+    from core.planning_models import normalize_slope, normalize_soil_type, normalize_water_availability
+    
     fields = _load_fields()
+    
+    # Normalizar valores antes de salvar
+    normalized_data = data.copy()
+    if "slope" in normalized_data:
+        normalized_data["slope"] = normalize_slope(normalized_data["slope"])
+    if "soil_type" in normalized_data:
+        normalized_data["soil_type"] = normalize_soil_type(normalized_data["soil_type"])
+    if "water_availability" in normalized_data:
+        normalized_data["water_availability"] = normalize_water_availability(normalized_data["water_availability"])
     
     for i, field in enumerate(fields):
         if field.get("id") == field_id:
             # Preservar id e created_at, atualizar updated_at
             updated_field = {
                 "id": field["id"],
-                **data,
+                **normalized_data,
                 "created_at": field["created_at"],
                 "updated_at": datetime.now().isoformat()
             }

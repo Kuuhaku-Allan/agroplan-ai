@@ -1619,7 +1619,10 @@ def gerar_calendario_talhao(field_id: str, request: dict):
         from core.field_storage import obter_talhao_usuario
         from core.crop_calendar_engine import gerar_calendario_cultura
         from core.calendar_weather_adapter import enriquecer_calendario_com_clima
-        from core.planning_models import Field, SoilType, Slope, WaterAvailability, GenerateCalendarRequest
+        from core.planning_models import (
+            Field, SoilType, Slope, WaterAvailability, GenerateCalendarRequest,
+            normalize_slope, normalize_soil_type, normalize_water_availability
+        )
         from datetime import datetime
         
         # Validar request
@@ -1643,15 +1646,20 @@ def gerar_calendario_talhao(field_id: str, request: dict):
                 detail="Formato de data inválido. Use ISO 8601 (YYYY-MM-DD)"
             )
         
+        # Normalizar valores antes de criar Field
+        normalized_slope = normalize_slope(field_data["slope"])
+        normalized_soil = normalize_soil_type(field_data["soil_type"])
+        normalized_water = normalize_water_availability(field_data["water_availability"])
+        
         # Criar objeto Field
         field = Field(
             id=field_data["id"],
             property_id="user",
             name=field_data["name"],
             area_ha=field_data["area_ha"],
-            soil_type=SoilType(field_data["soil_type"]),
-            slope=Slope(field_data["slope"]),
-            water_availability=WaterAvailability(field_data["water_availability"])
+            soil_type=SoilType(normalized_soil),
+            slope=Slope(normalized_slope),
+            water_availability=WaterAvailability(normalized_water)
         )
         
         # Gerar calendário

@@ -38,8 +38,8 @@ class SoilType(str, Enum):
 class Slope(str, Enum):
     """Tipos de relevo"""
     PLANO = "plano"
-    LEVE = "leve"
-    MEDIO = "medio"
+    SUAVE = "suave"
+    MODERADO = "moderado"
     INGREME = "ingreme"
 
 
@@ -486,10 +486,90 @@ class GenerateCalendarRequest(BaseModel):
     @field_validator('cultura')
     @classmethod
     def validate_cultura(cls, v: str) -> str:
-        allowed = ['soja', 'milho', 'feijao']
+        allowed = ['soja', 'milho', 'feijao', 'cafe', 'cana', 'arroz', 'trigo', 'sorgo', 'mandioca', 'algodao']
         if v not in allowed:
             raise ValueError(f'cultura deve ser uma de: {", ".join(allowed)}')
         return v
+
+
+# ===== Funções de Normalização =====
+
+def normalize_slope(value: str) -> str:
+    """
+    Normaliza valores antigos de slope para os novos padrões.
+    
+    Mapeamento:
+    - leve → suave
+    - medio/médio → moderado
+    - moderada → moderado
+    
+    Args:
+        value: Valor de slope a normalizar
+    
+    Returns:
+        Valor normalizado
+    """
+    mapping = {
+        "leve": "suave",
+        "medio": "moderado",
+        "médio": "moderado",
+        "moderada": "moderado"
+    }
+    return mapping.get(value.lower() if value else "", value)
+
+
+def normalize_soil_type(value: str) -> str:
+    """
+    Normaliza valores de tipo de solo.
+    
+    Args:
+        value: Valor de soil_type a normalizar
+    
+    Returns:
+        Valor normalizado (lowercase, sem acentos)
+    """
+    if not value:
+        return value
+    
+    # Remover acentos e normalizar
+    normalized = value.lower().strip()
+    
+    # Mapeamentos específicos se necessário
+    mapping = {
+        "argiloso": "argiloso",
+        "arenoso": "arenoso",
+        "misto": "misto",
+        "siltoso": "siltoso"
+    }
+    
+    return mapping.get(normalized, normalized)
+
+
+def normalize_water_availability(value: str) -> str:
+    """
+    Normaliza valores de disponibilidade de água.
+    
+    Args:
+        value: Valor de water_availability a normalizar
+    
+    Returns:
+        Valor normalizado (lowercase, sem acentos)
+    """
+    if not value:
+        return value
+    
+    # Remover acentos e normalizar
+    normalized = value.lower().strip()
+    
+    # Mapeamentos específicos
+    mapping = {
+        "baixa": "baixa",
+        "media": "media",
+        "média": "media",
+        "alta": "alta"
+    }
+    
+    return mapping.get(normalized, normalized)
 
 
 # ===== Modelos de Replanejamento por Imprevistos (Fase 10.6) =====
