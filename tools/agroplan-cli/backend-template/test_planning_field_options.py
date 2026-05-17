@@ -158,13 +158,10 @@ def testar_combinacao(soil_type: str, slope: str, water_availability: str) -> Tu
             return False, f"Falha ao gerar calendário: {data.get('error', 'Erro desconhecido')}"
         
         # 3. Validar resposta
-        if "calendar" not in data:
-            return False, "Resposta não contém 'calendar'"
+        if "tasks" not in data:
+            return False, "Resposta não contém 'tasks'"
         
-        if "tasks" not in data["calendar"]:
-            return False, "Calendário não contém 'tasks'"
-        
-        if len(data["calendar"]["tasks"]) == 0:
+        if len(data["tasks"]) == 0:
             return False, "Calendário não contém tarefas"
         
         return True, ""
