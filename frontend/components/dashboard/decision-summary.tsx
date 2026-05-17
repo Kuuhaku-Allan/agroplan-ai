@@ -9,9 +9,14 @@ interface DecisionSummaryProps {
     otimo_global: boolean;
     total_combinacoes: number;
   };
+  showGuidedExplanations?: boolean;
 }
 
-export function DecisionSummary({ objetivo, validacao }: DecisionSummaryProps) {
+export function DecisionSummary({
+  objetivo,
+  validacao,
+  showGuidedExplanations = true,
+}: DecisionSummaryProps) {
   const forcaBrutaInviavel = validacao.total_combinacoes > 10000;
   
   return (
@@ -37,10 +42,12 @@ export function DecisionSummary({ objetivo, validacao }: DecisionSummaryProps) {
           </div>
         </div>
 
-        <p className="text-slate-300 leading-relaxed mb-4">
-          O AgroPlan AI recomenda o plano otimizado pelo <strong className="text-emerald-500">Algoritmo Genético</strong> por 
-          apresentar melhor equilíbrio entre lucro, risco, compatibilidade do terreno e diversidade de culturas.
-        </p>
+        {showGuidedExplanations && (
+          <p className="text-slate-300 leading-relaxed mb-4">
+            O AgroPlan AI recomenda o plano otimizado pelo <strong className="text-emerald-500">Algoritmo Genético</strong> por
+            apresentar melhor equilíbrio entre lucro, risco, compatibilidade do terreno e diversidade de culturas.
+          </p>
+        )}
 
         {/* Badges de informação */}
         <div className="space-y-2">
@@ -95,12 +102,14 @@ export function DecisionSummary({ objetivo, validacao }: DecisionSummaryProps) {
         </div>
 
         {/* Nota de rodapé */}
-        <div className="mt-4 pt-4 border-t border-slate-700/50">
-          <p className="text-xs text-slate-500">
-            Este plano considera múltiplos objetivos e aplica penalidades agronômicas para evitar 
-            soluções inadequadas como monocultura ou incompatibilidade de solo.
-          </p>
-        </div>
+        {showGuidedExplanations && (
+          <div className="mt-4 pt-4 border-t border-slate-700/50">
+            <p className="text-xs text-slate-500">
+              Este plano considera múltiplos objetivos e aplica penalidades agronômicas para evitar
+              soluções inadequadas como monocultura ou incompatibilidade de solo.
+            </p>
+          </div>
+        )}
       </div>
     </Card>
   );

@@ -121,7 +121,14 @@ export function setApiMode(mode: 'auto' | 'local' | 'online'): void {
  */
 export function getApiMode(): 'auto' | 'local' | 'online' {
   if (typeof window === 'undefined') return 'auto';
-  return (localStorage.getItem('agroplan_api_mode') as any) || 'auto';
+  const mode = localStorage.getItem('agroplan_api_mode');
+  return mode === 'local' || mode === 'online' || mode === 'auto' ? mode : 'auto';
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException
+    ? error.name === 'AbortError'
+    : error instanceof Error && error.name === 'AbortError';
 }
 
 /**
@@ -155,8 +162,8 @@ export async function testApiConnection(): Promise<{
       results.local.online = true;
       results.local.latency = Date.now() - startLocal;
     }
-  } catch (error: any) {
-    results.local.error = error.name === 'AbortError' ? 'Timeout' : 'Conexão falhou';
+  } catch (error: unknown) {
+    results.local.error = isAbortError(error) ? 'Timeout' : 'Conexão falhou';
   }
 
   // Testar API Render
@@ -171,8 +178,8 @@ export async function testApiConnection(): Promise<{
       results.render.online = true;
       results.render.latency = Date.now() - startRender;
     }
-  } catch (error: any) {
-    results.render.error = error.name === 'AbortError' ? 'Timeout' : 'Conexão falhou';
+  } catch (error: unknown) {
+    results.render.error = isAbortError(error) ? 'Timeout' : 'Conexão falhou';
   }
 
   // Determinar qual está ativa
@@ -277,17 +284,19 @@ export async function getHealth() {
   }
 }
 
-export async function getDashboard(location?: ClimateLocation) {
+export async function getDashboard(location?: Partial<ClimateLocation>) {
   try {
     let url = '/dashboard';
     
     // Adicionar parâmetros climáticos e ZARC se localização fornecida
     if (location) {
-      const params = new URLSearchParams({
-        lat: location.lat.toString(),
-        lon: location.lon.toString(),
-        days: (location.days || 30).toString()
-      });
+      const params = new URLSearchParams();
+
+      if (location.lat !== undefined && location.lon !== undefined) {
+        params.append('lat', location.lat.toString());
+        params.append('lon', location.lon.toString());
+        params.append('days', (location.days || 30).toString());
+      }
       
       // Adicionar parâmetros ZARC se disponíveis
       if (location.uf) {
@@ -300,7 +309,10 @@ export async function getDashboard(location?: ClimateLocation) {
         params.append('safra', location.safra);
       }
       
-      url += `?${params.toString()}`;
+      const query = params.toString();
+      if (query) {
+        url += `?${query}`;
+      }
     }
     
     const response = await apiFetch(url, {
@@ -353,29 +365,17 @@ export async function getCulturas() {
   return response.json();
 }
 
-export async function getCenarios(location?: ClimateLocation) {
+export async function getCenarios(location?: Partial<ClimateLocation>) {
   try {
     let url = '/cenarios';
     
-    // Adicionar parâmetros climáticos e ZARC se localização fornecida
-    if (location) {
+    // Adicionar parâmetros climáticos se localização fornecida
+    if (location?.lat !== undefined && location.lon !== undefined) {
       const params = new URLSearchParams({
         lat: location.lat.toString(),
         lon: location.lon.toString(),
         days: (location.days || 30).toString()
       });
-      
-      // Adicionar parâmetros ZARC se disponíveis
-      if (location.uf) {
-        params.append('uf', location.uf);
-      }
-      if (location.municipio) {
-        params.append('municipio', location.municipio);
-      }
-      if (location.safra) {
-        params.append('safra', location.safra);
-      }
-      
       url += `?${params.toString()}`;
     }
     
@@ -391,7 +391,7 @@ export async function getCenarios(location?: ClimateLocation) {
 
 export async function otimizar(objetivo: string = 'equilibrado', seed: number = 42, location?: ClimateLocation) {
   try {
-    const body: any = { objetivo, seed };
+    const body: Record<string, string | number> = { objetivo, seed };
     
     // Adicionar parâmetros climáticos se localização fornecida
     if (location) {
@@ -473,7 +473,7 @@ export async function rodadas(objetivo: string = 'equilibrado', numRodadas: numb
 
 export async function gerarRelatorio(objetivo: string = 'equilibrado', formato: string = 'md', location?: ClimateLocation) {
   try {
-    const body: any = { objetivo, formato };
+    const body: Record<string, string | number> = { objetivo, formato };
     
     // Adicionar parâmetros climáticos se localização fornecida
     if (location) {
@@ -505,9 +505,9 @@ export async function gerarRelatorio(objetivo: string = 'equilibrado', formato: 
     }
     
     return response.json();
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro em gerarRelatorio:', error);
-    throw new Error(error.message || 'Falha ao gerar relatório');
+    throw new Error(error instanceof Error ? error.message : 'Falha ao gerar relatório');
   }
 }
 

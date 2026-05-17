@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { getDashboard, getCenarios, getClimateLocation, setClimateLocation } from "@/lib/api";
 import { DashboardData, Cenario } from "@/lib/types";
 import type { ClimateLocation, ClimateData } from "@/lib/types/climate";
@@ -17,11 +18,30 @@ import { ClimateRegionSelector } from "@/components/climate/climate-region-selec
 import { ZarcImpactBanner } from "@/components/zarc/zarc-impact-banner";
 import { PriceImpactBanner } from "@/components/prices/price-impact-banner";
 import { MarketProfitValidationBanner } from "@/components/prices/market-profit-validation-banner";
-import { formatCurrencyBRL, formatPercent, formatFitness, formatCurrencyCompactBRL, formatLargeNumber } from "@/lib/formatters";
+import { formatCurrencyBRL, formatPercent, formatFitness, formatCurrencyCompactBRL } from "@/lib/formatters";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { useAdvancedMode } from "@/hooks/useAdvancedMode";
+import {
+  ASSISTANT_LEVEL_LABELS,
+  buildLocationForEnabledModules,
+} from "@/lib/settings";
 
-import { TrendingUp, AlertTriangle, Gauge, Sprout, CheckCircle2, MapPin } from "lucide-react";
+import {
+  TrendingUp,
+  AlertTriangle,
+  Gauge,
+  Sprout,
+  CheckCircle2,
+  MapPin,
+  Settings2,
+  CloudSun,
+  BadgeDollarSign,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 
 // Função auxiliar para determinar status de validação
 function getValidationStatus(validacao: { otimo_global: boolean; total_combinacoes: number }) {
@@ -50,7 +70,71 @@ function getValidationStatus(validacao: { otimo_global: boolean; total_combinaco
   };
 }
 
+function statusBadgeClass(enabled: boolean) {
+  return enabled
+    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+    : "border-slate-600/50 bg-slate-800/50 text-slate-400";
+}
+
+function hasLocationPayload(location?: Partial<ClimateLocation>): boolean {
+  if (!location) return false;
+  return Boolean(
+    location.lat !== undefined ||
+      location.lon !== undefined ||
+      location.uf ||
+      location.municipio ||
+      location.safra,
+  );
+}
+
+interface ModuleNoticeProps {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  tone?: "slate" | "amber";
+}
+
+function ModuleNotice({
+  icon: Icon,
+  title,
+  description,
+  tone = "slate",
+}: ModuleNoticeProps) {
+  const toneClass =
+    tone === "amber"
+      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+      : "border-slate-700/70 bg-slate-900/50 text-slate-300";
+
+  return (
+    <div className={`rounded-lg border p-4 ${toneClass}`}>
+      <div className="flex items-start gap-3">
+        <Icon className="mt-0.5 h-5 w-5 flex-shrink-0" />
+        <div>
+          <h3 className="text-sm font-medium">{title}</h3>
+          <p className="mt-1 text-xs text-slate-400">{description}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
+  const {
+    settings: advancedSettings,
+    canUseClimate,
+    canUseZarc,
+    canUsePrices,
+    canUseMarketValidation,
+    canShowGuidedExplanations,
+  } = useAdvancedMode();
+
+  const climateEnabled = canUseClimate();
+  const zarcEnabled = canUseZarc();
+  const pricesEnabled = canUsePrices();
+  const marketValidationEnabled = canUseMarketValidation();
+  const guidedExplanationsEnabled = canShowGuidedExplanations();
+  const manualMode = advancedSettings.assistant_level === "manual";
+
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [cenarios, setCenarios] = useState<Record<string, Cenario> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +142,17 @@ export default function DashboardPage() {
   const [climateLocation, setClimateLocationState] = useState<ClimateLocation | null>(null);
   const [showClimateSelector, setShowClimateSelector] = useState(false);
 
-  const loadData = async () => {
+  const getEnabledLocationPayload = useCallback(
+    (location: ClimateLocation | null): Partial<ClimateLocation> | undefined => {
+      if (!location) return undefined;
+
+      const enabledLocation = buildLocationForEnabledModules(location, advancedSettings);
+      return hasLocationPayload(enabledLocation) ? enabledLocation : undefined;
+    },
+    [advancedSettings],
+  );
+
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -66,11 +160,12 @@ export default function DashboardPage() {
       // Obter localização climática salva
       const savedLocation = getClimateLocation();
       setClimateLocationState(savedLocation);
+      const enabledLocation = getEnabledLocationPayload(savedLocation);
 
       // Carrega dashboard e cenários em paralelo com localização climática
       const [dashboardData, cenariosData] = await Promise.all([
-        getDashboard(savedLocation || undefined),
-        getCenarios(savedLocation || undefined)
+        getDashboard(enabledLocation),
+        getCenarios(enabledLocation)
       ]);
       
       setDashboard(dashboardData);
@@ -81,7 +176,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getEnabledLocationPayload]);
 
   const handleClimateLocationChange = (location: ClimateLocation | null) => {
     setClimateLocation(location);
@@ -92,15 +187,19 @@ export default function DashboardPage() {
   useEffect(() => {
     // Só executa no cliente
     if (typeof window !== 'undefined') {
-      loadData();
+      const timeoutId = window.setTimeout(() => {
+        void loadData();
+      }, 0);
+
+      return () => window.clearTimeout(timeoutId);
     }
-  }, []);
+  }, [loadData]);
 
   return (
     <div>
       <Topbar
         title="Dashboard"
-        subtitle="Visão geral do planejamento agrícola"
+        subtitle={guidedExplanationsEnabled ? "Visão geral do planejamento agrícola" : undefined}
       />
 
       <div className="p-8 space-y-8">
@@ -108,6 +207,55 @@ export default function DashboardPage() {
         {error && !loading && (
           <ErrorState onRetry={loadData} />
         )}
+
+        {/* Status modular */}
+        <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
+          <CardContent className="flex flex-col gap-4 pt-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-slate-300">
+                  Modo atual: {ASSISTANT_LEVEL_LABELS[advancedSettings.assistant_level]}
+                </span>
+                <Badge variant="outline" className={statusBadgeClass(climateEnabled)}>
+                  Clima: {climateEnabled ? "ligado" : "desligado"}
+                </Badge>
+                <Badge variant="outline" className={statusBadgeClass(zarcEnabled)}>
+                  ZARC: {zarcEnabled ? "ligado" : "desligado"}
+                </Badge>
+                <Badge variant="outline" className={statusBadgeClass(pricesEnabled)}>
+                  Preços: {pricesEnabled ? "ligado" : "desligado"}
+                </Badge>
+                <Badge variant="outline" className={statusBadgeClass(marketValidationEnabled)}>
+                  Validação mercado: {marketValidationEnabled ? "ligada" : "desligada"}
+                </Badge>
+                <Badge variant="outline" className={statusBadgeClass(guidedExplanationsEnabled)}>
+                  Explicações: {guidedExplanationsEnabled ? "completas" : "reduzidas"}
+                </Badge>
+              </div>
+              {guidedExplanationsEnabled && (
+                <p className="text-xs text-slate-500">
+                  O Dashboard aplica essas preferências antes de enviar localização para a API.
+                </p>
+              )}
+              {manualMode && (
+                <p className="text-xs text-emerald-300/80">
+                  Você está no modo Manual. Apenas informações essenciais ficam visíveis.
+                </p>
+              )}
+            </div>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="border-white/10 bg-slate-950/40 text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-300"
+            >
+              <Link href="/configuracoes">
+                <Settings2 className="mr-2 h-4 w-4" />
+                Editar configurações
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Cards de métricas */}
         {loading ? (
@@ -203,13 +351,14 @@ export default function DashboardPage() {
             {/* Coluna direita: Clima, ZARC, Decisão e Ações (1/3 da largura) */}
             <div className="space-y-6">
               {/* Card de Clima Real */}
-              {climateLocation ? (
+              {climateEnabled ? (
+                climateLocation ? (
                 <ClimateRegionCard
                   location={climateLocation}
                   climateData={dashboard.clima_real as ClimateData}
                   onRemove={() => handleClimateLocationChange(null)}
                 />
-              ) : (
+                ) : (
                 <div className="p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -218,8 +367,50 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <p className="text-xs text-slate-400 mb-3">
-                    Selecione uma região para usar dados climáticos reais do Open-Meteo
+                    {guidedExplanationsEnabled
+                      ? "Selecione uma região para usar dados climáticos reais do Open-Meteo"
+                      : "Nenhuma região climática selecionada."}
                   </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
+                    onClick={() => setShowClimateSelector(true)}
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Selecionar Região
+                  </Button>
+                </div>
+                )
+              ) : (
+                <ModuleNotice
+                  icon={CloudSun}
+                  title="Clima integrado desativado"
+                  description="Clima integrado está desativado nas Configurações."
+                />
+              )}
+
+              {/* Banner ZARC */}
+              {zarcEnabled && dashboard.zarc?.ativo && (
+                <ZarcImpactBanner
+                  zarc={dashboard.zarc}
+                  onChangeRegion={() => setShowClimateSelector(true)}
+                />
+              )}
+
+              {zarcEnabled && !dashboard.zarc?.ativo && (
+                <div className="rounded-lg border border-slate-700/70 bg-slate-900/50 p-4">
+                  <div className="mb-3 flex items-start gap-3">
+                    <Sprout className="mt-0.5 h-5 w-5 text-slate-400" />
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-300">ZARC sem região</h3>
+                      {guidedExplanationsEnabled && (
+                        <p className="mt-1 text-xs text-slate-400">
+                          Selecione uma região predefinida com UF e município para mostrar cobertura ZARC.
+                        </p>
+                      )}
+                    </div>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
@@ -232,26 +423,51 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* Banner ZARC */}
-              {dashboard.zarc?.ativo && (
-                <ZarcImpactBanner
-                  zarc={dashboard.zarc}
-                  onChangeRegion={() => setShowClimateSelector(true)}
+              {!zarcEnabled && (
+                <ModuleNotice
+                  icon={Sprout}
+                  title="ZARC desativado"
+                  description="ZARC está desativado nas Configurações."
                 />
               )}
 
               {/* Banner de Preços */}
-              {dashboard.precos?.ativo && (
+              {pricesEnabled && dashboard.precos?.ativo && (
                 <PriceImpactBanner precos={dashboard.precos} />
               )}
 
+              {!pricesEnabled && (
+                <ModuleNotice
+                  icon={BadgeDollarSign}
+                  title="Preços agrícolas desativados"
+                  description="Preços agrícolas estão desativados nas Configurações."
+                />
+              )}
+
               {/* Banner de Validação de Lucro de Mercado */}
-              {dashboard.validacao_lucro_mercado?.ativo && (
+              {pricesEnabled && marketValidationEnabled && dashboard.validacao_lucro_mercado?.ativo && (
                 <MarketProfitValidationBanner validacao={dashboard.validacao_lucro_mercado} />
               )}
 
+              {pricesEnabled && !marketValidationEnabled && (
+                <ModuleNotice
+                  icon={ShieldCheck}
+                  title="Validação de mercado desativada"
+                  description="Validação de lucro de mercado está desativada nas Configurações."
+                />
+              )}
+
+              {!pricesEnabled && (
+                <ModuleNotice
+                  icon={ShieldCheck}
+                  title="Validação de mercado indisponível"
+                  description="Validação de lucro de mercado depende de preços agrícolas."
+                  tone="amber"
+                />
+              )}
+
               {/* Aviso se tem clima mas não tem ZARC */}
-              {climateLocation && !climateLocation.uf && (
+              {zarcEnabled && climateLocation && !climateLocation.uf && (
                 <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                   <p className="text-xs text-amber-600">
                     💡 ZARC requer município e UF. Selecione uma região predefinida como Clementina-SP.
@@ -262,6 +478,7 @@ export default function DashboardPage() {
               <DecisionSummary 
                 objetivo={dashboard.objetivo}
                 validacao={dashboard.validacao}
+                showGuidedExplanations={guidedExplanationsEnabled}
               />
               
               <QuickActions />

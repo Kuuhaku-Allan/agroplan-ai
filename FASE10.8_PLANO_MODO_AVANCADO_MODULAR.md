@@ -4,6 +4,7 @@
 **Data:** 2026-05-16  
 **Branch:** main  
 **Última verificação:** Fase 10.8.2.1 validada com API local online em 2026-05-16. Detalhes em `FASE10.8.2.1_VERIFICACAO_PLANEJAMENTO_MODULAR.md`.  
+**Última fase implementada:** Fase 10.8.3 - Dashboard Modular. Detalhes em `FASE10.8.3_DASHBOARD_MODULAR.md`.
 **Artifact:** Este arquivo (não implementar sem aprovação)
 
 ---
@@ -642,3 +643,46 @@ Sem mudancas:
 
 - Nenhuma mudanca backend.
 - Nenhuma publicacao CLI.
+
+---
+
+## Fase 10.8.3 - Dashboard Modular
+
+Status: implementada e validada no frontend.
+
+Resumo:
+
+- `/dashboard` agora usa `useAdvancedMode()`.
+- Card de status modular adicionado ao topo do Dashboard.
+- `climate_enabled` controla exibicao climatica e remove `lat/lon/days` das chamadas quando desligado.
+- `zarc_enabled` controla exibicao ZARC e remove `uf/municipio/safra` das chamadas quando desligado.
+- `prices_enabled` controla banners de precos e lucro de mercado derivado de precos.
+- `market_validation_enabled` controla o banner de validacao de lucro de mercado.
+- `guided_explanations_enabled` reduz textos didaticos sem esconder alertas e metricas essenciais.
+- Perfil Manual mantem o Dashboard util com metricas, graficos, plano recomendado, decisao e acoes rapidas.
+
+Arquivos principais:
+
+- `frontend/app/dashboard/page.tsx`
+- `frontend/components/dashboard/decision-summary.tsx`
+- `frontend/lib/settings.ts`
+- `frontend/context/AdvancedModeContext.tsx`
+- `frontend/lib/api.ts`
+
+Payload seguro:
+
+- `getDashboard()` passou a aceitar localizacao parcial.
+- `getCenarios()` passou a enviar apenas parametros climaticos quando `lat/lon` estao disponiveis.
+- O Dashboard usa `buildLocationForEnabledModules()` antes das chamadas.
+
+Validacao:
+
+- `eslint` dos arquivos tocados passou.
+- `npm.cmd run build` passou apos reexecucao com rede para buscar a fonte Inter.
+- Verificacao visual no navegador cobriu Iniciante, Manual, Avancado com clima off, Avancado com ZARC off e Avancado com precos off.
+
+Sem mudancas:
+
+- Nenhuma mudanca backend.
+- Nenhuma publicacao CLI.
+- Comparacao Mercado segue fora do escopo desta fase.

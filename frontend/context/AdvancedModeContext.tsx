@@ -26,6 +26,9 @@ import {
   isMarketEnabled as getMarketEnabled,
   canUseExperimentalOptimizer as getCanUseExperimentalOptimizer,
   canUseClimate as getCanUseClimate,
+  canUseZarc as getCanUseZarc,
+  canUsePrices as getCanUsePrices,
+  canUseMarketValidation as getCanUseMarketValidation,
   canUseReplanning as getCanUseReplanning,
   canShowGuidedExplanations as getCanShowGuidedExplanations,
   canUseGuidedMode as getCanUseGuidedMode,
@@ -47,6 +50,9 @@ interface AdvancedModeContextValue {
   isMarketEnabled: () => boolean;
   canUseExperimentalOptimizer: () => boolean;
   canUseClimate: () => boolean;
+  canUseZarc: () => boolean;
+  canUsePrices: () => boolean;
+  canUseMarketValidation: () => boolean;
   canUseReplanning: () => boolean;
   canShowGuidedExplanations: () => boolean;
   canUseGuidedMode: () => boolean;
@@ -128,6 +134,9 @@ export function AdvancedModeProvider({ children }: AdvancedModeProviderProps) {
   const isMarketEnabled = () => getMarketEnabled(settings);
   const canUseExperimentalOptimizer = () => getCanUseExperimentalOptimizer(settings);
   const canUseClimate = () => getCanUseClimate(settings);
+  const canUseZarc = () => getCanUseZarc(settings);
+  const canUsePrices = () => getCanUsePrices(settings);
+  const canUseMarketValidation = () => getCanUseMarketValidation(settings);
   const canUseReplanning = () => getCanUseReplanning(settings);
   const canShowGuidedExplanations = () => getCanShowGuidedExplanations(settings);
   const canUseGuidedMode = () => getCanUseGuidedMode();
@@ -144,6 +153,9 @@ export function AdvancedModeProvider({ children }: AdvancedModeProviderProps) {
     isMarketEnabled,
     canUseExperimentalOptimizer,
     canUseClimate,
+    canUseZarc,
+    canUsePrices,
+    canUseMarketValidation,
     canUseReplanning,
     canShowGuidedExplanations,
     canUseGuidedMode,

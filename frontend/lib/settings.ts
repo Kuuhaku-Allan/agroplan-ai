@@ -166,6 +166,18 @@ export function canUseClimate(settings: AdvancedModeSettings): boolean {
   return isModuleEnabled(settings, "climate_enabled");
 }
 
+export function canUseZarc(settings: AdvancedModeSettings): boolean {
+  return isModuleEnabled(settings, "zarc_enabled");
+}
+
+export function canUsePrices(settings: AdvancedModeSettings): boolean {
+  return isModuleEnabled(settings, "prices_enabled");
+}
+
+export function canUseMarketValidation(settings: AdvancedModeSettings): boolean {
+  return isModuleEnabled(settings, "market_validation_enabled");
+}
+
 export function canUseReplanning(settings: AdvancedModeSettings): boolean {
   return isModuleEnabled(settings, "replanning_enabled");
 }
