@@ -83,6 +83,14 @@ Geração de relatórios profissionais:
 - Configuração por objetivo
 - Preview em tempo real
 
+### ℹ️ Sobre
+Página institucional completa:
+- Objetivo do projeto e funcionalidades
+- Fontes de dados e tecnologias utilizadas
+- Como funciona a otimização (Algoritmo Genético)
+- Limitações e cuidados importantes
+- Estado atual e próximas evoluções
+
 ## 🌐 Provedores de Dados Reais
 
 O AgroPlan AI integra múltiplos provedores de dados reais para enriquecer as recomendações:
