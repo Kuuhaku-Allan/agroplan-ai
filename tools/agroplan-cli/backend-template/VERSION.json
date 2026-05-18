@@ -1,6 +1,6 @@
 {
-  "cli_version": "1.0.41",
-  "backend_template_version": "1.0.41",
+  "cli_version": "1.0.42",
+  "backend_template_version": "1.0.42",
   "zarc_index_version": "2025-2026-fast-index-v2",
   "price_index_version": "2025-05-reference-v1",
   "features": [
@@ -29,7 +29,8 @@
     "nasa_power_parser_fix",
     "calendar_replanning_engine",
     "calendar_replanning_apply_suggestions",
-    "planning_field_validation_fix"
+    "planning_field_validation_fix",
+    "performance_validation_reports"
   ],
   "generated_at": "2026-05-17T00:00:00Z"
 }

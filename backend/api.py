@@ -86,6 +86,7 @@ class ValidarRequest(BaseModel):
 class RelatorioRequest(BaseModel):
     objetivo: str = "equilibrado"
     formato: str = "md"
+    perfil: str = "rapido"  # rapido, completo
     lat: Optional[float] = None
     lon: Optional[float] = None
     days: Optional[int] = 30
@@ -96,6 +97,7 @@ class RelatorioRequest(BaseModel):
 class RodadasRequest(BaseModel):
     objetivo: str = "equilibrado"
     rodadas: int = 5
+    modo: str = "rapido"  # rapido, normal, completo
 
 # Cache de dados (carrega uma vez)
 _dados_cache = None
@@ -1207,12 +1209,18 @@ def validar(request: ValidarRequest):
         if request.objetivo not in objetivos_validos:
             raise HTTPException(status_code=400, detail=f"Objetivo inválido. Use: {objetivos_validos}")
         
-        # Executa validação
-        resultado = comparar_ag_com_forca_bruta(
-            culturas, talhoes, regras,
-            objetivo=request.objetivo,
-            seed=request.seed
-        )
+        # Cache para validação
+        cache_key = get_cache_key("validar", objetivo=request.objetivo, seed=request.seed)
+        
+        def compute_validacao():
+            return comparar_ag_com_forca_bruta(
+                culturas, talhoes, regras,
+                objetivo=request.objetivo,
+                seed=request.seed
+            )
+        
+        # Executa validação (com cache)
+        resultado = get_or_compute_cache(cache_key, compute_validacao)
         
         if resultado.get('erro'):
             raise HTTPException(status_code=400, detail=resultado.get('mensagem'))
@@ -1228,7 +1236,7 @@ def validar(request: ValidarRequest):
 
 @app.post("/rodadas")
 def rodadas(request: RodadasRequest):
-    """Executa múltiplas rodadas do AG"""
+    """Executa múltiplas rodadas do AG com modos de performance"""
     try:
         culturas, talhoes, regras = get_dados()
         
@@ -1237,12 +1245,57 @@ def rodadas(request: RodadasRequest):
         if request.objetivo not in objetivos_validos:
             raise HTTPException(status_code=400, detail=f"Objetivo inválido. Use: {objetivos_validos}")
         
-        # Executa rodadas
-        resultado = executar_multiplas_rodadas(
-            culturas, talhoes, regras,
+        # Configuração de modos
+        modos_config = {
+            "rapido": {"geracoes": 30, "populacao": 25, "max_rodadas": 5},
+            "normal": {"geracoes": 60, "populacao": 35, "max_rodadas": 10},
+            "completo": {"geracoes": 100, "populacao": 50, "max_rodadas": 20}
+        }
+        
+        # Valida modo
+        if request.modo not in modos_config:
+            raise HTTPException(status_code=400, detail=f"Modo inválido. Use: {list(modos_config.keys())}")
+        
+        config = modos_config[request.modo]
+        rodadas_efetivas = min(request.rodadas, config["max_rodadas"])
+        aviso = None
+        
+        # Aviso se limitou rodadas
+        if request.rodadas > config["max_rodadas"]:
+            aviso = f"Modo {request.modo} limita a análise a {config['max_rodadas']} rodadas para manter resposta interativa."
+        
+        # Cache para rodadas
+        cache_key = get_cache_key(
+            "rodadas",
             objetivo=request.objetivo,
-            rodadas=request.rodadas
+            rodadas=rodadas_efetivas,
+            modo=request.modo
         )
+        
+        def compute_rodadas():
+            return executar_multiplas_rodadas(
+                culturas, talhoes, regras,
+                objetivo=request.objetivo,
+                rodadas=rodadas_efetivas,
+                geracoes=config["geracoes"],
+                populacao=config["populacao"]
+            )
+        
+        # Executa rodadas (com cache)
+        resultado = get_or_compute_cache(cache_key, compute_rodadas)
+        
+        # Adiciona informações de modo
+        resultado["modo"] = request.modo
+        resultado["config"] = {
+            "geracoes": int(config["geracoes"]),
+            "populacao": int(config["populacao"]),
+            "max_rodadas": int(config["max_rodadas"])
+        }
+        resultado["rodadas_solicitadas"] = int(request.rodadas)
+        resultado["rodadas_executadas"] = int(rodadas_efetivas)
+        
+        if aviso:
+            resultado["aviso"] = aviso
         
         # Converte tipos numpy para Python nativos
         resultado_convertido = converter_tipos_python(resultado)

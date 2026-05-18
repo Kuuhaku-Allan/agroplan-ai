@@ -172,7 +172,7 @@ def comparar_ag_com_forca_bruta(culturas, talhoes, regras, objetivo='equilibrado
     }
 
 
-def executar_multiplas_rodadas(culturas, talhoes, regras, objetivo='equilibrado', rodadas=10):
+def executar_multiplas_rodadas(culturas, talhoes, regras, objetivo='equilibrado', rodadas=10, geracoes=100, populacao=50):
     """
     Executa o AG múltiplas vezes para avaliar estabilidade
     
@@ -182,6 +182,8 @@ def executar_multiplas_rodadas(culturas, talhoes, regras, objetivo='equilibrado'
         regras: DataFrame com regras
         objetivo: objetivo do AG
         rodadas: número de execuções
+        geracoes: número de gerações do AG
+        populacao: tamanho da população do AG
     
     Returns:
         Dicionário com estatísticas
@@ -194,11 +196,16 @@ def executar_multiplas_rodadas(culturas, talhoes, regras, objetivo='equilibrado'
     lucros_list = []
     riscos_list = []
     
-    print(f"   Executando {rodadas} rodadas do Algoritmo Genético...")
+    print(f"   Executando {rodadas} rodadas do Algoritmo Genético (gerações={geracoes}, população={populacao})...")
     
     for i in range(rodadas):
         # Usa seed diferente para cada rodada
-        resultado = otimizar_plano_genetico(culturas, talhoes, regras, objetivo, seed=i)
+        resultado = otimizar_plano_genetico(
+            culturas, talhoes, regras, objetivo, 
+            seed=i, 
+            geracoes=geracoes, 
+            populacao=populacao
+        )
         resultados.append(resultado)
         fitness_list.append(resultado['fitness'])
         lucros_list.append(resultado['lucro_total'])
