@@ -42,9 +42,9 @@ export function FieldDetailPanel({ talhao, onClose }: FieldDetailPanelProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="bg-slate-900 border-slate-800 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <Card className="bg-slate-900/95 border-slate-800 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-slate-900 border-b border-slate-800 p-6 flex items-center justify-between">
+        <div className="sticky top-0 z-20 bg-slate-900/90 backdrop-blur-md border-b border-slate-700/70 p-6 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-500/10 rounded-lg">
               <MapPin className="w-6 h-6 text-emerald-500" />
@@ -65,7 +65,7 @@ export function FieldDetailPanel({ talhao, onClose }: FieldDetailPanelProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 pt-7 space-y-6">
           {/* Características */}
           <div>
             <h3 className="text-lg font-semibold text-slate-50 mb-4">Características do Terreno</h3>

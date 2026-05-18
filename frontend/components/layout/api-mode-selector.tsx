@@ -396,8 +396,8 @@ function LocalApiSetupModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-      <Card className="w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl border-slate-700 bg-slate-800 shadow-2xl">
-        <CardHeader className="sticky top-0 bg-slate-800 border-b border-slate-700 rounded-t-2xl">
+      <Card className="w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl border-slate-700 bg-slate-800/95 shadow-2xl">
+        <CardHeader className="sticky top-0 z-20 bg-slate-800/90 backdrop-blur-md border-b border-slate-700/70 rounded-t-2xl shadow-lg">
           <CardTitle className="text-slate-50 flex items-center gap-2">
             <Monitor className="w-5 h-5 text-emerald-500" />
             Configurar API Local
