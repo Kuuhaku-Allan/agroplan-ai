@@ -43,8 +43,8 @@ export function ScenarioDetailPanel({ cenario, onClose }: ScenarioDetailPanelPro
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="bg-slate-900/95 border-slate-700 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="sticky top-0 z-20 bg-slate-900/90 backdrop-blur-md border-b border-slate-700/70 p-6 flex items-center justify-between shadow-lg">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-white/10 bg-slate-950/95 backdrop-blur-xl shadow-2xl">
+        <div className="shrink-0 z-20 flex items-center justify-between border-b border-white/10 bg-slate-950/95 p-6 shadow-[0_12px_28px_rgba(2,6,23,0.45)]">
           <div>
             <h2 className="text-2xl font-bold text-slate-50">{cenario.nome}</h2>
             <p className="text-sm text-slate-400 mt-1">{cenario.descricao}</p>
@@ -59,7 +59,7 @@ export function ScenarioDetailPanel({ cenario, onClose }: ScenarioDetailPanelPro
           </Button>
         </div>
 
-        <div className="p-6 pt-7 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Métricas Principais */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card className="bg-emerald-900/20 border-emerald-500/30 p-4">
