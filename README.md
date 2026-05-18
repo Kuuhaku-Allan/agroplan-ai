@@ -79,9 +79,12 @@ Comparação entre diferentes estratégias:
 
 ### 📄 Relatórios
 Geração de relatórios profissionais:
+- **Modos de performance**: Rápido (padrão) e Completo
 - Formatos: Markdown e TXT
 - Configuração por objetivo
 - Preview em tempo real
+- Modo rápido recomendado para apresentação (~5-10s)
+- Cache para segunda geração (<1s)
 
 ### ℹ️ Sobre
 Página institucional completa:
