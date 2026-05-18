@@ -244,7 +244,7 @@ export default function ComparacaoMercadoPage() {
 
       <div className="p-8 space-y-6">
         <Card className="rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.20)]">
-          <CardContent className="flex flex-col gap-4 pt-6 lg:flex-row lg:items-center lg:justify-between">
+          <CardContent className="flex min-h-[88px] flex-col justify-center gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm font-medium text-slate-300">
