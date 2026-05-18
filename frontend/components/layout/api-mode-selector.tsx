@@ -229,26 +229,20 @@ export function ApiModeSelector({ status, origin, onRefresh }: ApiModeSelectorPr
                 </div>
               </div>
 
-              {/* Render Wake Notice */}
+              {/* Render Wake Notice - Componente Completo */}
               {showRenderWake && (currentMode === 'online' || currentMode === 'auto') && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                  <div className="flex items-center gap-2 text-amber-400 text-sm font-medium mb-2">
-                    <AlertTriangle className="w-4 h-4" />
-                    API Render pode estar dormindo
-                  </div>
-                  <p className="text-xs text-slate-400 mb-3">
-                    Pode levar ~1 minuto para acordar. Abra o link abaixo ou aguarde.
-                  </p>
-                  <a
-                    href={API_ENDPOINTS.renderHealth}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-mono"
-                  >
-                    {API_ENDPOINTS.renderHealth}
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
+                <RenderWakeNotice
+                  onWakeAttempt={() => {
+                    setShowRenderWake(false);
+                    testConnection();
+                  }}
+                  onRetry={testConnection}
+                  onUseLocal={() => {
+                    handleModeChange('local');
+                    setShowRenderWake(false);
+                  }}
+                  className="mt-2"
+                />
               )}
 
               {/* Keep-Alive Toggle */}
