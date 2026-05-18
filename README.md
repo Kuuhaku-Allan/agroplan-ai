@@ -8,6 +8,14 @@ AgroPlan AI é uma plataforma web que utiliza Inteligência Artificial para otim
 
 ## ✨ Funcionalidades
 
+### 🏠 Landing Page
+Página inicial pública e profissional:
+- Apresentação clara do sistema e suas funcionalidades
+- Seções: Hero, Funcionalidades, Como Funciona, Dados e Transparência, Modos de Uso
+- Visual premium dark-glass consistente com a aplicação
+- CTAs para Dashboard e Planejamento
+- Textos honestos sobre capacidades e limitações
+
 ### 📊 Dashboard
 Visão geral completa do planejamento com:
 - Métricas principais (lucro total, risco médio, fitness, diversidade)

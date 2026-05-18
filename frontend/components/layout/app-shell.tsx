@@ -3,6 +3,7 @@
 import { Sidebar } from "./sidebar";
 import { ReactNode } from "react";
 import { useRenderKeepAlive } from "@/hooks/useRenderKeepAlive";
+import { usePathname } from "next/navigation";
 
 interface AppShellProps {
   children: ReactNode;
@@ -12,6 +13,9 @@ export function AppShell({ children }: AppShellProps) {
   // Ativar keep-alive se configurado
   useRenderKeepAlive();
   
+  const pathname = usePathname();
+  const isLandingPage = pathname === "/";
+  
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Gradiente de fundo */}
@@ -19,9 +23,9 @@ export function AppShell({ children }: AppShellProps) {
       
       {/* Layout */}
       <div className="relative flex">
-        <Sidebar />
+        {!isLandingPage && <Sidebar />}
         
-        <main className="flex-1 ml-64">
+        <main className={isLandingPage ? "flex-1" : "flex-1 ml-64"}>
           {children}
         </main>
       </div>
