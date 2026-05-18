@@ -14,7 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { validar, rodadas as executarRodadas } from "@/lib/api";
 import { ResultadoValidacao } from "@/lib/types";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 
 interface RodadasResult {
   rodadas: number;
@@ -23,6 +23,12 @@ interface RodadasResult {
   pior_fitness: number;
   desvio_padrao: number;
   coeficiente_variacao: number;
+  modo?: string;
+  config?: {
+    geracoes: number;
+    populacao: number;
+  };
+  avisos?: string[];
 }
 
 export default function ValidacaoPage() {
@@ -53,7 +59,7 @@ export default function ValidacaoPage() {
         setForcaBrutaInviavel({ inviavel: true, combinacoes });
         setActiveTab("rodadas");
         
-        const rodadasData = await executarRodadas(objetivo, 10);
+        const rodadasData = await executarRodadas(objetivo, 5, 'rapido');
         setRodadasResult(rodadasData);
       } else if (data.erro) {
         setError(data.mensagem || "Erro ao executar validação");
@@ -69,14 +75,14 @@ export default function ValidacaoPage() {
     }
   };
 
-  const handleExecuteRodadas = async (objetivo: string, numRodadas: number) => {
+  const handleExecuteRodadas = async (objetivo: string, numRodadas: number, modo: 'rapido' | 'normal' | 'completo') => {
     setLoading(true);
     setError(null);
     setRodadasResult(null);
     setActiveTab("rodadas");
 
     try {
-      const data = await executarRodadas(objetivo, numRodadas);
+      const data = await executarRodadas(objetivo, numRodadas, modo);
       setRodadasResult(data);
     } catch (err) {
       console.error("Erro ao executar rodadas:", err);
@@ -123,6 +129,20 @@ export default function ValidacaoPage() {
         {/* Loading */}
         {loading && (
           <div className="space-y-6">
+            <Card className="bg-blue-500/10 border-blue-500/30 p-4">
+              <div className="flex items-start gap-3">
+                <Loader2 className="w-5 h-5 text-blue-400 animate-spin shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-blue-400">
+                    Executando validação em modo rápido...
+                  </p>
+                  <p className="text-xs text-blue-300/70 mt-1">
+                    Isso pode levar alguns segundos.
+                  </p>
+                </div>
+              </div>
+            </Card>
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="bg-slate-900/50 border-slate-800/50 p-5">
@@ -202,6 +222,47 @@ export default function ValidacaoPage() {
             {/* Card de força bruta inviável */}
             {forcaBrutaInviavel?.inviavel && (
               <BruteforceUnfeasibleCard totalCombinacoes={forcaBrutaInviavel.combinacoes} />
+            )}
+
+            {/* Config e Avisos */}
+            {(rodadasResult.config || rodadasResult.avisos) && (
+              <Card className="bg-slate-900/50 border-slate-800/50 p-5">
+                <div className="space-y-3">
+                  {rodadasResult.config && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-300 mb-2">
+                        Configuração Utilizada
+                      </h4>
+                      <div className="flex gap-4 text-sm">
+                        <span className="text-slate-400">
+                          Modo: <span className="text-emerald-400 font-medium">{rodadasResult.modo || 'rápido'}</span>
+                        </span>
+                        <span className="text-slate-400">
+                          Gerações: <span className="text-slate-200 font-medium">{rodadasResult.config.geracoes}</span>
+                        </span>
+                        <span className="text-slate-400">
+                          População: <span className="text-slate-200 font-medium">{rodadasResult.config.populacao}</span>
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {rodadasResult.avisos && rodadasResult.avisos.length > 0 && (
+                    <div className="pt-3 border-t border-slate-800">
+                      <h4 className="text-sm font-semibold text-amber-400 mb-2">
+                        Avisos
+                      </h4>
+                      <ul className="space-y-1">
+                        {rodadasResult.avisos.map((aviso, idx) => (
+                          <li key={idx} className="text-xs text-amber-300/80">
+                            • {aviso}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </Card>
             )}
 
             {/* Análise de estabilidade */}

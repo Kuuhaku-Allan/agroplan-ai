@@ -55,10 +55,12 @@ Otimização inteligente do planejamento:
 
 ### ✅ Validação
 Validação rigorosa dos resultados:
+- **Modos de performance**: Rápido (padrão), Normal e Completo
 - Comparação AG vs Força Bruta (quando viável)
 - Análise de estabilidade com múltiplas rodadas
 - Métricas de convergência
 - Explicação da escalabilidade (10 bilhões de combinações)
+- Modo rápido recomendado para uso interativo (~3s por rodada)
 
 ### 🎯 Cenários
 Comparação entre diferentes estratégias:

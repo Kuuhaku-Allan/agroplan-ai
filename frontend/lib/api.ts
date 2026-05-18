@@ -516,13 +516,20 @@ export async function validar(objetivo: string = 'equilibrado', seed: number = 4
   return response.json();
 }
 
-export async function rodadas(objetivo: string = 'equilibrado', numRodadas: number = 5) {
+export async function rodadas(
+  objetivo: string = 'equilibrado', 
+  numRodadas: number = 5,
+  modo: 'rapido' | 'normal' | 'completo' = 'rapido'
+) {
   const response = await apiFetch('/rodadas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ objetivo, rodadas: numRodadas })
+    body: JSON.stringify({ objetivo, rodadas: numRodadas, modo, incluir_planos: false })
   });
-  if (!response.ok) throw new Error('Falha ao executar rodadas');
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Falha ao executar rodadas' }));
+    throw new Error(errorData.detail || 'Falha ao executar rodadas');
+  }
   return response.json();
 }
 

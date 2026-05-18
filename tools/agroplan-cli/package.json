@@ -1,6 +1,6 @@
 {
   "name": "agroplan-ai-cli",
-  "version": "1.0.42",
+  "version": "1.0.43",
   "description": "AgroPlan AI CLI - Setup and Management",
   "type": "module",
   "bin": {
