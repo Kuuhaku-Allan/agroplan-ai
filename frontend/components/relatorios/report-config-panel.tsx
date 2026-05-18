@@ -122,9 +122,7 @@ export function ReportConfigPanel({
             </SelectContent>
           </Select>
           <p className="text-xs text-slate-500 mt-2">
-            {perfil === "rapido" 
-              ? "Recomendado para apresentação. Evita validações pesadas." 
-              : "Executa validações completas e pode demorar mais."}
+            {perfil === "completo" && "Executa validações completas e pode demorar mais."}
           </p>
         </div>
 
