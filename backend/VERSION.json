@@ -1,6 +1,6 @@
 {
-  "cli_version": "1.0.43",
-  "backend_template_version": "1.0.43",
+  "cli_version": "1.0.44",
+  "backend_template_version": "1.0.44",
   "zarc_index_version": "2025-2026-fast-index-v2",
   "price_index_version": "2025-05-reference-v1",
   "features": [
@@ -31,7 +31,8 @@
     "calendar_replanning_apply_suggestions",
     "planning_field_validation_fix",
     "performance_validation_reports",
-    "performance_validation_config_fix"
+    "performance_validation_config_fix",
+    "final_delivery_report_performance"
   ],
   "generated_at": "2026-05-17T00:00:00Z"
 }

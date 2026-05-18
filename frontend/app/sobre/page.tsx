@@ -457,7 +457,7 @@ export default function SobrePage() {
         {/* Footer Info */}
         <div className="text-center text-sm text-slate-500 pt-4">
           <p>AgroPlan AI - Sistema de apoio à decisão agrícola</p>
-          <p className="mt-1">Versão 1.0.43 - CLI disponível via npm</p>
+          <p className="mt-1">Versão 1.0.44 - CLI disponível via npm</p>
         </div>
       </div>
     </div>

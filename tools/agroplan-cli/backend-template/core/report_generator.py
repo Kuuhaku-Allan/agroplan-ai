@@ -98,7 +98,7 @@ def get_objetivo_description(objetivo):
     return descriptions.get(objetivo, "otimizou múltiplos critérios")
 
 
-def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', formato='md', contexto_climatico=None, uf=None, municipio=None, safra="2025/2026"):
+def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', formato='md', perfil='rapido', contexto_climatico=None, uf=None, municipio=None, safra="2025/2026"):
     """
     Gera relatório completo do sistema
     
@@ -108,6 +108,7 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
         regras: DataFrame com regras
         objetivo: objetivo do AG
         formato: 'md' ou 'txt'
+        perfil: 'rapido' ou 'completo' (padrão: 'rapido')
         contexto_climatico: Dicionário com dados climáticos reais (opcional)
         uf: Unidade Federativa para ZARC (opcional)
         municipio: Município para ZARC (opcional)
@@ -129,23 +130,35 @@ def gerar_relatorio_completo(culturas, talhoes, regras, objetivo='equilibrado', 
     else:
         resultado_ag = gerar_plano_genetico(culturas, talhoes, regras, objetivo, seed=42)
     
-    safe_print("   🔬 Validando com força bruta...")
-    validacao = comparar_ag_com_forca_bruta(culturas, talhoes, regras, objetivo, seed=42)
+    # Validação e estabilidade dependem do perfil
+    validacao = None
+    estabilidade = None
+    aviso_perfil = None
     
-    safe_print("   🔄 Analisando estabilidade (5 rodadas)...")
-    estabilidade = executar_multiplas_rodadas(culturas, talhoes, regras, objetivo, rodadas=5)
+    if perfil == "completo":
+        safe_print("   🔬 Validando com força bruta...")
+        validacao = comparar_ag_com_forca_bruta(culturas, talhoes, regras, objetivo, seed=42)
+        
+        safe_print("   🔄 Analisando estabilidade (5 rodadas)...")
+        estabilidade = executar_multiplas_rodadas(culturas, talhoes, regras, objetivo, rodadas=5)
+    else:
+        # Modo rápido: pula validações pesadas
+        safe_print("   ⚡ Modo rápido: pulando validações pesadas...")
+        aviso_perfil = "Relatório gerado em modo rápido. A validação completa pode ser executada separadamente na seção Validação."
     
     # Gera conteúdo do relatório
     if formato == 'md':
         conteudo = gerar_relatorio_markdown(
             culturas, talhoes, regras, objetivo,
-            cenarios, resultado_ag, validacao, estabilidade
+            cenarios, resultado_ag, validacao, estabilidade,
+            aviso_perfil=aviso_perfil
         )
         extensao = 'md'
     else:
         conteudo = gerar_relatorio_txt(
             culturas, talhoes, regras, objetivo,
-            cenarios, resultado_ag, validacao, estabilidade
+            cenarios, resultado_ag, validacao, estabilidade,
+            aviso_perfil=aviso_perfil
         )
         extensao = 'txt'
     
@@ -465,7 +478,7 @@ def gerar_secao_validacao_lucro_mercado(resultado, formato='md'):
     return secao
 
 
-def gerar_relatorio_markdown(culturas, talhoes, regras, objetivo, cenarios, resultado_ag, validacao, estabilidade):
+def gerar_relatorio_markdown(culturas, talhoes, regras, objetivo, cenarios, resultado_ag, validacao, estabilidade, aviso_perfil=None):
     """Gera relatório em formato Markdown"""
     
     md = []
@@ -474,6 +487,12 @@ def gerar_relatorio_markdown(culturas, talhoes, regras, objetivo, cenarios, resu
     md.append(f"**Data:** {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     md.append(f"**Objetivo:** {display_name(objetivo).title()}")
     md.append("")
+    
+    # Adicionar aviso de perfil se fornecido
+    if aviso_perfil:
+        md.append("> ⚡ **Modo Rápido:** " + aviso_perfil)
+        md.append("")
+    
     md.append("---")
     md.append("")
     
@@ -808,7 +827,7 @@ def gerar_relatorio_markdown(culturas, talhoes, regras, objetivo, cenarios, resu
     return "\n".join(md)
 
 
-def gerar_relatorio_txt(culturas, talhoes, regras, objetivo, cenarios, resultado_ag, validacao, estabilidade):
+def gerar_relatorio_txt(culturas, talhoes, regras, objetivo, cenarios, resultado_ag, validacao, estabilidade, aviso_perfil=None):
     """Gera relatório em formato TXT"""
     
     txt = []
@@ -819,6 +838,12 @@ def gerar_relatorio_txt(culturas, talhoes, regras, objetivo, cenarios, resultado
     txt.append(f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     txt.append(f"Objetivo: {display_name(objetivo).upper()}")
     txt.append("")
+    
+    # Adicionar aviso de perfil se fornecido
+    if aviso_perfil:
+        txt.append("MODO RÁPIDO: " + aviso_perfil)
+        txt.append("")
+    
     txt.append("=" * 80)
     txt.append("")
     

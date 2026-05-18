@@ -533,9 +533,14 @@ export async function rodadas(
   return response.json();
 }
 
-export async function gerarRelatorio(objetivo: string = 'equilibrado', formato: string = 'md', location?: ClimateLocation) {
+export async function gerarRelatorio(
+  objetivo: string = 'equilibrado', 
+  formato: string = 'md', 
+  perfil: 'rapido' | 'completo' = 'rapido',
+  location?: ClimateLocation
+) {
   try {
-    const body: Record<string, string | number> = { objetivo, formato };
+    const body: Record<string, string | number> = { objetivo, formato, perfil };
     
     // Adicionar parâmetros climáticos se localização fornecida
     if (location) {

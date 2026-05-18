@@ -13,6 +13,7 @@ import { ClimateImpactBanner, ClimateInactiveBanner } from "@/components/climate
 import { ClimateRegionSelector } from "@/components/climate/climate-region-selector";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 import { gerarRelatorio, getClimateLocation, setClimateLocation } from "@/lib/api";
 import type { ClimateLocation, ClimateData } from "@/lib/types/climate";
 
@@ -27,6 +28,7 @@ interface RelatorioData {
 export default function RelatoriosPage() {
   const [objetivo, setObjetivo] = useState<string>("equilibrado");
   const [formato, setFormato] = useState<"md" | "txt">("md");
+  const [perfil, setPerfil] = useState<"rapido" | "completo">("rapido");
   const [relatorio, setRelatorio] = useState<RelatorioData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +50,8 @@ export default function RelatoriosPage() {
       // Obter localização climática atual
       const currentLocation = getClimateLocation();
       
-      // Gerar relatório com localização climática
-      const data = await gerarRelatorio(objetivo, formato, currentLocation || undefined);
+      // Gerar relatório com localização climática e perfil
+      const data = await gerarRelatorio(objetivo, formato, perfil, currentLocation || undefined);
       setRelatorio({
         caminho: data.caminho,
         conteudo: data.conteudo,
@@ -191,9 +193,11 @@ export default function RelatoriosPage() {
             <ReportConfigPanel
               objetivo={objetivo}
               formato={formato}
+              perfil={perfil}
               loading={loading}
               onObjetivoChange={setObjetivo}
               onFormatoChange={setFormato}
+              onPerfilChange={setPerfil}
               onGenerate={handleGenerate}
             />
           </div>
@@ -212,6 +216,24 @@ export default function RelatoriosPage() {
         {/* Loading */}
         {loading && (
           <div className="space-y-6">
+            <Card className="bg-blue-500/10 border-blue-500/30 p-4">
+              <div className="flex items-start gap-3">
+                <Loader2 className="w-5 h-5 text-blue-400 animate-spin shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-blue-400">
+                    {perfil === "rapido" 
+                      ? "Gerando relatório em modo rápido..." 
+                      : "Gerando relatório completo. Isso pode levar mais tempo..."}
+                  </p>
+                  <p className="text-xs text-blue-300/70 mt-1">
+                    {perfil === "rapido"
+                      ? "Validações pesadas serão puladas para resposta mais rápida."
+                      : "Executando validações completas com força bruta e análise de estabilidade."}
+                  </p>
+                </div>
+              </div>
+            </Card>
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
                 <Card key={i} className="bg-slate-900/50 border-slate-800/50 p-5">

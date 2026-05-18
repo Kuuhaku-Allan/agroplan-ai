@@ -9,6 +9,7 @@ from typing import Optional
 import sys
 import os
 import uuid
+import json
 
 # Adiciona o diretório backend ao path para imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -34,6 +35,16 @@ DEBUG_ERRORS = os.getenv("DEBUG_ERRORS", "false").lower() == "true"
 # Cache em memória para resultados pesados
 _resultados_cache = {}
 
+def get_backend_version():
+    """Obtém versão do backend a partir do VERSION.json"""
+    try:
+        version_path = os.path.join(os.path.dirname(__file__), "VERSION.json")
+        with open(version_path, 'r', encoding='utf-8') as f:
+            version_info = json.load(f)
+            return version_info.get("backend_template_version", "1.0.44")
+    except:
+        return "1.0.44"
+
 def get_cache_key(nome, **params):
     """Gera chave única para cache baseada no nome e parâmetros"""
     return f"{nome}:" + ":".join(f"{k}={v}" for k, v in sorted(params.items()))
@@ -54,7 +65,7 @@ def get_ag_cacheado(objetivo="equilibrado", seed=42, geracoes=100, populacao=50)
 app = FastAPI(
     title="AgroPlan AI API",
     description="API para Sistema Inteligente de Planejamento de Plantio",
-    version="5.0.0"
+    version=get_backend_version()
 )
 
 # Configura CORS
@@ -140,7 +151,7 @@ def root():
     """Endpoint raiz"""
     return {
         "message": "AgroPlan AI API",
-        "version": "5.0.0",
+        "version": get_backend_version(),
         "docs": "/docs"
     }
 
@@ -233,7 +244,7 @@ def debug_version():
         culturas_fallback = set(item.get("cultura") for item in fallback_data)
         
         return {
-            "api_version": "5.0.0",
+            "api_version": get_backend_version(),
             "backend_file": __file__,
             "backend_template_version": version_info.get("backend_template_version", "unknown"),
             "cli_version": version_info.get("cli_version", "unknown"),
@@ -1308,10 +1319,11 @@ def rodadas(request: RodadasRequest):
 
 @app.post("/relatorio")
 def relatorio(request: RelatorioRequest):
-    """Gera relatório com contexto climático opcional"""
+    """Gera relatório com contexto climático opcional e perfil de performance"""
+    import time
+    start_time = time.time()
+    
     try:
-        culturas, talhoes, regras = get_dados()
-        
         # Valida objetivo
         objetivos_validos = ['equilibrado', 'lucro', 'risco', 'sustentavel']
         if request.objetivo not in objetivos_validos:
@@ -1322,17 +1334,44 @@ def relatorio(request: RelatorioRequest):
         if request.formato not in formatos_validos:
             raise HTTPException(status_code=400, detail=f"Formato inválido. Use: {formatos_validos}")
         
+        # Valida perfil
+        perfis_validos = ['rapido', 'completo']
+        if request.perfil not in perfis_validos:
+            raise HTTPException(status_code=400, detail=f"Perfil inválido. Use: {perfis_validos}")
+        
+        # Gerar chave de cache
+        cache_params = {
+            "objetivo": request.objetivo,
+            "formato": request.formato,
+            "perfil": request.perfil,
+            "lat": request.lat,
+            "lon": request.lon,
+            "uf": request.uf,
+            "municipio": request.municipio,
+            "safra": request.safra
+        }
+        cache_key = get_cache_key("relatorio", **cache_params)
+        
+        # Verificar cache
+        if cache_key in _resultados_cache:
+            cached_result = _resultados_cache[cache_key]
+            cached_result["cached"] = True
+            cached_result["tempo_geracao_segundos"] = 0
+            return cached_result
+        
         # Obter contexto climático se coordenadas foram fornecidas
         contexto_climatico = None
         if request.lat is not None and request.lon is not None:
             from core.climate_adapter import obter_contexto_climatico_por_coordenadas
             contexto_climatico = obter_contexto_climatico_por_coordenadas(request.lat, request.lon, request.days)
         
-        # Gera relatório com contexto climático e ZARC integrado
+        # Gera relatório com perfil de performance
+        culturas, talhoes, regras = get_dados()
         caminho = gerar_relatorio_completo(
             culturas, talhoes, regras,
             objetivo=request.objetivo,
             formato=request.formato,
+            perfil=request.perfil,
             contexto_climatico=contexto_climatico,
             uf=request.uf,
             municipio=request.municipio,
@@ -1343,10 +1382,15 @@ def relatorio(request: RelatorioRequest):
         with open(caminho, 'r', encoding='utf-8') as f:
             conteudo = f.read()
         
+        tempo_geracao = time.time() - start_time
+        
         resultado = {
             "caminho": caminho,
             "conteudo": conteudo,
-            "formato": request.formato
+            "formato": request.formato,
+            "perfil": request.perfil,
+            "cached": False,
+            "tempo_geracao_segundos": round(tempo_geracao, 2)
         }
         
         # Adicionar informações de clima real
@@ -1365,6 +1409,9 @@ def relatorio(request: RelatorioRequest):
             }
         else:
             resultado["clima_real"] = {"ativo": False}
+        
+        # Armazenar no cache
+        _resultados_cache[cache_key] = resultado
         
         return resultado
     except HTTPException:
