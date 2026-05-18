@@ -286,6 +286,44 @@ O frontend detecta automaticamente qual API usar:
 - **Menu clicável**: Seletor visual na Topbar permite alternar entre Automático/Local/Render
 - **Assistente integrado**: Guia passo a passo quando API Local não disponível
 
+### 🌐 Modo Render e API Local
+
+A aplicação suporta dois modos de API com detecção automática:
+
+#### API Render (Padrão)
+- **URL**: `https://agroplan-ai-api.onrender.com`
+- **Vantagens**: Funciona em qualquer lugar, sem instalação
+- **Limitações**: Plano Free dorme após ~15 minutos sem uso
+- **Wake-up**: Pode levar ~1 minuto para acordar
+
+#### API Local (Opcional)
+- **URL**: `http://localhost:8000`
+- **Vantagens**: Mais rápida, não dorme, ideal para desenvolvimento
+- **Requisitos**: Requer instalação local (ver Setup Rápido acima)
+
+#### Assistente de Conexão
+
+Quando a API Render está dormindo, o sistema:
+
+1. **Detecta automaticamente** a latência alta (> 5 segundos)
+2. **Mostra aviso visual** no seletor de API
+3. **Oferece opções:**
+   - Acordar API Render automaticamente
+   - Abrir API Render em nova aba
+   - Tentar novamente
+   - Usar API Local (se disponível)
+
+#### Keep-Alive para Apresentações
+
+Para manter a API Render acordada durante apresentações:
+
+1. Clicar no badge da API (canto superior direito)
+2. Marcar "Manter API Render acordada"
+3. Sistema faz ping a cada 10 minutos
+4. API permanece acordada enquanto aba estiver aberta
+
+**Nota**: Keep-alive consome horas grátis do Render Free. Use apenas quando necessário.
+
 📖 **Documentação completa**: [docs/LOCAL_MODE.md](docs/LOCAL_MODE.md)
 - Download e cópia para área de transferência
 
