@@ -4,6 +4,8 @@
 
 AgroPlan AI é uma plataforma web que utiliza Inteligência Artificial para otimizar o planejamento agrícola, recomendando as melhores culturas para cada talhão considerando características do terreno, objetivos do produtor e restrições agronômicas.
 
+📸 **Screenshots principais**: [docs/screenshots](docs/screenshots)
+
 ---
 
 ## ✨ Funcionalidades
