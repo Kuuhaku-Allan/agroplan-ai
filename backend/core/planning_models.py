@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Optional, List, Dict
 from enum import Enum
+import unicodedata
 from pydantic import BaseModel, Field as PydanticField, field_validator
 
 
@@ -595,6 +596,29 @@ class RiskLevel(str, Enum):
     ALTO = "alto"
 
 
+def normalize_risk_level_value(value):
+    if value is None:
+        return value
+    if isinstance(value, RiskLevel):
+        return value.value
+
+    text = str(value).strip()
+    candidate = text.split(".")[-1] if text.upper().startswith("RISKLEVEL.") else text
+    normalized = (
+        unicodedata.normalize("NFKD", candidate)
+        .encode("ascii", "ignore")
+        .decode("ascii")
+        .lower()
+        .strip()
+    )
+    mapping = {
+        "alto": "alto",
+        "medio": "medio",
+        "baixo": "baixo",
+    }
+    return mapping.get(normalized, text.lower())
+
+
 class ReplanningEvent(BaseModel):
     """Imprevisto registrado pelo usuário"""
     event_type: EventType = PydanticField(..., description="Tipo do imprevisto")
@@ -615,6 +639,11 @@ class ReplanningSuggestion(BaseModel):
     risk_level: RiskLevel = PydanticField(..., description="Nível de risco")
     requires_manual_validation: bool = PydanticField(..., description="Se exige validação manual")
     affected_task_id: Optional[str] = PydanticField(None, description="ID da tarefa afetada")
+
+    @field_validator("risk_level", mode="before")
+    @classmethod
+    def normalize_risk_level(cls, v):
+        return normalize_risk_level_value(v)
 
 
 class ReplanningRequest(BaseModel):

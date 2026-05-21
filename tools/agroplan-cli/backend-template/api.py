@@ -4,8 +4,10 @@ FastAPI Backend para AgroPlan AI
 
 from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
+from enum import Enum
 from pydantic import BaseModel
 from typing import Optional
+import copy
 import sys
 import os
 import uuid
@@ -129,7 +131,9 @@ def converter_tipos_python(obj):
     """Converte tipos numpy para tipos Python nativos recursivamente"""
     import numpy as np
     
-    if isinstance(obj, dict):
+    if isinstance(obj, BaseModel):
+        return converter_tipos_python(obj.model_dump(mode="json"))
+    elif isinstance(obj, dict):
         return {k: converter_tipos_python(v) for k, v in obj.items()}
     elif isinstance(obj, list):
         return [converter_tipos_python(item) for item in obj]
@@ -139,6 +143,8 @@ def converter_tipos_python(obj):
         return float(obj)
     elif isinstance(obj, (np.bool_, bool)):
         return bool(obj)
+    elif isinstance(obj, Enum):
+        return obj.value
     elif isinstance(obj, str):
         return str(obj)
     else:
@@ -1293,7 +1299,8 @@ def rodadas(request: RodadasRequest):
             )
         
         # Executa rodadas (com cache)
-        resultado = get_or_compute_cache(cache_key, compute_rodadas)
+        resultado_base = get_or_compute_cache(cache_key, compute_rodadas)
+        resultado = copy.deepcopy(resultado_base)
         
         # Adiciona informações de modo
         resultado["modo"] = request.modo

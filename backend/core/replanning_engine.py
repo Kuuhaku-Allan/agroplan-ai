@@ -624,8 +624,8 @@ def replanejar_calendario(
     summary = " ".join(summary_parts)
 
     return {
-        "event": event.model_dump(),
-        "suggestions": [s.model_dump() for s in suggestions],
+        "event": event.model_dump(mode="json"),
+        "suggestions": [s.model_dump(mode="json") for s in suggestions],
         "updated_tasks": updated_tasks,
         "warnings": warnings,
         "summary": summary,
@@ -684,7 +684,7 @@ def aplicar_sugestao_replanejamento(
         "summary": "Sugestão aplicada em modo de simulação.",
         "original_calendar": original_calendar,
         "updated_calendar": updated_calendar,
-        "applied_suggestion": suggestion.model_dump(),
+        "applied_suggestion": suggestion.model_dump(mode="json"),
         "change_log": change_log,
         "warnings": warnings,
     }

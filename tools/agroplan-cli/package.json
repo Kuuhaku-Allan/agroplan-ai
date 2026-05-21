@@ -1,10 +1,10 @@
 {
   "name": "agroplan-ai-cli",
-  "version": "1.0.44",
+  "version": "1.0.45",
   "description": "AgroPlan AI CLI - Setup and Management",
   "type": "module",
   "bin": {
-    "agroplan": "./dist/index.js"
+    "agroplan": "dist/index.js"
   },
   "files": [
     "dist",
@@ -44,7 +44,7 @@
   "homepage": "https://agroplan-ai.vercel.app",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Kuuhaku-Allan/agroplan-ai.git",
+    "url": "git+https://github.com/Kuuhaku-Allan/agroplan-ai.git",
     "directory": "tools/agroplan-cli"
   },
   "bugs": {

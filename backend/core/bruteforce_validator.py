@@ -7,6 +7,28 @@ from core.terrain_analyzer import analisar_todos_talhoes
 from core.genetic_optimizer import criar_funcao_fitness
 
 
+def _to_float(value, default=0.0):
+    try:
+        return float(value)
+    except Exception:
+        return default
+
+
+def _limpar_tipos_python(value):
+    if isinstance(value, dict):
+        return {k: _limpar_tipos_python(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_limpar_tipos_python(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_limpar_tipos_python(item) for item in value)
+    if hasattr(value, "item"):
+        try:
+            return value.item()
+        except Exception:
+            return value
+    return value
+
+
 def validar_por_forca_bruta(culturas, talhoes, regras, objetivo='equilibrado'):
     """
     Testa todas as combinações possíveis de culturas por talhão
@@ -206,11 +228,20 @@ def executar_multiplas_rodadas(culturas, talhoes, regras, objetivo='equilibrado'
             geracoes=geracoes, 
             populacao=populacao
         )
-        resultados.append(resultado)
-        fitness_list.append(resultado['fitness'])
-        lucros_list.append(resultado['lucro_total'])
-        riscos_list.append(resultado['risco_medio'])
-        print(f"      Rodada {i+1}/{rodadas}: Fitness = {resultado['fitness']:.2f}")
+        fitness = _to_float(resultado.get("fitness", 0))
+        lucro = _to_float(resultado.get("lucro_total", 0))
+        risco = _to_float(resultado.get("risco_medio", 0))
+
+        resultado_limpo = _limpar_tipos_python(resultado)
+        resultado_limpo["fitness"] = fitness
+        resultado_limpo["lucro_total"] = lucro
+        resultado_limpo["risco_medio"] = risco
+
+        resultados.append(resultado_limpo)
+        fitness_list.append(fitness)
+        lucros_list.append(lucro)
+        riscos_list.append(risco)
+        print(f"      Rodada {i+1}/{rodadas}: Fitness = {fitness:.2f}")
     
     # Encontra melhor e pior
     melhor_idx = fitness_list.index(max(fitness_list))
@@ -239,17 +270,17 @@ def executar_multiplas_rodadas(culturas, talhoes, regras, objetivo='equilibrado'
         estabilidade_desc = 'O algoritmo apresentou variação significativa entre as execuções. Considere aumentar o número de gerações ou população.'
     
     return {
-        'rodadas': rodadas,
-        'melhor_fitness': max(fitness_list),
-        'fitness_medio': fitness_medio,
-        'pior_fitness': min(fitness_list),
-        'desvio_padrao': fitness_desvio,
-        'coeficiente_variacao': coef_variacao,
-        'lucro_medio': lucro_medio,
-        'risco_medio': risco_medio,
-        'melhor_plano': melhor_resultado,
-        'pior_plano': pior_resultado,
+        'rodadas': int(rodadas),
+        'melhor_fitness': float(max(fitness_list)),
+        'fitness_medio': float(fitness_medio),
+        'pior_fitness': float(min(fitness_list)),
+        'desvio_padrao': float(fitness_desvio),
+        'coeficiente_variacao': float(coef_variacao),
+        'lucro_medio': float(lucro_medio),
+        'risco_medio': float(risco_medio),
+        'melhor_plano': _limpar_tipos_python(melhor_resultado),
+        'pior_plano': _limpar_tipos_python(pior_resultado),
         'estabilidade': estabilidade,
         'estabilidade_descricao': estabilidade_desc,
-        'todos_resultados': resultados
+        'todos_resultados': _limpar_tipos_python(resultados)
     }

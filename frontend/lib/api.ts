@@ -816,6 +816,19 @@ export async function replanCalendar(payload: {
   return response.json();
 }
 
+function normalizeRiskLevelForApi(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+
+  const text = value.trim();
+  const normalized = text.startsWith('RiskLevel.') ? text.slice('RiskLevel.'.length) : text;
+  const key = normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+
+  if (key === 'ALTO') return 'alto';
+  if (key === 'MEDIO') return 'medio';
+  if (key === 'BAIXO') return 'baixo';
+  return value;
+}
+
 /**
  * Aplica uma sugestão de replanejamento em modo de simulação.
  * Retorna o calendário ajustado.
@@ -823,10 +836,18 @@ export async function replanCalendar(payload: {
 export async function applyReplanningSuggestion(
   payload: import('./types').ApplyReplanningRequest
 ): Promise<import('./types').ApplyReplanningResponse> {
+  const normalizedPayload: import('./types').ApplyReplanningRequest = {
+    ...payload,
+    suggestion: {
+      ...payload.suggestion,
+      risk_level: normalizeRiskLevelForApi(payload.suggestion.risk_level) as import('./types').RiskLevel,
+    },
+  };
+
   const response = await apiFetch('/planejamento/replanejar/aplicar', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalizedPayload),
   });
 
   if (!response.ok) {
