@@ -62,4 +62,8 @@ Tentativa de `npm.cmd publish --access public` para `agroplan-ai-cli@1.0.45`:
 ## Status local e Render
 
 - Local: corrigido e validado.
-- Render: pendente de push/deploy e validacao da API publicada.
+- Render: deploy 1.0.45 ativo e smoke remoto aprovado:
+  - `/planejamento/replanejar` retorna `risk_level` como `alto|medio|baixo`.
+  - `/planejamento/replanejar/aplicar` aceita `alto` e legado `RiskLevel.ALTO`.
+  - `/rodadas` modo `rapido` passou.
+  - `/rodadas` modo `normal` passou.
