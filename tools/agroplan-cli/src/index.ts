@@ -13,6 +13,9 @@ import { openCommand } from "./commands/open";
 import { setupCommand } from "./commands/setup";
 import { updateCommand } from "./commands/update";
 
+const packageJson = await Bun.file(new URL("../package.json", import.meta.url)).json() as { version: string };
+const CLI_VERSION = packageJson.version;
+
 const COMMANDS = {
   setup: "Configura a API local no seu computador",
   "setup --force": "Reinstala a API local (remove instalação anterior)",
@@ -27,7 +30,7 @@ const COMMANDS = {
 };
 
 function showHelp(): void {
-  console.log("🌱 AgroPlan AI - CLI Local v1.0.21");
+  console.log(`🌱 AgroPlan AI - CLI Local v${CLI_VERSION}`);
   console.log("   Launcher para modo local acelerado\n");
   
   console.log("📋 Comandos disponíveis:");
@@ -116,6 +119,11 @@ async function main(): Promise<void> {
       case "--help":
       case "-h":
         showHelp();
+        break;
+
+      case "--version":
+      case "-v":
+        console.log(CLI_VERSION);
         break;
         
       default:
